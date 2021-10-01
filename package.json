@@ -1,5 +1,5 @@
 {
-  "name": "useForm",
+  "name": "@rvision/use-form",
   "description": "forms utility library",
   "version": "1.0.0",
   "license": "MIT",
@@ -20,7 +20,6 @@
     "@babel/preset-react": "^7.10.4",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
-    "bulma": "^0.9.1",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^6.2.0",
     "css-loader": "^4.3.0",
@@ -41,6 +40,7 @@
     "node-sass": "^4.14.1",
     "optimize-css-assets-webpack-plugin": "^5.0.4",
     "postcss-loader": "^4.0.2",
+    "prettier": "^2.4.1",
     "react-hot-loader": "^4.12.21",
     "sass": "^1.26.11",
     "sass-loader": "^10.0.2",
@@ -55,9 +55,13 @@
     "webpack-visualizer-plugin": "^0.1.11"
   },
   "dependencies": {
+    "bulma": "^0.9.3",
     "prop-types": "^15.7.2",
     "react": "^17.0.1",
+    "react-datepicker": "^4.2.1",
     "react-dom": "^17.0.1",
+    "react-select": "^5.0.0",
+    "yup": "^0.32.9"
   },
   "scripts": {
     "start": "webpack-dev-server --config ./config/webpack.js --env.env=development --progress --port 8080",

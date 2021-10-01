@@ -1,0 +1,15 @@
+@charset "utf-8";
+
+@import 'variables.scss'; // bulma variables and html style
+@import 'bulma.scss'; // bulma framework
+
+
+.hasError {
+	border: 1px solid red;
+	box-shadow: 0 0 0 0.125em rgb(242 126 63 / 25%);
+}
+.error {
+	color: red;
+	font-size: 60%;
+	display: inline-block;
+}
