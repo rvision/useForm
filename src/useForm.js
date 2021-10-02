@@ -1,63 +1,167 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
+const extractPath = string => {
+	return string.replace(/\[|\]\.?/g, '.').split(/[\.\[\]\'\"]/);
+};
+
+const getDeep = (fullPath, source) => {
+	if (source === undefined) {
+		return undefined;
+	}
+
+	if (fullPath.length === 0) {
+		return source;
+	}
+
+	const path = fullPath[0];
+	if (fullPath.length === 1) {
+		return source[path];
+	}
+
+	if (source[path] === undefined) {
+		return undefined;
+	}
+
+	const next = fullPath[1];
+	const idx = Number(next);
+	if (!Number.isNaN(idx)) {
+		if (fullPath.length === 2) {
+			return source[path][idx];
+		}
+		return getDeep(fullPath.slice(2), source[path][idx]);
+	}
+
+	return getDeep(fullPath.slice(1), source[path]);
+};
+
+const setDeep = (fullPath, target, value) => {
+	if (fullPath.length === 0) {
+		return;
+	}
+
+	const path = fullPath[0];
+	if (fullPath.length === 1) {
+		target[path] = value;
+		return;
+	}
+	const next = fullPath[1];
+	const idx = Number(next);
+	if (!Number.isNaN(idx)) {
+		target[path] = target[path] || [];
+		// NOTE: this makes entries undefined instead of empty
+		// target[path] = [...target[path]];
+		target[path][idx] = target[path][idx] === undefined ? {} : target[path][idx];
+		if (fullPath.length === 2) {
+			target[path][idx] = value;
+		} else {
+			setDeep(fullPath.slice(2), target[path][idx], value);
+		}
+	} else {
+		target[path] = target[path] === undefined ? {} : { ...target[path] };
+		setDeep(fullPath.slice(1), target[path], value);
+	}
+};
+
+const deleteDeep = (fullPath, target) => {
+	if (fullPath.length === 0) {
+		return;
+	}
+
+	const path = fullPath[0];
+	if (fullPath.length === 1) {
+		delete target[path];
+		return;
+	}
+	const next = fullPath[1];
+	const idx = Number(next);
+	if (!Number.isNaN(idx)) {
+		if (fullPath.length === 2) {
+			delete target[path][idx];
+		} else {
+			deleteDeep(fullPath.slice(2), target[path][idx]);
+		}
+	} else {
+		deleteDeep(fullPath.slice(1), target[path][idx]);
+	}
+};
+
 const useForm = ({ defaultValues = {}, validate }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const [isTouched, setIsTouched] = useState(false);
 	const key = useKey();
 
-	const hasError = (propName = null) => {
-		if (propName === null) {
+	const hasError = (fullPath = null) => {
+		if (fullPath === null) {
 			return Object.keys(errors).length > 0;
 		}
-		return !!errors[propName];
+		return getDeep(extractPath(fullPath), errors) !== undefined;
 	};
 
-	const getValue = (propName = null) => {
-		if (propName.indexOf('.') >= 0) {
-			const split = propName.split('.');
-			const arr = split[0];
-			const prop = split[2];
-			const index = Number(split[1]);
-			return values[arr][index][prop];
-		}
-		return values[propName];
+	const getValue = fullPath => {
+		return getDeep(extractPath(fullPath), values);
 	};
 
-	const setValue = (propName, value) => {
-		if (propName.indexOf('.') >= 0) {
-			const split = propName.split('.');
-			const newArr = [...values[split[0]]];
-			const index = Number(split[1]);
-			const prop = split[2];
-			newArr[index][prop] = value;
-			setValue(split[0], newArr);
-			return;
-		}
+	const setValue = (fullPath, value) => {
+		const pathArray = extractPath(fullPath);
 
-		setValues(values => ({
-			...values,
-			[propName]: value,
-		}));
+		setValues(values => {
+			const newValues = { ...values };
+			setDeep(pathArray, newValues, value);
+			return newValues;
+		});
 
 		if (isTouched === false) {
 			setIsTouched(true);
 		}
 
-		if (hasError(propName)) {
+		if (hasError(fullPath)) {
 			const newValues = { ...values };
-			newValues[propName] = value;
-			const newErrors = { ...errors };
+			setDeep(pathArray, newValues, value);
 			const newValidation = validate(newValues);
-			if (newValidation[propName]) {
-				newErrors[propName] = { ...newValidation[propName] };
-				// todo: focus on field
-			} else {
-				delete newErrors[propName];
-			}
+			const error = getDeep(pathArray, newValidation);
+			const newErrors = { ...errors };
+			setDeep(pathArray, newErrors, error);
 			setErrors(newErrors);
 		}
+	};
+
+	const clearError = fullPath => {
+		if (hasError(fullPath)) {
+			const newErrors = { ...errors };
+			deleteDeep(extractPath(fullPath), newErrors);
+			setErrors(newErrors);
+		}
+	};
+
+	const append = (fullPath, object) => {
+		const newArr = [...getDeep(extractPath(fullPath), values), object];
+		setValue(fullPath, newArr);
+		clearError(fullPath);
+		clearError(`${fullPath}[0]`);
+	};
+
+	const prepend = (fullPath, object) => {
+		const newArr = [object, ...getDeep(extractPath(fullPath), values)];
+		setValue(fullPath, newArr);
+		clearError(fullPath);
+		clearError(`${fullPath}[${newArr.length - 1}]`);
+	};
+
+	const remove = (fullPath, idx) => {
+		const newArr = [...getDeep(extractPath(fullPath), values)];
+		newArr.splice(idx, 1);
+		setValue(fullPath, newArr);
+	};
+
+	const reset = () => {
+		setValues(defaultValues);
+		setErrors(validate(defaultValues));
+	};
+
+	const trigger = () => {
+		setErrors(validate(values));
 	};
 
 	// basic html form inputs
@@ -81,33 +185,6 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		setValue(name, value);
 	};
 
-	const append = (propName, object) => {
-		const newArr = [...values[propName], object];
-		setValue(propName, newArr);
-	};
-
-	const prepend = (propName, object) => {
-		const newArr = [object, ...values[propName]];
-		setValue(propName, newArr);
-	};
-
-	const remove = fullName => {
-		const split = fullName.split('.');
-		const propName = split[0];
-		const index = Number(split[1]);
-		const newArr = [...values[propName]];
-		newArr.splice(index, 1);
-		setValue(propName, newArr);
-	};
-
-	const reset = () => {
-		setValues(defaultValues);
-	};
-
-	const trigger = () => {
-		setErrors(validate(values));
-	};
-
 	const register = name => {
 		const props = {
 			name,
@@ -123,10 +200,9 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		return e => {
 			e.preventDefault();
 			const errors = validate(values);
+			setErrors(errors);
 			if (Object.keys(errors).length === 0) {
 				onSubmitHandler(values);
-			} else {
-				setErrors(errors);
 			}
 		};
 	};
@@ -146,10 +222,29 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		reset,
 		formState: {
 			errors,
-			isValid: true,
+			isValid: hasError(),
 			isTouched,
 		},
 	};
 };
 
 export default useForm;
+
+export const yupResolver = schema => {
+	return fields => {
+		try {
+			schema.validateSync(fields, { abortEarly: false });
+		} catch (validationError) {
+			const errors = {};
+			validationError.inner.forEach(error => {
+				const err = {
+					message: error.message,
+					type: error.type,
+				};
+				setDeep(extractPath(error.path), errors, err);
+			});
+			return errors;
+		}
+		return {};
+	};
+};

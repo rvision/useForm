@@ -1,0 +1,6 @@
+TO BE DONE:
+================================================================================
+-keširanje split fullPath-a?
+-validacija: kako i kada
+-re-validacija: kako i kada
+-onBlur eventi
