@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Select from 'react-select';
 import * as yup from 'yup';
 import useForm, { yupResolver } from './useForm';
 
@@ -9,7 +10,7 @@ const schema = yup.object().shape({
 	occupation: yup.array().min(1, 'Please enter at least 1 occupation').of(yup.string()),
 	firstName: yup.string().required('Please enter first name'),
 	lastName: yup.string().required('Please enter last name'),
-	birthDate: yup.date().required('Date is required').typeError('Invalid format'),
+	birthDate: yup.date().nullable().required('Date is required').typeError('Invalid format'),
 	albums: yup
 		.array()
 		.ensure()
@@ -17,7 +18,7 @@ const schema = yup.object().shape({
 		.of(
 			yup.object().shape({
 				name: yup.string().required('Please enter album name'),
-				releaseDate: yup.date().required('Release date is required').typeError('Invalid format'),
+				releaseDate: yup.date().nullable().required('Release date is required').typeError('Invalid format'),
 			}),
 		),
 	movies: yup
@@ -27,7 +28,8 @@ const schema = yup.object().shape({
 		.of(
 			yup.object().shape({
 				name: yup.string().required('Please enter movie name'),
-				year: yup.date().required('Movie year is required').typeError('Invalid format'),
+				year: yup.date().nullable().required('Movie year is required').typeError('Invalid format'),
+				genres: yup.array().ensure().min(1, 'Please enter at least 1 genre'),
 				coStars: yup
 					.array()
 					.ensure()
@@ -41,6 +43,16 @@ const schema = yup.object().shape({
 			}),
 		),
 });
+
+const leftColumn = 'column is-one-quarter has-text-right';
+const rightColumn = 'column is-three-quarters';
+
+const selectStyle = {
+	container: provided => ({
+		...provided,
+		fontSize: '13px',
+	}),
+};
 
 const Demo = () => {
 	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, append, remove, hasError, reset, formState } = useForm({
@@ -63,15 +75,17 @@ const Demo = () => {
 		reset();
 	};
 
-	console.log('render', errors);
+	// console.log('render', errors);
+	// console.log('values', values);
+	// console.log('defaultModel', defaultModel);
 
 	return (
 		<div>
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Title</label>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
 					<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
 						{optionsTitle.map(option => {
 							return (
@@ -86,10 +100,10 @@ const Demo = () => {
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Occupation</label>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
 					<select multiple className={hasError('occupation') ? 'hasError' : ''} {...register('occupation')}>
 						{optionsOccupation.map(option => {
 							return (
@@ -104,10 +118,10 @@ const Demo = () => {
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Birthdate</label>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
 					<ReactDatePicker
 						selected={getValue('birthDate')}
 						className={hasError('birthDate') ? 'hasError' : ''}
@@ -134,26 +148,35 @@ const Demo = () => {
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Name</label>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
 					<div className="columns is-gapless">
-						<div className="column is-half">
+						<div className="column">
 							<input type="text" className={hasError('firstName') ? 'hasError' : ''} {...register('firstName')} />
-							{hasError('firstName') && <span className="error">{errors.firstName.message}</span>}
-						</div>
-
-						<div className="column is-half">
 							<input type="text" className={hasError('lastName') ? 'hasError' : ''} {...register('lastName')} />
-							{hasError('lastName') && <span className="error">{errors.lastName.message}</span>}
+
+							{hasError('firstName') && (
+								<>
+									<br />
+									<span className="error">{errors.firstName.message}</span>
+								</>
+							)}
+							<br />
+							{hasError('lastName') && (
+								<>
+									<br />
+									<span className="error">{errors.lastName.message}</span>
+								</>
+							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Albums</label>
 					<div>
 						<button
@@ -168,13 +191,14 @@ const Demo = () => {
 						{hasError(`albums`) && <span className="error">{errors.albums.message}</span>}
 					</div>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
+					{key(getValue('albums'))}
 					{getValue('albums').map((album, idx) => {
 						const k = key(album);
-
 						return (
 							<div key={k} className="columns is-gapless mb-0">
 								<div className="column">
+									{k}
 									<input type="text" {...register(`albums.${idx}.name`)} className={hasError(`albums.${idx}.name`) ? 'hasError' : ''} />
 									{hasError(`albums.${idx}.name`) && <span className="error">{errors.albums[idx].name.message}</span>}
 								</div>
@@ -204,7 +228,7 @@ const Demo = () => {
 				</div>
 			</div>
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Movies</label>
 					<div>
 						<button
@@ -213,6 +237,7 @@ const Demo = () => {
 								append('movies', {
 									name: '',
 									year: null,
+									genres: [],
 									coStars: [],
 								});
 							}}
@@ -222,86 +247,126 @@ const Demo = () => {
 						{hasError(`movies`) && <span className="error">{errors.movies.message}</span>}
 					</div>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
+					{key(getValue('movies'))}
 					{getValue('movies').map((movie, idx) => {
 						return (
-							<div key={key(movie)} className="columns is-gapless mb-0">
-								<div className="column">
-									<input type="text" {...register(`movies[${idx}]name`)} className={hasError(`movies.${idx}.name`) ? 'hasError' : ''} />
-									{hasError(`movies.${idx}.name`) && <span className="error">{errors.movies[idx].name.message}</span>}
-									<div>
-										co-stars:
+							<React.Fragment key={key(movie)}>
+								<div className="columns is-gapless mb-0">
+									{key(movie)}
+									<div className="column">
+										<input type="text" {...register(`movies[${idx}]name`)} className={hasError(`movies.${idx}.name`) ? 'hasError' : ''} />
+										{hasError(`movies.${idx}.name`) && <span className="error">{errors.movies[idx].name.message}</span>}
+									</div>
+									<div className="column">
+										<ReactDatePicker
+											selected={getValue(`movies.${idx}.year`)}
+											className={hasError(`movies.${idx}.year`) ? 'hasError' : ''}
+											onChange={date => {
+												setValue(`movies.${idx}.year`, date);
+											}}
+										/>
+										{hasError(`movies[${idx}]year`) && <span className="error">{errors.movies[idx].year.message}</span>}
+									</div>
+									<div className="column is-one-third">
+										<Select
+											styles={selectStyle}
+											placeholder="Select Genre(s)"
+											isMulti
+											isClearable
+											options={optionsGenres}
+											getOptionLabel={option => option.name}
+											getOptionValue={option => option.id}
+											value={optionsGenres.filter(option => getValue(`movies[${idx}].genres`).includes(option.id))}
+											onChange={options => {
+												setValue(
+													`movies[${idx}].genres`,
+													options.map(x => x.id),
+												);
+											}}
+										/>
+										{hasError(`movies.${idx}.genres`) && <span className="error">{errors.movies[idx].genres.message}</span>}
+									</div>
+									<div className="column">
 										<button
 											onClick={e => {
 												e.preventDefault();
-												append(`movies.${idx}.coStars`, {
-													firstName: '',
-													lastName: '',
-												});
+												remove('movies', idx);
 											}}
 										>
-											+ Add new
+											-
 										</button>
-										{getValue(`movies[${idx}].coStars`).map((star, jdx) => {
-											return (
-												<div key={key(star)} className="columns is-gapless mb-0">
-													<div className="column is-half">
-														<input
-															type="text"
-															className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'hasError' : ''}
-															{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
-														/>
-														{hasError(`movies[${idx}].coStars[${jdx}].firstName`) && (
-															<span className="error">{errors.movies[idx].coStars[jdx].firstName.message}</span>
-														)}
-													</div>
-
-													<div className="column is-half">
-														<input
-															type="text"
-															className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'hasError' : ''}
-															{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
-														/>
-														{hasError(`movies[${idx}].coStars[${jdx}].lastName`) && (
-															<span className="error">{errors.movies[idx].coStars[jdx].lastName.message}</span>
-														)}
-													</div>
-												</div>
-											);
-										})}
 									</div>
 								</div>
-								<div className="column">
-									<ReactDatePicker
-										selected={getValue(`movies.${idx}.year`)}
-										className={hasError(`movies.${idx}.year`) ? 'hasError' : ''}
-										onChange={date => {
-											setValue(`movies.${idx}.year`, date);
-										}}
-									/>
-									{hasError(`movies[${idx}]year`) && <span className="error">{errors.movies[idx].year.message}</span>}
+
+								<div className="columns is-gapless mb-0">
+									<div className="column">
+										<div>
+											co-stars:
+											<button
+												onClick={e => {
+													e.preventDefault();
+													append(`movies.${idx}.coStars`, {
+														firstName: '',
+														lastName: '',
+													});
+												}}
+											>
+												+ Add new
+											</button>
+											{hasError(`movies[${idx}].coStars`) && <span className="error">{errors.movies[idx].coStars.message}</span>}
+											{getValue(`movies[${idx}].coStars`).map((star, jdx) => {
+												return (
+													<div key={key(star)} className="columns is-gapless mb-0">
+														<div className="column">
+															<input
+																type="text"
+																className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'hasError' : ''}
+																{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
+															/>
+															{hasError(`movies[${idx}].coStars[${jdx}].firstName`) && (
+																<span className="error">{errors.movies[idx].coStars[jdx].firstName.message}</span>
+															)}
+														</div>
+
+														<div className="column">
+															<input
+																type="text"
+																className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'hasError' : ''}
+																{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
+															/>
+															{hasError(`movies[${idx}].coStars[${jdx}].lastName`) && (
+																<span className="error">{errors.movies[idx].coStars[jdx].lastName.message}</span>
+															)}
+														</div>
+
+														<div className="column">
+															<button
+																onClick={e => {
+																	e.preventDefault();
+																	remove(`movies[${idx}].coStars`, jdx);
+																}}
+															>
+																-
+															</button>
+														</div>
+													</div>
+												);
+											})}
+										</div>
+									</div>
 								</div>
-								<div className="column">
-									<button
-										onClick={e => {
-											e.preventDefault();
-											remove('movies', idx);
-										}}
-									>
-										-
-									</button>
-								</div>
-							</div>
+							</React.Fragment>
 						);
 					})}
 				</div>
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Radio</label>
 				</div>
-				<div className="column is-half">
+				<div className={rightColumn}>
 					{optionsRadio.map(option => {
 						return (
 							<label key={option.id} className="radio">
@@ -321,13 +386,12 @@ const Demo = () => {
 			</div>
 
 			<div className="columns">
-				<div className="column is-half has-text-right">
+				<div className={leftColumn}>
 					<label>Checkbox</label>
 				</div>
 
-				<div className="column is-half">
+				<div className={rightColumn}>
 					<input type="checkbox" className={hasError('checkbox') ? 'hasError' : ''} {...register('checkbox')} />
-					{hasError('checkbox') && <span className="error">{errors.checkbox.message}</span>}
 				</div>
 			</div>
 
@@ -357,6 +421,12 @@ const optionsRadio = [
 	{ id: '4', name: '4' },
 	{ id: '5', name: '5' },
 ];
+const optionsGenres = [
+	{ id: 0, name: 'Action' },
+	{ id: 1, name: 'Adventure' },
+	{ id: 2, name: 'Fantasy' },
+	{ id: 3, name: 'Thriller' },
+];
 const defaultModel = Object.freeze({
 	title: 'Ms',
 	occupation: ['singer', 'actress'],
@@ -374,6 +444,7 @@ const defaultModel = Object.freeze({
 		{
 			name: 'A View to a Kill',
 			year: new Date('1985-01-01'),
+			genres: [0, 1, 3],
 			coStars: [
 				{
 					firstName: 'Roger',
@@ -384,6 +455,7 @@ const defaultModel = Object.freeze({
 		{
 			name: 'Conan the Destroyer',
 			year: new Date('1984-01-01'),
+			genres: [0, 1, 2],
 			coStars: [
 				{
 					firstName: 'Arnold',

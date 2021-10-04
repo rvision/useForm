@@ -1,8 +1,37 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useKey from './useKey';
 
 const extractPath = string => {
+	if (!string) {
+		return [];
+	}
 	return string.replace(/\[|\]\.?/g, '.').split(/[\.\[\]\'\"]/);
+};
+
+const clone = obj => {
+	if (typeof obj !== 'object' || obj === null) {
+		return obj;
+	}
+
+	if (obj instanceof Date) {
+		return new Date(obj.getTime());
+	}
+
+	if (obj instanceof Array) {
+		return obj.reduce((arr, item, i) => {
+			arr[i] = clone(item);
+			return arr;
+		}, []);
+	}
+
+	if (obj instanceof Object) {
+		return Object.keys(obj).reduce((newObj, key) => {
+			newObj[key] = clone(obj[key]);
+			return newObj;
+		}, {});
+	}
+
+	return obj;
 };
 
 const getDeep = (fullPath, source) => {
@@ -24,7 +53,7 @@ const getDeep = (fullPath, source) => {
 	}
 
 	const next = fullPath[1];
-	const idx = Number(next);
+	const idx = parseInt(next, 10);
 	if (!Number.isNaN(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -46,11 +75,14 @@ const setDeep = (fullPath, target, value) => {
 		return;
 	}
 	const next = fullPath[1];
-	const idx = Number(next);
+	const idx = parseInt(next, 10);
 	if (!Number.isNaN(idx)) {
-		target[path] = target[path] || [];
 		// NOTE: this makes entries undefined instead of empty
-		// target[path] = [...target[path]];
+		// target[path] = target[path] === undefined ? [] : [...target[path]];
+		target[path] = target[path] === undefined ? [] : target[path];
+
+		// NOTE: this line causes inputs to loose focus in .map
+		// target[path][idx] = target[path][idx] === undefined ? {} : { ...target[path][idx] };
 		target[path][idx] = target[path][idx] === undefined ? {} : target[path][idx];
 		if (fullPath.length === 2) {
 			target[path][idx] = value;
@@ -74,7 +106,7 @@ const deleteDeep = (fullPath, target) => {
 		return;
 	}
 	const next = fullPath[1];
-	const idx = Number(next);
+	const idx = parseInt(next, 10);
 	if (!Number.isNaN(idx)) {
 		if (fullPath.length === 2) {
 			delete target[path][idx];
@@ -91,6 +123,10 @@ const useForm = ({ defaultValues = {}, validate }) => {
 	const [errors, setErrors] = useState({});
 	const [isTouched, setIsTouched] = useState(false);
 	const key = useKey();
+
+	useEffect(() => {
+		setValues(clone(defaultValues));
+	}, [defaultValues]);
 
 	const hasError = (fullPath = null) => {
 		if (fullPath === null) {
@@ -109,21 +145,24 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		setValues(values => {
 			const newValues = { ...values };
 			setDeep(pathArray, newValues, value);
+
+			// TODO: revalidateMode, etc
+			if (hasError(fullPath)) {
+				const newValidation = validate(newValues);
+				const error = getDeep(pathArray, newValidation);
+				const newErrors = { ...errors };
+				deleteDeep(pathArray, newErrors);
+				if (error) {
+					setDeep(pathArray, newErrors, error);
+				}
+				setErrors(newErrors);
+			}
+
 			return newValues;
 		});
 
 		if (isTouched === false) {
 			setIsTouched(true);
-		}
-
-		if (hasError(fullPath)) {
-			const newValues = { ...values };
-			setDeep(pathArray, newValues, value);
-			const newValidation = validate(newValues);
-			const error = getDeep(pathArray, newValidation);
-			const newErrors = { ...errors };
-			setDeep(pathArray, newErrors, error);
-			setErrors(newErrors);
 		}
 	};
 
@@ -156,8 +195,9 @@ const useForm = ({ defaultValues = {}, validate }) => {
 	};
 
 	const reset = () => {
-		setValues(defaultValues);
-		setErrors(validate(defaultValues));
+		const newValues = clone(defaultValues);
+		setValues(newValues);
+		setErrors(validate(newValues));
 	};
 
 	const trigger = () => {

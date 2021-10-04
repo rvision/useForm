@@ -9,14 +9,8 @@ const App = () => {
 				<p className="subtitle">testing with native inputs and custom components</p>
 			</div>
 
-			<div className="columns">
-				<div className="column is-8 is-offset-2">
-					<div className="columns">
-						<div className="column">
-							<Demo />
-						</div>
-					</div>
-				</div>
+			<div className="px-6">
+				<Demo />
 			</div>
 		</section>
 	);
