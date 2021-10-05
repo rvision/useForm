@@ -47,19 +47,19 @@ const schema = yup.object().shape({
 const leftColumn = 'column is-one-quarter has-text-right';
 const rightColumn = 'column is-three-quarters';
 
-const selectStyle = {
-	container: provided => ({
-		...provided,
-		fontSize: '13px',
-	}),
-};
+// const selectStyle = {
+// 	container: provided => ({
+// 		...provided,
+// 		fontSize: '13px',
+// 	}),
+// };
 
 const Demo = () => {
-	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, append, remove, hasError, reset, formState } = useForm({
+	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, Error, append, remove, hasError, clearError, reset, formState } = useForm({
 		defaultValues: defaultModel,
 		// mode: 'onSubmit',
 		// reValidateMode: 'onChange',
-		validate: yupResolver(schema),
+		resolver: yupResolver(schema),
 	});
 
 	const { isDirty, errors } = formState;
@@ -75,13 +75,27 @@ const Demo = () => {
 		reset();
 	};
 
-	// console.log('render', errors);
+	console.log('Errors', errors);
 	// console.log('values', values);
 	// console.log('defaultModel', defaultModel);
 
 	return (
 		<div>
 			<h5>{isDirty && <>Dirty</>}</h5>
+			<a
+				onClick={() => {
+					trigger('movies');
+				}}
+			>
+				ValidateMovies
+			</a>
+			<a
+				onClick={() => {
+					clearError('movies[2]');
+				}}
+			>
+				ClearMovies
+			</a>
 			<div className="columns">
 				<div className={leftColumn}>
 					<label>Title</label>
@@ -140,6 +154,7 @@ const Demo = () => {
 							setValue('date', e.target.value);
 						}}
 					/> */}
+
 					{hasError('birthDate') && (
 						<span className="error" aria-live="polite">
 							{errors.birthDate.message}
@@ -159,17 +174,15 @@ const Demo = () => {
 							<input type="text" className={hasError('lastName') ? 'hasError' : ''} {...register('lastName')} />
 
 							{hasError('firstName') && (
-								<>
-									<br />
-									<span className="error">{errors.firstName.message}</span>
-								</>
+								<span className="error" aria-live="polite">
+									{errors.firstName.message}
+								</span>
 							)}
-							<br />
+
 							{hasError('lastName') && (
-								<>
-									<br />
-									<span className="error">{errors.lastName.message}</span>
-								</>
+								<span className="error" aria-live="polite">
+									{errors.lastName.message}
+								</span>
 							)}
 						</div>
 					</div>
@@ -257,7 +270,7 @@ const Demo = () => {
 								<div className="columns is-gapless mb-0">
 									{key(movie)}
 									<div className="column">
-										<input type="text" {...register(`movies[${idx}]name`)} className={hasError(`movies.${idx}.name`) ? 'hasError' : ''} />
+										<input type="text" {...register(`movies[${idx}].name`)} className={hasError(`movies.${idx}.name`) ? 'hasError' : ''} />
 										{hasError(`movies.${idx}.name`) && <span className="error">{errors.movies[idx].name.message}</span>}
 									</div>
 									<div className="column">
@@ -268,30 +281,32 @@ const Demo = () => {
 												setValue(`movies.${idx}.year`, date);
 											}}
 										/>
-										{hasError(`movies[${idx}]year`) && <span className="error">{errors.movies[idx].year.message}</span>}
+										{hasError(`movies[${idx}].year`) && <span className="error">{errors.movies[idx].year.message}</span>}
 									</div>
 									<div className="column is-one-third">
-										<Select
-											styles={selectStyle}
-											placeholder="Select Genre(s)"
-											isMulti
-											isClearable
-											options={optionsGenres}
-											getOptionLabel={option => option.name}
-											getOptionValue={option => option.id}
-											value={optionsGenres.filter(option => getValue(`movies[${idx}].genres`).includes(option.id))}
-											onChange={options => {
-												setValue(
-													`movies[${idx}].genres`,
-													options.map(x => x.id),
-												);
-											}}
-										/>
+										<div className="select-wrapper">
+											<Select
+												// styles={selectStyle}
+												placeholder="Select Genre(s)"
+												isMulti
+												isClearable
+												options={optionsGenres}
+												getOptionLabel={option => option.name}
+												getOptionValue={option => option.id}
+												value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
+												onChange={options => {
+													setValue(
+														`movies.${idx}.genres`,
+														options.map(x => x.id),
+													);
+												}}
+											/>
+										</div>
 										{hasError(`movies.${idx}.genres`) && <span className="error">{errors.movies[idx].genres.message}</span>}
 									</div>
 
 									<div className="column">
-										<input type="range" className="range slider is-fullwidth" step="1" {...register(`movies[${idx}].metaCritic`)} />
+										<input type="range" className="range slider is-fullwidth" step="1" {...register(`movies.${idx}.metaCritic`)} />
 										Metacritic: {getValue(`movies[${idx}].metaCritic`)}%
 									</div>
 									<div className="column">
@@ -371,7 +386,7 @@ const Demo = () => {
 
 			<div className="columns">
 				<div className={leftColumn}>
-					<label>Radio</label>
+					<label>Your rating</label>
 				</div>
 				<div className={rightColumn}>
 					{optionsRadio.map(option => {
@@ -394,7 +409,7 @@ const Demo = () => {
 
 			<div className="columns">
 				<div className={leftColumn}>
-					<label>Checkbox</label>
+					<label>Would recommend?</label>
 				</div>
 
 				<div className={rightColumn}>

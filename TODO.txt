@@ -1,19 +1,29 @@
 TO BE DONE:
 ================================================================================
--sredi delete, možda da bude clear ili tako nešto
-  - za ceo fullpath, svaku varijantu uradi getValue
-  - ako je objekat, vidi koliko ključeva ima
-  - ako je array, vidi koliko elemenata ima i da li su svi undefined ili empty
-  - sve na desno briši iz errors
--prepend/append revalidira grešku
+extractPath skloni svuda osim u 3 funkcije
 
--keširanje split fullPath-a?
+mode
+This option allows you to configure the validation before onSubmit event.
+	Name	Type	Description
+	onSubmit	string	Validation will trigger on the submit event and invalid inputs will attach onChange event listeners to re-validate them.
+	onBlur	string	Validation will trigger on the blur event.
+	onChange	string	Validation will trigger on the change event with each input, and lead to multiple re-renders. Warning: this often comes with a significant impact on performance.
+	onTouched	string
+	Validation will trigger on the first blur event. After that, it will trigger on every change event.
+
+	Note: when using with Controller, make sure to wire up onBlur with the render prop.
+
+	all	string	Validation will trigger on the blur and change events.
+
+reValidateMode: onChange | onBlur | onSubmit = 'onChange'!React Native: Custom register or using Controller
+	This option allows you to configure when inputs with errors get re-validated after submit. By default, validation is only triggered during an input change.
+
+shouldFocusError: true
+
+-error komponenta
+
+-onBlur eventi
 -validacija: kako i kada
 -re-validacija: kako i kada
--onBlur eventi
+-prepend/append revalidira grešku
 
--isDirty: ne radi zbog razlicitih pozicija u array-u console.log(JSON.stringify(newValues) !== defaultValuesJSON);
-	const [defaultValuesJSON, setDefaultValuesJSON] = useState('');
-	useEffect(() => {
-		setDefaultValuesJSON(JSON.stringify(defaultValues));
-	}, [defaultValues]);
