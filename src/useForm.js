@@ -197,40 +197,37 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 		if (fullPath === null) {
 			return Object.keys(errors).length > 0;
 		}
-		return getDeep(extractPath(fullPath), errors) !== undefined;
+		return getDeep(fullPath, errors) !== undefined;
 	};
 
 	const clearError = fullPath => {
 		if (hasError(fullPath)) {
 			const newErrors = { ...errors };
-			deleteDeepToRoot(extractPath(fullPath), newErrors);
+			deleteDeepToRoot(fullPath, newErrors);
 			setErrors(newErrors);
 		}
 	};
 
 	const trigger = (fullPath = null, newValues = values) => {
-		const pathArray = extractPath(fullPath);
 		const newValidation = resolver(newValues);
-		const error = getDeep(pathArray, newValidation);
+		const error = getDeep(fullPath, newValidation);
 		const newErrors = { ...errors };
-		deleteDeepToRoot(pathArray, newErrors);
+		deleteDeepToRoot(fullPath, newErrors);
 		if (error !== undefined) {
-			setDeep(pathArray, newErrors, error);
+			setDeep(fullPath, newErrors, error);
 		}
 		setErrors(newErrors);
 		return newErrors;
 	};
 
 	const getValue = fullPath => {
-		return getDeep(extractPath(fullPath), values);
+		return getDeep(fullPath, values);
 	};
 
 	const setValue = (fullPath, value) => {
-		const pathArray = extractPath(fullPath);
-
 		setValues(values => {
 			const newValues = { ...values };
-			setDeep(pathArray, newValues, value);
+			setDeep(fullPath, newValues, value);
 
 			isDirty.current = defaultValuesJSON.current !== toJSONString(newValues);
 
@@ -248,17 +245,17 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 	};
 
 	const append = (fullPath, object) => {
-		const newArr = [...getDeep(extractPath(fullPath), values), object];
+		const newArr = [...getDeep(fullPath, values), object];
 		setValue(fullPath, newArr);
 	};
 
 	const prepend = (fullPath, object) => {
-		const newArr = [object, ...getDeep(extractPath(fullPath), values)];
+		const newArr = [object, ...getDeep(fullPath, values)];
 		setValue(fullPath, newArr);
 	};
 
 	const remove = (fullPath, idx) => {
-		const newArr = [...getDeep(extractPath(fullPath), values)];
+		const newArr = [...getDeep(fullPath, values)];
 		newArr.splice(idx, 1);
 		setValue(fullPath, newArr);
 	};
@@ -306,7 +303,7 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 
 	const onBlur = name => {
 		return () => {
-			if (getDeep(extractPath(name), trigger(name))) {
+			if (getDeep(name, trigger(name))) {
 				refsMap.current.get(name).focus();
 			}
 		};
@@ -362,7 +359,7 @@ export const yupResolver = schema => {
 					message: error.message,
 					type: error.type,
 				};
-				setDeep(extractPath(error.path), errors, err);
+				setDeep(error.path, errors, err);
 			});
 		}
 		return errors;
