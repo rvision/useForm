@@ -3,7 +3,8 @@ import useKey from './useKey';
 
 const ParseInt = int => parseInt(int, 10);
 const isNumber = num => !Number.isNaN(num);
-const toJSONString = obj => JSON.stringify(obj);
+const toJSONString = JSON.stringify;
+const IsArray = Array.isArray;
 
 let splitCache = {};
 
@@ -46,7 +47,7 @@ const clone = obj => {
 };
 
 const getDeep = (fullPath, source) => {
-	if (!Array.isArray(fullPath)) {
+	if (!IsArray(fullPath)) {
 		return getDeep(extractPath(fullPath), source);
 	}
 
@@ -80,7 +81,7 @@ const getDeep = (fullPath, source) => {
 };
 
 const setDeep = (fullPath, target, value) => {
-	if (!Array.isArray(fullPath)) {
+	if (!IsArray(fullPath)) {
 		setDeep(extractPath(fullPath), target, value);
 		return;
 	}
@@ -116,12 +117,12 @@ const setDeep = (fullPath, target, value) => {
 };
 
 const deleteDeepEntry = (fullPath, target) => {
-	if (!Array.isArray(fullPath)) {
+	if (!IsArray(fullPath)) {
 		deleteDeepEntry(extractPath(fullPath), target);
 		return;
 	}
 
-	if (fullPath.length === 0) {
+	if (fullPath.length === 0 || target === undefined) {
 		return;
 	}
 
@@ -130,6 +131,11 @@ const deleteDeepEntry = (fullPath, target) => {
 		delete target[path];
 		return;
 	}
+
+	if (target[path] === undefined) {
+		return;
+	}
+
 	const next = fullPath[1];
 	const idx = ParseInt(next);
 	if (isNumber(idx)) {
@@ -145,7 +151,7 @@ const deleteDeepEntry = (fullPath, target) => {
 
 // removes all entries to the root of the object
 const deleteDeepToRoot = (fullPath, target) => {
-	if (!Array.isArray(fullPath)) {
+	if (!IsArray(fullPath)) {
 		deleteDeepToRoot(extractPath(fullPath), target);
 		return;
 	}
@@ -161,7 +167,7 @@ const deleteDeepToRoot = (fullPath, target) => {
 	pathsToRoot.forEach(path => {
 		const value = getDeep(path, target);
 		if (value !== undefined) {
-			if (Array.isArray(value)) {
+			if (IsArray(value)) {
 				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
 					deleteDeepEntry(path, target);
 				}
@@ -172,7 +178,7 @@ const deleteDeepToRoot = (fullPath, target) => {
 	});
 };
 
-const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
+const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = false, resolver = () => {} }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const [isTouched, setIsTouched] = useState(false);
@@ -224,16 +230,21 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 		return getDeep(fullPath, values);
 	};
 
-	const setValue = (fullPath, value) => {
+	const setValue = (fullPath, value, reValidate = true) => {
 		setValues(values => {
 			const newValues = { ...values };
 			setDeep(fullPath, newValues, value);
-
 			isDirty.current = defaultValuesJSON.current !== toJSONString(newValues);
 
-			// TODO: revalidateMode, etc
-			if (hasError(fullPath)) {
-				trigger(fullPath, newValues);
+			if (reValidate) {
+				if (mode === 'onSubmit') {
+					if (hasError(fullPath)) {
+						trigger(fullPath, newValues);
+					}
+				}
+				if (mode === 'onChange' || mode === 'onBlur') {
+					trigger(fullPath, newValues);
+				}
 			}
 
 			return newValues;
@@ -244,17 +255,29 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 		}
 	};
 
+	const clearArrayObjectError = fullPath => {
+		const arrError = getDeep(fullPath, errors);
+		if (arrError && !IsArray(arrError)) {
+			const newErrors = { ...errors };
+			deleteDeepToRoot(fullPath, newErrors);
+			setErrors(newErrors);
+		}
+	};
+
 	const append = (fullPath, object) => {
+		clearArrayObjectError(fullPath);
 		const newArr = [...getDeep(fullPath, values), object];
-		setValue(fullPath, newArr);
+		setValue(fullPath, newArr, false);
 	};
 
 	const prepend = (fullPath, object) => {
+		clearArrayObjectError(fullPath);
 		const newArr = [object, ...getDeep(fullPath, values)];
-		setValue(fullPath, newArr);
+		setValue(fullPath, newArr, false);
 	};
 
 	const remove = (fullPath, idx) => {
+		clearArrayObjectError(fullPath);
 		const newArr = [...getDeep(fullPath, values)];
 		newArr.splice(idx, 1);
 		setValue(fullPath, newArr);
@@ -264,11 +287,12 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 		const newValues = clone(defaultValues);
 		setValues(newValues);
 		setErrors(resolver(newValues));
+		setIsTouched(false);
 		isDirty.current = defaultValuesJSON === toJSONString(newValues);
 	};
 
 	// basic html form inputs
-	const onChangeNative = e => {
+	const onChange = e => {
 		const { name, type, checked, options, files } = e.target;
 		let { value } = e.target;
 		switch (type) {
@@ -304,7 +328,9 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 	const onBlur = name => {
 		return () => {
 			if (getDeep(name, trigger(name))) {
-				refsMap.current.get(name).focus();
+				if (shouldFocusError) {
+					refsMap.current.get(name).focus();
+				}
 			}
 		};
 	};
@@ -314,12 +340,16 @@ const useForm = ({ defaultValues = {}, resolver = () => {} }) => {
 			name,
 			value: getValue(name),
 			checked: getValue(name),
-			onChange: onChangeNative,
-			// onBlur: onBlur(name),
-			ref: element => {
-				refsMap.current.set(name, element);
-			},
+			onChange,
 		};
+
+		if (mode === 'onBlur') {
+			props.onBlur = onBlur(name);
+			props.ref = element => {
+				refsMap.current.set(name, element);
+			};
+		}
+
 		return props;
 	};
 

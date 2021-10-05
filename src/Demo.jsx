@@ -57,8 +57,11 @@ const rightColumn = 'column is-three-quarters';
 const Demo = () => {
 	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, Error, append, remove, hasError, clearError, reset, formState } = useForm({
 		defaultValues: defaultModel,
+		mode: 'onSubmit',
 		// mode: 'onSubmit',
+		// mode: 'onChange',
 		// reValidateMode: 'onChange',
+		shouldFocusError: false,
 		resolver: yupResolver(schema),
 	});
 
@@ -196,7 +199,7 @@ const Demo = () => {
 						<button
 							onClick={e => {
 								e.preventDefault();
-								append('albums', { name: '', releaseDate: null });
+								prepend('albums', { name: '', releaseDate: null });
 							}}
 						>
 							+ Add new

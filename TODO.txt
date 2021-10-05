@@ -1,24 +1,25 @@
 TO BE DONE:
 ================================================================================
-extractPath skloni svuda osim u 3 funkcije
+
 
 mode
 This option allows you to configure the validation before onSubmit event.
-	Name	Type	Description
-	onSubmit	string	Validation will trigger on the submit event and invalid inputs will attach onChange event listeners to re-validate them.
-	onBlur	string	Validation will trigger on the blur event.
-	onChange	string	Validation will trigger on the change event with each input, and lead to multiple re-renders. Warning: this often comes with a significant impact on performance.
+	* onSubmit	string	Validation will trigger on the submit event and invalid inputs will attach onChange event listeners to re-validate them.
+
+	* onChange	string	Validation will trigger on the change event with each input, and lead to multiple re-renders.
+	Warning: this often comes with a significant impact on performance.
+
+	* onBlur	string	Validation will trigger on the blur event.
+
 	onTouched	string
 	Validation will trigger on the first blur event. After that, it will trigger on every change event.
 
-	Note: when using with Controller, make sure to wire up onBlur with the render prop.
-
 	all	string	Validation will trigger on the blur and change events.
+* shouldFocusError: true
 
-reValidateMode: onChange | onBlur | onSubmit = 'onChange'!React Native: Custom register or using Controller
+reValidateMode: onChange | onBlur | onSubmit = 'onChange'
+
 	This option allows you to configure when inputs with errors get re-validated after submit. By default, validation is only triggered during an input change.
-
-shouldFocusError: true
 
 -error komponenta
 
