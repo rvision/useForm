@@ -62,7 +62,7 @@ const Demo = () => {
 		validate: yupResolver(schema),
 	});
 
-	const { errors } = formState;
+	const { isDirty, errors } = formState;
 
 	const onSubmit = vals => {
 		// e.preventDefault();
@@ -81,6 +81,7 @@ const Demo = () => {
 
 	return (
 		<div>
+			<h5>{isDirty && <>Dirty</>}</h5>
 			<div className="columns">
 				<div className={leftColumn}>
 					<label>Title</label>
@@ -238,6 +239,7 @@ const Demo = () => {
 									name: '',
 									year: null,
 									genres: [],
+									metaCritic: 50,
 									coStars: [],
 								});
 							}}
@@ -286,6 +288,11 @@ const Demo = () => {
 											}}
 										/>
 										{hasError(`movies.${idx}.genres`) && <span className="error">{errors.movies[idx].genres.message}</span>}
+									</div>
+
+									<div className="column">
+										<input type="range" className="range slider is-fullwidth" step="1" {...register(`movies[${idx}].metaCritic`)} />
+										Metacritic: {getValue(`movies[${idx}].metaCritic`)}%
 									</div>
 									<div className="column">
 										<button
@@ -429,7 +436,7 @@ const optionsGenres = [
 ];
 const defaultModel = Object.freeze({
 	title: 'Ms',
-	occupation: ['singer', 'actress'],
+	occupation: ['actress', 'singer'],
 	firstName: 'Grace',
 	lastName: 'Jones',
 	radio: '3',
@@ -445,6 +452,7 @@ const defaultModel = Object.freeze({
 			name: 'A View to a Kill',
 			year: new Date('1985-01-01'),
 			genres: [0, 1, 3],
+			metaCritic: 40,
 			coStars: [
 				{
 					firstName: 'Roger',
@@ -456,6 +464,7 @@ const defaultModel = Object.freeze({
 			name: 'Conan the Destroyer',
 			year: new Date('1984-01-01'),
 			genres: [0, 1, 2],
+			metaCritic: 53,
 			coStars: [
 				{
 					firstName: 'Arnold',

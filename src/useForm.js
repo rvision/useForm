@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
 const extractPath = string => {
@@ -122,9 +122,13 @@ const useForm = ({ defaultValues = {}, validate }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const [isTouched, setIsTouched] = useState(false);
+	const defaultValuesJSON = useRef('');
+	const isDirty = useRef(false);
 	const key = useKey();
 
 	useEffect(() => {
+		defaultValuesJSON.current = JSON.stringify(defaultValues);
+		isDirty.current = false;
 		setValues(clone(defaultValues));
 	}, [defaultValues]);
 
@@ -145,6 +149,8 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		setValues(values => {
 			const newValues = { ...values };
 			setDeep(pathArray, newValues, value);
+
+			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
 			// TODO: revalidateMode, etc
 			if (hasError(fullPath)) {
@@ -198,6 +204,7 @@ const useForm = ({ defaultValues = {}, validate }) => {
 		const newValues = clone(defaultValues);
 		setValues(newValues);
 		setErrors(validate(newValues));
+		isDirty.current = defaultValuesJSON === JSON.stringify(newValues);
 	};
 
 	const trigger = () => {
@@ -214,6 +221,9 @@ const useForm = ({ defaultValues = {}, validate }) => {
 				break;
 			case 'checkbox':
 				value = checked;
+				break;
+			case 'range':
+				value = parseInt(value, 10);
 				break;
 			case 'file':
 				[value] = files;
@@ -264,6 +274,7 @@ const useForm = ({ defaultValues = {}, validate }) => {
 			errors,
 			isValid: hasError(),
 			isTouched,
+			isDirty: isDirty.current,
 		},
 	};
 };
@@ -272,10 +283,10 @@ export default useForm;
 
 export const yupResolver = schema => {
 	return fields => {
+		const errors = {};
 		try {
 			schema.validateSync(fields, { abortEarly: false });
 		} catch (validationError) {
-			const errors = {};
 			validationError.inner.forEach(error => {
 				const err = {
 					message: error.message,
@@ -283,8 +294,7 @@ export const yupResolver = schema => {
 				};
 				setDeep(extractPath(error.path), errors, err);
 			});
-			return errors;
 		}
-		return {};
+		return errors;
 	};
 };
