@@ -345,7 +345,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const handleSubmit = onSubmitHandler => {
 		return e => {
-			e.preventDefault();
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+
 			const errors = resolver(values) || {};
 			setErrors(errors);
 			if (Object.keys(errors).length === 0) {
