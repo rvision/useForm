@@ -15,3 +15,14 @@ blablabla
 --------------- | ------------- | --------------------------------------------------------------
 companyId       | guid          | Company identifier (required field)
 id              | guid[]        | Recurring template id (required field)
+
+#### features
+- Import a HTML file and watch it magically convert to Markdown
+- Drag and drop images (requires your Dropbox account be linked)
+- [Breakdance](https://breakdance.github.io/breakdance/) - HTML to Markdown converter
+
+## License
+
+MIT
+
+**Free Software, Hell Yeah!**
