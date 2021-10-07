@@ -25,14 +25,14 @@ const useKey = () => {
 		};
 	}, []);
 
-	const keyFn = useCallback(object => {
-		if (!compatibleKeyTypes.includes(typeof object)) {
-			return `key-${object}`;
-		}
-
+	const keyFn = useCallback((object = {}) => {
 		const c = map.current;
 		if (c.has(object)) {
 			return c.get(object);
+		}
+
+		if (!compatibleKeyTypes.includes(typeof object)) {
+			return `key-${object}`;
 		}
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString
 		const key = (++now).toString(36);
