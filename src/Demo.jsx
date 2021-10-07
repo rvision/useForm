@@ -247,7 +247,7 @@ const Demo = () => {
 								e.preventDefault();
 								append('movies', {
 									name: '',
-									year: new Date(`${2000 + i}`),
+									year: null,
 									genres: [],
 									metaCritic: 11,
 									coStars: [],
