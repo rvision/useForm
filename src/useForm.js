@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
 const ParseInt = int => parseInt(int, 10);
+const ParseFloat = Number.parseFloat;
 const isNumber = num => !Number.isNaN(num);
 const toJSONString = JSON.stringify;
 const IsArray = Array.isArray;
+const splitRegEx = /\[([^\]]+)\]/g;
 
 let splitCache = {};
-
 const extractPath = string => {
 	if (!string) {
 		return [];
@@ -15,7 +16,7 @@ const extractPath = string => {
 	if (splitCache[string]) {
 		return splitCache[string];
 	}
-	const split = string.replace(/\[([^\]]+)\]/g, '.$1').split('.');
+	const split = string.replace(splitRegEx, '.$1').split('.');
 	splitCache[string] = split;
 	return split;
 };
@@ -168,10 +169,12 @@ const deleteDeepToRoot = (fullPath, target) => {
 		const value = getDeep(path, target);
 		if (value !== undefined) {
 			if (IsArray(value)) {
+				// check if array is empty (no items) or each of them is undefined/empty
 				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
 					deleteDeepEntry(path, target);
 				}
-			} else if (Object.keys(value || {}).length === 0) {
+			} // check if object is empty
+			else if (Object.keys(value || {}).length === 0) {
 				deleteDeepEntry(path, target);
 			}
 		}
@@ -195,13 +198,15 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	useEffect(() => {
 		return () => {
+			// cleanup
+			refsMap.current = new Map();
 			splitCache = {};
 		};
 	}, []);
 
 	const hasError = (fullPath = null) => {
 		if (fullPath === null) {
-			return Object.keys(errors).length > 0;
+			return Object.keys(errors || {}).length > 0;
 		}
 		return getDeep(fullPath, errors) !== undefined;
 	};
@@ -215,7 +220,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	const trigger = (fullPath = null, newValues = values) => {
-		const newValidation = resolver(newValues);
+		const newValidation = resolver(newValues) || {};
 		const error = getDeep(fullPath, newValidation);
 		const newErrors = { ...errors };
 		deleteDeepToRoot(fullPath, newErrors);
@@ -230,13 +235,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return getDeep(fullPath, values);
 	};
 
-	const setValue = (fullPath, value, reValidate = true) => {
+	const setValue = (fullPath, value, validate = true) => {
 		setValues(values => {
 			const newValues = { ...values };
 			setDeep(fullPath, newValues, value);
 			isDirty.current = defaultValuesJSON.current !== toJSONString(newValues);
 
-			if (reValidate) {
+			if (validate) {
 				if (mode === 'onSubmit') {
 					if (hasError(fullPath)) {
 						trigger(fullPath, newValues);
@@ -246,7 +251,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 					trigger(fullPath, newValues);
 				}
 			}
-
 			return newValues;
 		});
 
@@ -264,6 +268,16 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		}
 	};
 
+	const moveErrors = (fullPath, callback) => {
+		const arrError = getDeep(fullPath, errors);
+		if (arrError && IsArray(arrError)) {
+			const newErrors = { ...errors };
+			const newArrErrrors = callback([...arrError]);
+			setDeep(fullPath, newErrors, newArrErrrors);
+			setErrors(newErrors);
+		}
+	};
+
 	const append = (fullPath, object) => {
 		clearArrayObjectError(fullPath);
 		const newArr = [...getDeep(fullPath, values), object];
@@ -274,24 +288,23 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		clearArrayObjectError(fullPath);
 		const newArr = [object, ...getDeep(fullPath, values)];
 		setValue(fullPath, newArr, false);
+
+		moveErrors(fullPath, arrErrors => [undefined, ...arrErrors]);
 	};
 
 	const remove = (fullPath, idx) => {
 		clearArrayObjectError(fullPath);
 		const newArr = [...getDeep(fullPath, values)];
 		newArr.splice(idx, 1);
-		setValue(fullPath, newArr);
+		setValue(fullPath, newArr, false);
+		clearError(`${fullPath}.${idx}`);
+
+		moveErrors(fullPath, arrErrors => {
+			arrErrors.splice(idx, 1);
+			return arrErrors;
+		});
 	};
 
-	const reset = () => {
-		const newValues = clone(defaultValues);
-		setValues(newValues);
-		setErrors(resolver(newValues));
-		setIsTouched(false);
-		isDirty.current = defaultValuesJSON === toJSONString(newValues);
-	};
-
-	// basic html form inputs
 	const onChange = e => {
 		const { name, type, checked, options, files } = e.target;
 		let { value } = e.target;
@@ -304,6 +317,12 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			case 'range':
 				value = ParseInt(value);
 				break;
+			case 'number':
+				value = ParseFloat(value);
+				if (!isNumber(value)) {
+					value = undefined;
+				}
+				break;
 			case 'file':
 				[value] = files;
 				break;
@@ -314,10 +333,20 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		setValue(name, value);
 	};
 
+	const onBlur = name => {
+		return () => {
+			if (getDeep(name, trigger(name))) {
+				if (shouldFocusError === true) {
+					refsMap.current.get(name).focus();
+				}
+			}
+		};
+	};
+
 	const handleSubmit = onSubmitHandler => {
 		return e => {
 			e.preventDefault();
-			const errors = resolver(values);
+			const errors = resolver(values) || {};
 			setErrors(errors);
 			if (Object.keys(errors).length === 0) {
 				onSubmitHandler(values);
@@ -325,23 +354,31 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		};
 	};
 
-	const onBlur = name => {
-		return () => {
-			if (getDeep(name, trigger(name))) {
-				if (shouldFocusError) {
-					refsMap.current.get(name).focus();
-				}
-			}
-		};
+	const reset = (model = defaultValues, validate = true) => {
+		const newValues = clone(model);
+		setValues(newValues);
+		setIsTouched(false);
+		isDirty.current = false;
+		if (validate) {
+			setErrors(resolver(newValues) || {});
+		}
 	};
 
 	const register = name => {
 		const props = {
 			name,
-			value: getValue(name),
-			checked: getValue(name),
 			onChange,
+			ref: element => {
+				refsMap.current.set(name, element);
+			},
 		};
+
+		const value = getValue(name);
+		if (value === true || value === false) {
+			props.checked = value;
+		} else {
+			props.value = value || '';
+		}
 
 		if (mode === 'onBlur') {
 			props.onBlur = onBlur(name);
@@ -353,6 +390,14 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return props;
 	};
 
+	const Error = ({ for: path, children }) => {
+		const err = getDeep(path, errors);
+		if (!err) {
+			return false;
+		}
+		return <>{typeof children === 'function' ? children(err) : <span className="error">{err.message}</span>}</>;
+	};
+
 	return {
 		getValue,
 		values,
@@ -361,6 +406,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		trigger,
 		handleSubmit,
 		hasError,
+		Error,
 		clearError,
 		append,
 		prepend,
