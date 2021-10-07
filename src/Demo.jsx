@@ -175,7 +175,7 @@ const Demo = () => {
 				<div className={rightColumn}>
 					<div className="columns is-gapless">
 						<div className="column">
-							<input type="text" className={hasError('firstName') ? 'hasError' : ''} {...register('firstName')} />
+							<input type="text" {...register('firstName')} className={hasError('firstName') ? 'hasError' : ''} />
 							<input type="text" className={hasError('lastName') ? 'hasError' : ''} {...register('lastName')} />
 
 							<Error for="firstName">{({ message }) => <span className="error">{message}</span>}</Error>
@@ -247,9 +247,9 @@ const Demo = () => {
 								e.preventDefault();
 								append('movies', {
 									name: '',
-									year: null,
+									year: new Date(`${2000 + i}`),
 									genres: [],
-									metaCritic: 50,
+									metaCritic: 11,
 									coStars: [],
 								});
 							}}
@@ -285,7 +285,6 @@ const Demo = () => {
 									<div className="column is-one-third">
 										<div className="select-wrapper">
 											<Select
-												// styles={selectStyle}
 												placeholder="Select Genre(s)"
 												isMulti
 												isClearable
@@ -304,7 +303,7 @@ const Demo = () => {
 									</div>
 
 									<div className="column">
-										<input type="number" step="1" {...register(`movies.${idx}.metaCritic`)} />
+										<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
 										Metacritic: {getValue(`movies[${idx}].metaCritic`)}%
 										{hasError(`movies.${idx}.metaCritic`) && <span className="error">{errors.movies[idx].metaCritic.message}</span>}
 									</div>

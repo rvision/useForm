@@ -377,7 +377,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		if (value === true || value === false) {
 			props.checked = value;
 		} else {
-			props.value = value || '';
+			props.value = `${value}` === '0' ? value : value || '';
 		}
 
 		if (mode === 'onBlur') {
@@ -399,20 +399,20 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	return {
-		getValue,
 		values,
+		getValue,
 		setValue,
 		register,
 		trigger,
 		handleSubmit,
 		hasError,
-		Error,
 		clearError,
 		append,
 		prepend,
 		remove,
 		key,
 		reset,
+		Error,
 		formState: {
 			errors,
 			isValid: hasError(),

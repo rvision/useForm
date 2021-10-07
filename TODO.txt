@@ -1,5 +1,17 @@
 TO BE DONE:
 ================================================================================
+Error komponenta
+
+
+-prepend/append array?
+-onSubmit string u konstantu
+
+onChange?
+setValue
+{
+	shouldValidate: true,
+	shouldDirty: true
+}
 
 
 mode
@@ -27,4 +39,8 @@ reValidateMode: onChange | onBlur | onSubmit = 'onChange'
 -validacija: kako i kada
 -re-validacija: kako i kada
 -prepend/append revalidira grešku
+
+-focus za prepend/append? prvi prop? ne radi, jer ceo render nije okinut
+const name = `${fullPath}.${newArr.length - 1}.${Object.keys(object)[0]}`;
+refsMap.current.get(name).focus();
 
