@@ -29,11 +29,12 @@ const schema = yup.object().shape({
 			yup.object().shape({
 				name: yup.string().required('Please enter movie name'),
 				year: yup.date().nullable().required('Movie year is required').typeError('Invalid format'),
-				genres: yup.array().ensure().min(1, 'Please enter at least 1 genre'),
+				metaCritic: yup.number().nullable().required('Metacritic rating is required').typeError('Invalid format'),
+				genres: yup.array().ensure().min(1, 'Please enter at least 1 movie genre'),
 				coStars: yup
 					.array()
 					.ensure()
-					.min(1, 'Please enter at least 1 co-star')
+					.min(1, 'Please enter at least 1 movie co-star')
 					.of(
 						yup.object().shape({
 							firstName: yup.string().required('Please enter first name'),
@@ -55,7 +56,7 @@ const rightColumn = 'column is-three-quarters';
 // };
 
 const Demo = () => {
-	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, Error, append, remove, hasError, clearError, reset, formState } = useForm({
+	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, append, remove, hasError, clearError, Error, reset, formState } = useForm({
 		defaultValues: defaultModel,
 		mode: 'onSubmit',
 		// mode: 'onSubmit',
@@ -141,6 +142,8 @@ const Demo = () => {
 				</div>
 				<div className={rightColumn}>
 					<ReactDatePicker
+						showMonthDropdown
+						showYearDropdown
 						selected={getValue('birthDate')}
 						className={hasError('birthDate') ? 'hasError' : ''}
 						onChange={date => {
@@ -157,7 +160,6 @@ const Demo = () => {
 							setValue('date', e.target.value);
 						}}
 					/> */}
-
 					{hasError('birthDate') && (
 						<span className="error" aria-live="polite">
 							{errors.birthDate.message}
@@ -176,17 +178,8 @@ const Demo = () => {
 							<input type="text" className={hasError('firstName') ? 'hasError' : ''} {...register('firstName')} />
 							<input type="text" className={hasError('lastName') ? 'hasError' : ''} {...register('lastName')} />
 
-							{hasError('firstName') && (
-								<span className="error" aria-live="polite">
-									{errors.firstName.message}
-								</span>
-							)}
-
-							{hasError('lastName') && (
-								<span className="error" aria-live="polite">
-									{errors.lastName.message}
-								</span>
-							)}
+							<Error for="firstName">{({ message }) => <span className="error">{message}</span>}</Error>
+							<Error for="lastName" />
 						</div>
 					</div>
 				</div>
@@ -217,17 +210,18 @@ const Demo = () => {
 								<div className="column">
 									{k}
 									<input type="text" {...register(`albums.${idx}.name`)} className={hasError(`albums.${idx}.name`) ? 'hasError' : ''} />
-									{hasError(`albums.${idx}.name`) && <span className="error">{errors.albums[idx].name.message}</span>}
+									<Error for={`albums.${idx}.name`} />
 								</div>
 								<div className="column">
 									<ReactDatePicker
+										showYearDropdown
 										selected={getValue(`albums.${idx}.releaseDate`)}
 										className={hasError(`albums.${idx}.releaseDate`) ? 'hasError' : ''}
 										onChange={date => {
 											setValue(`albums.${idx}.releaseDate`, date);
 										}}
 									/>
-									{hasError(`albums.${idx}.releaseDate`) && <span className="error">{errors.albums[idx].releaseDate.message}</span>}
+									<Error for={`albums.${idx}.releaseDate`} />
 								</div>
 								<div className="column">
 									<button
@@ -278,6 +272,8 @@ const Demo = () => {
 									</div>
 									<div className="column">
 										<ReactDatePicker
+											dateFormat="yyyy"
+											showYearPicker
 											selected={getValue(`movies.${idx}.year`)}
 											className={hasError(`movies.${idx}.year`) ? 'hasError' : ''}
 											onChange={date => {
@@ -298,10 +294,9 @@ const Demo = () => {
 												getOptionValue={option => option.id}
 												value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
 												onChange={options => {
-													setValue(
-														`movies.${idx}.genres`,
-														options.map(x => x.id),
-													);
+													const optionIds = options.map(x => x.id);
+													const picked = optionsGenres.filter(option => optionIds.includes(option.id)).map(x => x.id);
+													setValue(`movies.${idx}.genres`, picked);
 												}}
 											/>
 										</div>
@@ -309,8 +304,9 @@ const Demo = () => {
 									</div>
 
 									<div className="column">
-										<input type="range" className="range slider is-fullwidth" step="1" {...register(`movies.${idx}.metaCritic`)} />
+										<input type="number" step="1" {...register(`movies.${idx}.metaCritic`)} />
 										Metacritic: {getValue(`movies[${idx}].metaCritic`)}%
+										{hasError(`movies.${idx}.metaCritic`) && <span className="error">{errors.movies[idx].metaCritic.message}</span>}
 									</div>
 									<div className="column">
 										<button
@@ -452,6 +448,39 @@ const optionsGenres = [
 	{ id: 2, name: 'Fantasy' },
 	{ id: 3, name: 'Thriller' },
 ];
+
+// const coStars = new Array(1000).fill(1).map((x, idx) => {
+// 	return {
+// 		firstName: `Actor ${idx}`,
+// 		lastName: `Actor ${idx}`,
+// 	};
+// });
+
+const resetModel = Object.freeze({
+	title: 'Mr',
+	occupation: [],
+	firstName: 'Michael',
+	lastName: 'Fox',
+	radio: '3',
+	checkbox: false,
+	birthDate: new Date('1948-05-19'),
+	albums: [{ name: 'Power Of Love', releaseDate: new Date('1980-05-09') }],
+	movies: [
+		{
+			name: 'Back To The Future',
+			year: new Date('1985-01-01'),
+			genres: [0, 1, 3],
+			metaCritic: 40,
+			coStars: [
+				{
+					firstName: 'Roger',
+					lastName: 'Moore',
+				},
+			],
+		},
+	],
+});
+
 const defaultModel = Object.freeze({
 	title: 'Ms',
 	occupation: ['actress', 'singer'],
