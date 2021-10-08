@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "author": "Nenad Rogic <nenad.rogic@gmail.com>",
-  "keywords": [],
+  "keywords": ["react","form","forms"],
   "private": true,
   "main": "index.js",
   "browserslist": [
