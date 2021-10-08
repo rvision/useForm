@@ -7,6 +7,7 @@ const isNumber = num => !Number.isNaN(num);
 const toJSONString = JSON.stringify;
 const IsArray = Array.isArray;
 const splitRegEx = /\[([^\]]+)\]/g;
+const ObjectKeys = Object.keys;
 
 let splitCache = {};
 const extractPath = string => {
@@ -30,7 +31,7 @@ const clone = obj => {
 		return new Date(obj.getTime());
 	}
 
-	if (obj instanceof Array) {
+	if (IsArray(obj)) {
 		return obj.reduce((arr, item, i) => {
 			arr[i] = clone(item);
 			return arr;
@@ -38,7 +39,7 @@ const clone = obj => {
 	}
 
 	if (obj instanceof Object) {
-		return Object.keys(obj).reduce((newObj, key) => {
+		return ObjectKeys(obj).reduce((newObj, key) => {
 			newObj[key] = clone(obj[key]);
 			return newObj;
 		}, {});
@@ -170,11 +171,11 @@ const deleteDeepToRoot = (fullPath, target) => {
 		if (value !== undefined) {
 			if (IsArray(value)) {
 				// check if array is empty (no items) or each of them is undefined/empty
-				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
+				if (value.length === 0 || value.every(item => ObjectKeys(item || {}).length === 0)) {
 					deleteDeepEntry(path, target);
 				}
 			} // check if object is empty
-			else if (Object.keys(value || {}).length === 0) {
+			else if (ObjectKeys(value || {}).length === 0) {
 				deleteDeepEntry(path, target);
 			}
 		}
@@ -206,7 +207,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const hasError = (fullPath = null) => {
 		if (fullPath === null) {
-			return Object.keys(errors || {}).length > 0;
+			return ObjectKeys(errors || {}).length > 0;
 		}
 		return getDeep(fullPath, errors) !== undefined;
 	};
@@ -351,7 +352,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 			const errors = resolver(values) || {};
 			setErrors(errors);
-			if (Object.keys(errors).length === 0) {
+			if (ObjectKeys(errors).length === 0) {
 				onSubmitHandler(values);
 			}
 		};
