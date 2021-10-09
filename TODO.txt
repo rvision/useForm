@@ -1,14 +1,5 @@
 TO BE DONE:
 ================================================================================
-ovo pravi problem:
-
-clearArrayObjectError(fullPath);
-moveErrors(fullPath, arrErrors => {
-	arrErrors.splice(idx, 1);
-	return arrErrors;
-});
-
-
 -prepend/append array?
 -onSubmit string u konstantu
 

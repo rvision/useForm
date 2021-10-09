@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
@@ -5,7 +6,7 @@ const isNumber = num => !Number.isNaN(num);
 
 const splitRegEx = /\[([^\]]+)\]/g;
 let splitCache = {};
-const extractPath = string => {
+const _extractPath = string => {
 	if (!string) {
 		return [];
 	}
@@ -17,7 +18,7 @@ const extractPath = string => {
 	return split;
 };
 
-const clone = obj => {
+const _clone = obj => {
 	if (typeof obj !== 'object' || obj === null) {
 		return obj;
 	}
@@ -28,14 +29,14 @@ const clone = obj => {
 
 	if (Array.isArray(obj)) {
 		return obj.reduce((arr, item, i) => {
-			arr[i] = clone(item);
+			arr[i] = _clone(item);
 			return arr;
 		}, []);
 	}
 
 	if (obj instanceof Object) {
 		return Object.keys(obj).reduce((newObj, key) => {
-			newObj[key] = clone(obj[key]);
+			newObj[key] = _clone(obj[key]);
 			return newObj;
 		}, {});
 	}
@@ -43,9 +44,9 @@ const clone = obj => {
 	return obj;
 };
 
-const getDeep = (fullPath, source) => {
+const _getNested = (fullPath, source) => {
 	if (!Array.isArray(fullPath)) {
-		return getDeep(extractPath(fullPath), source);
+		return _getNested(_extractPath(fullPath), source);
 	}
 
 	if (source === undefined) {
@@ -71,15 +72,15 @@ const getDeep = (fullPath, source) => {
 		if (fullPath.length === 2) {
 			return source[path][idx];
 		}
-		return getDeep(fullPath.slice(2), source[path][idx]);
+		return _getNested(fullPath.slice(2), source[path][idx]);
 	}
 
-	return getDeep(fullPath.slice(1), source[path]);
+	return _getNested(fullPath.slice(1), source[path]);
 };
 
-const setDeep = (fullPath, target, value) => {
+const _setNested = (fullPath, target, value) => {
 	if (!Array.isArray(fullPath)) {
-		setDeep(extractPath(fullPath), target, value);
+		_setNested(_extractPath(fullPath), target, value);
 		return;
 	}
 
@@ -105,17 +106,17 @@ const setDeep = (fullPath, target, value) => {
 		if (fullPath.length === 2) {
 			target[path][idx] = value;
 		} else {
-			setDeep(fullPath.slice(2), target[path][idx], value);
+			_setNested(fullPath.slice(2), target[path][idx], value);
 		}
 	} else {
 		target[path] = target[path] === undefined ? {} : { ...target[path] };
-		setDeep(fullPath.slice(1), target[path], value);
+		_setNested(fullPath.slice(1), target[path], value);
 	}
 };
 
-const deleteDeepEntry = (fullPath, target) => {
+const _deleteNested = (fullPath, target) => {
 	if (!Array.isArray(fullPath)) {
-		deleteDeepEntry(extractPath(fullPath), target);
+		_deleteNested(_extractPath(fullPath), target);
 		return;
 	}
 
@@ -139,21 +140,21 @@ const deleteDeepEntry = (fullPath, target) => {
 		if (fullPath.length === 2) {
 			delete target[path][idx];
 		} else {
-			deleteDeepEntry(fullPath.slice(2), target[path][idx]);
+			_deleteNested(fullPath.slice(2), target[path][idx]);
 		}
 	} else {
-		deleteDeepEntry(fullPath.slice(1), target[path][idx]);
+		_deleteNested(fullPath.slice(1), target[path][idx]);
 	}
 };
 
 // removes all entries to the root of the object
-const deleteDeepToRoot = (fullPath, target) => {
+const _deleteNestedToRoot = (fullPath, target) => {
 	if (!Array.isArray(fullPath)) {
-		deleteDeepToRoot(extractPath(fullPath), target);
+		_deleteNestedToRoot(_extractPath(fullPath), target);
 		return;
 	}
 
-	deleteDeepEntry(fullPath, target);
+	_deleteNested(fullPath, target);
 
 	// make array of paths to the root of the object, starting from deepest one
 	const pathsToRoot = fullPath.map((part, idx) => {
@@ -162,79 +163,102 @@ const deleteDeepToRoot = (fullPath, target) => {
 
 	// delete paths from deepest to shallowest
 	pathsToRoot.forEach(path => {
-		const value = getDeep(path, target);
+		const value = _getNested(path, target);
 		if (value !== undefined) {
 			if (Array.isArray(value)) {
 				// check if array is empty (no items) or each of them is undefined/empty
 				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
-					deleteDeepEntry(path, target);
+					_deleteNested(path, target);
 				}
 			} // check if object is empty
 			else if (Object.keys(value || {}).length === 0) {
-				deleteDeepEntry(path, target);
+				_deleteNested(path, target);
 			}
 		}
 	});
+};
+
+// clears error if exists and not array of errors (root array arror, e.g. min items)
+const _clearObjectError = (fullPath, targetErrors) => {
+	const arrError = _getNested(fullPath, targetErrors);
+	if (arrError && !Array.isArray(arrError)) {
+		const newErrors = { ...targetErrors };
+		_deleteNestedToRoot(fullPath, newErrors);
+		return newErrors;
+	}
+	return targetErrors;
+};
+
+// shifts errors in array for prepend/remove operations
+const _shiftErrors = (fullPath, targetErrors, callback) => {
+	const arrError = _getNested(fullPath, targetErrors);
+	if (arrError && Array.isArray(arrError)) {
+		const newErrors = { ...targetErrors };
+		const newArrErrrors = callback([...arrError]);
+		_setNested(fullPath, newErrors, newArrErrrors);
+		return newErrors;
+	}
+	return targetErrors;
 };
 
 const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = false, resolver = () => {} }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const [isTouched, setIsTouched] = useState(false);
+	const isDirty = useRef(false);
 	const defaultValuesJSON = useRef('');
 	const refsMap = useRef(new Map());
-	const isDirty = useRef(false);
 	const key = useKey();
 
 	useEffect(() => {
 		defaultValuesJSON.current = JSON.stringify(defaultValues);
 		isDirty.current = false;
-		setValues(clone(defaultValues));
+		setValues(_clone(defaultValues));
 	}, [defaultValues]);
 
 	useEffect(() => {
 		return () => {
-			// cleanup
-			refsMap.current = new Map();
-			splitCache = {};
+			splitCache = {}; // cleanup
 		};
 	}, []);
 
-	const hasError = (fullPath = null) => {
+	const hasError = (fullPath = null, targetErrors = errors) => {
 		if (fullPath === null) {
-			return Object.keys(errors || {}).length > 0;
+			return Object.keys(targetErrors || {}).length > 0;
 		}
-		return getDeep(fullPath, errors) !== undefined;
+		return _getNested(fullPath, targetErrors) !== undefined;
 	};
 
-	const clearError = fullPath => {
+	const clearError = (fullPath, targetErrors = errors) => {
 		if (hasError(fullPath)) {
-			const newErrors = { ...errors };
-			deleteDeepToRoot(fullPath, newErrors);
+			const newErrors = { ...targetErrors };
+			_deleteNestedToRoot(fullPath, newErrors);
 			setErrors(newErrors);
+			return newErrors;
 		}
+		return targetErrors;
 	};
 
 	const trigger = (fullPath = null, newValues = values) => {
 		const newValidation = resolver(newValues) || {};
-		const error = getDeep(fullPath, newValidation);
-		const newErrors = { ...errors };
-		deleteDeepToRoot(fullPath, newErrors);
+		const error = _getNested(fullPath, newValidation);
+		const newErrors = { ...newValidation };
+		_deleteNestedToRoot(fullPath, newErrors);
 		if (error !== undefined) {
-			setDeep(fullPath, newErrors, error);
+			_setNested(fullPath, newErrors, error);
 		}
 		setErrors(newErrors);
 		return newErrors;
 	};
 
 	const getValue = fullPath => {
-		return getDeep(fullPath, values);
+		return _getNested(fullPath, values);
 	};
 
 	const setValue = (fullPath, value, validate = true) => {
 		setValues(values => {
 			const newValues = { ...values };
-			setDeep(fullPath, newValues, value);
+			_setNested(fullPath, newValues, value);
 			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
 			if (validate) {
@@ -243,7 +267,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 						trigger(fullPath, newValues);
 					}
 				}
-				if (mode === 'onChange' || mode === 'onBlur') {
+				if (mode === 'onChange') {
 					trigger(fullPath, newValues);
 				}
 			}
@@ -255,50 +279,41 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		}
 	};
 
-	const clearArrayObjectError = fullPath => {
-		const arrError = getDeep(fullPath, errors);
-		if (arrError && !Array.isArray(arrError)) {
-			const newErrors = { ...errors };
-			deleteDeepToRoot(fullPath, newErrors);
-			setErrors(newErrors);
-		}
-	};
-
-	const moveErrors = (fullPath, callback) => {
-		const arrError = getDeep(fullPath, errors);
-		if (arrError && Array.isArray(arrError)) {
-			const newErrors = { ...errors };
-			const newArrErrrors = callback([...arrError]);
-			setDeep(fullPath, newErrors, newArrErrrors);
-			setErrors(newErrors);
-		}
-	};
-
 	const append = (fullPath, object) => {
-		clearArrayObjectError(fullPath);
-		const newArr = [...getDeep(fullPath, values), object];
+		const newArr = [..._getNested(fullPath, values), object];
 		setValue(fullPath, newArr, false);
+
+		const newErrors = _clearObjectError(fullPath, errors);
+		setErrors(newErrors);
+
+		return newArr;
 	};
 
 	const prepend = (fullPath, object) => {
-		clearArrayObjectError(fullPath);
-		const newArr = [object, ...getDeep(fullPath, values)];
+		const newArr = [object, ..._getNested(fullPath, values)];
 		setValue(fullPath, newArr, false);
 
-		moveErrors(fullPath, arrErrors => [undefined, ...arrErrors]);
+		let newErrors = _clearObjectError(fullPath, errors);
+		newErrors = _shiftErrors(fullPath, newErrors, arrErrors => [undefined, ...arrErrors]);
+		setErrors(newErrors);
+
+		return newArr;
 	};
 
 	const remove = (fullPath, idx) => {
-		clearArrayObjectError(fullPath);
-		const newArr = [...getDeep(fullPath, values)];
+		const newArr = [..._getNested(fullPath, values)];
 		newArr.splice(idx, 1);
 		setValue(fullPath, newArr, false);
-		clearError(`${fullPath}.${idx}`);
 
-		moveErrors(fullPath, arrErrors => {
+		let newErrors = _clearObjectError(fullPath, errors);
+		newErrors = clearError(`${fullPath}.${idx}`, newErrors);
+		newErrors = _shiftErrors(fullPath, newErrors, arrErrors => {
 			arrErrors.splice(idx, 1);
 			return arrErrors;
 		});
+		setErrors(newErrors);
+
+		return newArr;
 	};
 
 	const onChange = e => {
@@ -314,9 +329,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 				value = parseInt(value, 10);
 				break;
 			case 'number':
-				value = Number.parseFloat(value);
-				if (!isNumber(value)) {
-					value = undefined;
+				if (value === '') {
+					value = null;
+				} else {
+					value = Number.parseFloat(value);
+					if (!isNumber(value)) {
+						value = undefined;
+					}
 				}
 				break;
 			case 'file':
@@ -331,7 +350,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const onBlur = name => {
 		return () => {
-			if (getDeep(name, trigger(name))) {
+			if (_getNested(name, trigger(name))) {
 				if (shouldFocusError === true) {
 					refsMap.current.get(name).focus();
 				}
@@ -339,22 +358,22 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		};
 	};
 
-	const handleSubmit = onSubmitHandler => {
+	const handleSubmit = handler => {
 		return e => {
 			if (e && e.preventDefault) {
 				e.preventDefault();
 			}
 
-			const errors = resolver(values) || {};
-			setErrors(errors);
-			if (Object.keys(errors).length === 0) {
-				onSubmitHandler(values);
+			const newErrors = resolver(values) || {};
+			setErrors(newErrors);
+			if (!hasError(null, newErrors)) {
+				handler(values);
 			}
 		};
 	};
 
 	const reset = (model = defaultValues, validate = true) => {
-		const newValues = clone(model);
+		const newValues = _clone(model);
 		setValues(newValues);
 		setIsTouched(false);
 		isDirty.current = false;
@@ -367,9 +386,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		const props = {
 			name,
 			onChange,
-			ref: element => {
-				refsMap.current.set(name, element);
-			},
 		};
 
 		const value = getValue(name);
@@ -390,7 +406,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	const Error = ({ for: path, children }) => {
-		const err = getDeep(path, errors);
+		const err = _getNested(path, errors);
 		if (!err) {
 			return false;
 		}
@@ -434,7 +450,7 @@ export const yupResolver = schema => {
 					message: error.message,
 					type: error.type,
 				};
-				setDeep(error.path, errors, err);
+				_setNested(error.path, errors, err);
 			});
 		}
 		return errors;

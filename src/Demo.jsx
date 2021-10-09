@@ -5,6 +5,8 @@ import Select from 'react-select';
 import * as yup from 'yup';
 import useForm, { yupResolver } from './useForm';
 
+let renderCount = 0;
+
 const schema = yup.object().shape({
 	title: yup.string().nullable().min(1).required('Title is required'),
 	occupation: yup.array().min(1, 'Please enter at least 1 occupation').of(yup.string()),
@@ -59,10 +61,9 @@ const Demo = () => {
 	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, append, remove, hasError, clearError, Error, reset, formState } = useForm({
 		defaultValues: defaultModel,
 		mode: 'onSubmit',
-		// mode: 'onSubmit',
+		// mode: 'onBlur',
 		// mode: 'onChange',
-		// reValidateMode: 'onChange',
-		shouldFocusError: false,
+		shouldFocusError: true,
 		resolver: yupResolver(schema),
 	});
 
@@ -79,12 +80,14 @@ const Demo = () => {
 		reset();
 	};
 
-	console.log('Errors', errors);
+	renderCount += 1;
+	console.log('Errors', renderCount, errors);
 	// console.log('values', values);
 	// console.log('defaultModel', defaultModel);
 
 	return (
 		<div>
+			<h5>{renderCount}</h5>
 			<h5>{isDirty && <>Dirty</>}</h5>
 			<a
 				onClick={() => {
@@ -198,6 +201,15 @@ const Demo = () => {
 							+ Add new
 						</button>
 
+						{/* <button
+							onClick={e => {
+								e.preventDefault();
+								clearError('albums');
+							}}
+						>
+							Trigger
+						</button> */}
+
 						{hasError(`albums`) && <span className="error">{errors.albums.message}</span>}
 					</div>
 				</div>
@@ -303,7 +315,7 @@ const Demo = () => {
 									</div>
 
 									<div className="column">
-										<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
+										<input type="number" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
 										Metacritic: {getValue(`movies[${idx}].metaCritic`)}%
 										{hasError(`movies.${idx}.metaCritic`) && <span className="error">{errors.movies[idx].metaCritic.message}</span>}
 									</div>
