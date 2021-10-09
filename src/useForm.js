@@ -1,14 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
-const ParseInt = int => parseInt(int, 10);
-const ParseFloat = Number.parseFloat;
 const isNumber = num => !Number.isNaN(num);
-const toJSONString = JSON.stringify;
-const IsArray = Array.isArray;
-const splitRegEx = /\[([^\]]+)\]/g;
-const ObjectKeys = Object.keys;
 
+const splitRegEx = /\[([^\]]+)\]/g;
 let splitCache = {};
 const extractPath = string => {
 	if (!string) {
@@ -31,7 +26,7 @@ const clone = obj => {
 		return new Date(obj.getTime());
 	}
 
-	if (IsArray(obj)) {
+	if (Array.isArray(obj)) {
 		return obj.reduce((arr, item, i) => {
 			arr[i] = clone(item);
 			return arr;
@@ -39,7 +34,7 @@ const clone = obj => {
 	}
 
 	if (obj instanceof Object) {
-		return ObjectKeys(obj).reduce((newObj, key) => {
+		return Object.keys(obj).reduce((newObj, key) => {
 			newObj[key] = clone(obj[key]);
 			return newObj;
 		}, {});
@@ -49,7 +44,7 @@ const clone = obj => {
 };
 
 const getDeep = (fullPath, source) => {
-	if (!IsArray(fullPath)) {
+	if (!Array.isArray(fullPath)) {
 		return getDeep(extractPath(fullPath), source);
 	}
 
@@ -71,7 +66,7 @@ const getDeep = (fullPath, source) => {
 	}
 
 	const next = fullPath[1];
-	const idx = ParseInt(next);
+	const idx = parseInt(next, 10);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -83,7 +78,7 @@ const getDeep = (fullPath, source) => {
 };
 
 const setDeep = (fullPath, target, value) => {
-	if (!IsArray(fullPath)) {
+	if (!Array.isArray(fullPath)) {
 		setDeep(extractPath(fullPath), target, value);
 		return;
 	}
@@ -98,7 +93,7 @@ const setDeep = (fullPath, target, value) => {
 		return;
 	}
 	const next = fullPath[1];
-	const idx = ParseInt(next);
+	const idx = parseInt(next, 10);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
@@ -119,7 +114,7 @@ const setDeep = (fullPath, target, value) => {
 };
 
 const deleteDeepEntry = (fullPath, target) => {
-	if (!IsArray(fullPath)) {
+	if (!Array.isArray(fullPath)) {
 		deleteDeepEntry(extractPath(fullPath), target);
 		return;
 	}
@@ -139,7 +134,7 @@ const deleteDeepEntry = (fullPath, target) => {
 	}
 
 	const next = fullPath[1];
-	const idx = ParseInt(next);
+	const idx = parseInt(next, 10);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			delete target[path][idx];
@@ -153,7 +148,7 @@ const deleteDeepEntry = (fullPath, target) => {
 
 // removes all entries to the root of the object
 const deleteDeepToRoot = (fullPath, target) => {
-	if (!IsArray(fullPath)) {
+	if (!Array.isArray(fullPath)) {
 		deleteDeepToRoot(extractPath(fullPath), target);
 		return;
 	}
@@ -169,13 +164,13 @@ const deleteDeepToRoot = (fullPath, target) => {
 	pathsToRoot.forEach(path => {
 		const value = getDeep(path, target);
 		if (value !== undefined) {
-			if (IsArray(value)) {
+			if (Array.isArray(value)) {
 				// check if array is empty (no items) or each of them is undefined/empty
-				if (value.length === 0 || value.every(item => ObjectKeys(item || {}).length === 0)) {
+				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
 					deleteDeepEntry(path, target);
 				}
 			} // check if object is empty
-			else if (ObjectKeys(value || {}).length === 0) {
+			else if (Object.keys(value || {}).length === 0) {
 				deleteDeepEntry(path, target);
 			}
 		}
@@ -192,7 +187,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	const key = useKey();
 
 	useEffect(() => {
-		defaultValuesJSON.current = toJSONString(defaultValues);
+		defaultValuesJSON.current = JSON.stringify(defaultValues);
 		isDirty.current = false;
 		setValues(clone(defaultValues));
 	}, [defaultValues]);
@@ -207,7 +202,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const hasError = (fullPath = null) => {
 		if (fullPath === null) {
-			return ObjectKeys(errors || {}).length > 0;
+			return Object.keys(errors || {}).length > 0;
 		}
 		return getDeep(fullPath, errors) !== undefined;
 	};
@@ -240,7 +235,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		setValues(values => {
 			const newValues = { ...values };
 			setDeep(fullPath, newValues, value);
-			isDirty.current = defaultValuesJSON.current !== toJSONString(newValues);
+			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
 			if (validate) {
 				if (mode === 'onSubmit') {
@@ -262,7 +257,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const clearArrayObjectError = fullPath => {
 		const arrError = getDeep(fullPath, errors);
-		if (arrError && !IsArray(arrError)) {
+		if (arrError && !Array.isArray(arrError)) {
 			const newErrors = { ...errors };
 			deleteDeepToRoot(fullPath, newErrors);
 			setErrors(newErrors);
@@ -271,7 +266,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const moveErrors = (fullPath, callback) => {
 		const arrError = getDeep(fullPath, errors);
-		if (arrError && IsArray(arrError)) {
+		if (arrError && Array.isArray(arrError)) {
 			const newErrors = { ...errors };
 			const newArrErrrors = callback([...arrError]);
 			setDeep(fullPath, newErrors, newArrErrrors);
@@ -316,10 +311,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 				value = checked;
 				break;
 			case 'range':
-				value = ParseInt(value);
+				value = parseInt(value, 10);
 				break;
 			case 'number':
-				value = ParseFloat(value);
+				value = Number.parseFloat(value);
 				if (!isNumber(value)) {
 					value = undefined;
 				}
@@ -352,7 +347,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 			const errors = resolver(values) || {};
 			setErrors(errors);
-			if (ObjectKeys(errors).length === 0) {
+			if (Object.keys(errors).length === 0) {
 				onSubmitHandler(values);
 			}
 		};

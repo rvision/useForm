@@ -1,6 +1,12 @@
 TO BE DONE:
 ================================================================================
-Error komponenta
+ovo pravi problem:
+
+clearArrayObjectError(fullPath);
+moveErrors(fullPath, arrErrors => {
+	arrErrors.splice(idx, 1);
+	return arrErrors;
+});
 
 
 -prepend/append array?
