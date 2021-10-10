@@ -262,13 +262,16 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
 			if (validate) {
-				if (mode === 'onSubmit') {
+				if (mode === 'onSubmit' || mode === 'onChange') {
 					if (hasError(fullPath)) {
-						trigger(fullPath, newValues);
+						const newErrors = clearError(fullPath);
+						const newValidation = resolver(newValues) || {};
+						const newError = _getNested(fullPath, newValidation);
+						if (newError) {
+							_setNested(fullPath, newErrors, newError);
+							setErrors(newErrors);
+						}
 					}
-				}
-				if (mode === 'onChange') {
-					trigger(fullPath, newValues);
 				}
 			}
 			return newValues;
@@ -350,10 +353,17 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const onBlur = name => {
 		return () => {
-			if (_getNested(name, trigger(name))) {
+			const newValidation = resolver(values) || {};
+			const newError = _getNested(name, newValidation);
+			if (newError) {
+				const newErrors = { ...errors };
+				_setNested(name, newErrors, newError);
+				setErrors(newErrors);
 				if (shouldFocusError === true) {
 					refsMap.current.get(name).focus();
 				}
+			} else {
+				clearError(name);
 			}
 		};
 	};
