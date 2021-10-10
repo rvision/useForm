@@ -20,7 +20,7 @@ const schema = yup.object().shape({
 		.of(
 			yup.object().shape({
 				name: yup.string().required('Please enter album name'),
-				releaseDate: yup.date().nullable().required('Release date is required').typeError('Invalid format'),
+				releaseDate: yup.date().nullable().required("Album's release date is required").typeError('Invalid format'),
 			}),
 		),
 	movies: yup
@@ -201,7 +201,7 @@ const Demo = () => {
 							className="button is-small is-light is-primary"
 							onClick={e => {
 								e.preventDefault();
-								prepend('albums', { name: '', releaseDate: null });
+								append('albums', { name: '', releaseDate: null });
 							}}
 						>
 							+ Add new
@@ -210,18 +210,18 @@ const Demo = () => {
 						<Error for="albums">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
 					</div>
 
-					{getValue('albums').map((album, idx) => {
-						const k = key(album);
-						return (
-							<div key={k}>
-								<div className="field-body">
-									<div className="field is-narrow">
+					<div className="field-body" style={{ flexFlow: 'row wrap' }}>
+						{getValue('albums').map((album, idx) => {
+							const k = key(album);
+							return (
+								<React.Fragment key={k}>
+									<div className="field is-narrow mb-1">
 										<img
 											src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
 											style={{ width: '30px', verticalAlign: 'text-top' }}
 										/>
 									</div>
-									<div className="field">
+									<div className="field mb-1">
 										<input
 											type="text"
 											placeholder="Enter album name"
@@ -230,7 +230,7 @@ const Demo = () => {
 										/>
 										<Error for={`albums.${idx}.name`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
 									</div>
-									<div className="field">
+									<div className="field is-narrow mb-1">
 										<ReactDatePicker
 											showYearDropdown
 											placeholderText="Enter release date"
@@ -242,7 +242,7 @@ const Demo = () => {
 										/>
 										<Error for={`albums.${idx}.releaseDate`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
 									</div>
-									<div className="field">
+									<div className="field is-narrow mb-1">
 										<button
 											className="button is-small is-light is-warning"
 											onClick={e => {
@@ -250,13 +250,89 @@ const Demo = () => {
 												remove('albums', idx);
 											}}
 										>
-											remove
+											remove x
 										</button>
 									</div>
-								</div>
-							</div>
-						);
-					})}
+									<div className="break" style={{ width: '100%' }} />
+								</React.Fragment>
+							);
+						})}
+					</div>
+				</div>
+
+				<hr />
+
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Movies</label>
+
+						<button
+							className="button is-small is-light is-primary"
+							onClick={e => {
+								e.preventDefault();
+								append('movies', {
+									name: '',
+									year: null,
+									genres: [],
+									metaCritic: 0,
+									coStars: [],
+								});
+							}}
+						>
+							+ Add new
+						</button>
+
+						<Error for="albums">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+					</div>
+
+					<div className="field-body" style={{ flexFlow: 'row wrap' }}>
+						{getValue('albums').map((album, idx) => {
+							const k = key(album);
+							return (
+								<React.Fragment key={k}>
+									<div className="field is-narrow mb-1">
+										<img
+											src="https://cdn4.iconfinder.com/data/icons/system-basic-vol-6/20/icon-window-play-128.png"
+											style={{ width: '30px', verticalAlign: 'text-top' }}
+										/>
+									</div>
+									<div className="field mb-1">
+										<input
+											type="text"
+											placeholder="Enter album name"
+											{...register(`albums.${idx}.name`)}
+											className={hasError(`albums.${idx}.name`) ? 'input is-danger' : 'input'}
+										/>
+										<Error for={`albums.${idx}.name`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+									</div>
+									<div className="field mb-1">
+										<ReactDatePicker
+											showYearDropdown
+											placeholderText="Enter release date"
+											selected={getValue(`albums.${idx}.releaseDate`)}
+											className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger' : 'input'}
+											onChange={date => {
+												setValue(`albums.${idx}.releaseDate`, date);
+											}}
+										/>
+										<Error for={`albums.${idx}.releaseDate`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+									</div>
+									<div className="field mb-1">
+										<button
+											className="button is-small is-light is-warning"
+											onClick={e => {
+												e.preventDefault();
+												remove('albums', idx);
+											}}
+										>
+											remove x
+										</button>
+									</div>
+									<div className="break" style={{ width: '100%' }} />
+								</React.Fragment>
+							);
+						})}
+					</div>
 				</div>
 
 				<hr />
@@ -371,18 +447,7 @@ const Demo = () => {
 			<div className="columns">
 				<div className={leftColumn}>
 					<label>Albums</label>
-					<div>
-						{/* <button
-							onClick={e => {
-								e.preventDefault();
-								clearError('albums');
-							}}
-						>
-							Trigger
-						</button> */}
-
-						{hasError(`albums`) && <span className="error">{errors.albums.message}</span>}
-					</div>
+					<div>{hasError(`albums`) && <span className="error">{errors.albums.message}</span>}</div>
 				</div>
 				<div className={rightColumn}>{key(getValue('albums'))}</div>
 			</div>
