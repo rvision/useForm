@@ -9,10 +9,10 @@ let renderCount = 0;
 
 const schema = yup.object().shape({
 	title: yup.string().nullable().min(1).required('Title is required'),
-	occupation: yup.array().min(1, 'Please enter at least 1 occupation').of(yup.string()),
-	firstName: yup.string().required('Please enter first name'),
+	occupation: yup.array().min(1, 'Please select at least 1 occupation').of(yup.string()),
+	firstName: yup.string().min(3, 'Please enter at least 3 chars').required('Please enter first name'),
 	lastName: yup.string().required('Please enter last name'),
-	birthDate: yup.date().nullable().required('Date is required').typeError('Invalid format'),
+	birthDate: yup.date().nullable().required('Birth date is required').typeError('Invalid format'),
 	albums: yup
 		.array()
 		.ensure()
@@ -87,6 +87,270 @@ const Demo = () => {
 
 	return (
 		<div>
+			<div>
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Celebrity</label>
+					</div>
+					<div className="field-body">
+						<div className="field is-narrow">
+							<div className="select is-fullwidth">
+								<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
+									{optionsTitle.map(option => {
+										return (
+											<option key={option.id} value={option.id}>
+												{option.name}
+											</option>
+										);
+									})}
+								</select>
+							</div>
+						</div>
+						<div className="field">
+							<input
+								type="text"
+								placeholder="Enter first name"
+								{...register('firstName')}
+								className={hasError('firstName') ? 'input is-danger' : 'input'}
+							/>
+							<Error for="firstName">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+						</div>
+						<div className="field">
+							<input type="text" placeholder="Enter last name" {...register('lastName')} className={hasError('lastName') ? 'input is-danger' : 'input'} />
+							<Error for="lastName">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+						</div>
+						<div className="field">
+							<ReactDatePicker
+								showMonthDropdown
+								showYearDropdown
+								placeholderText="Enter birthdate"
+								selected={getValue('birthDate')}
+								className={hasError('birthDate') ? 'input is-danger' : 'input'}
+								onChange={date => {
+									setValue('birthDate', date);
+								}}
+							/>
+							<Error for="birthDate">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+						</div>
+					</div>
+				</div>
+
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Occupation</label>
+						<p className="help">(how to use &lt;select /&gt; multiple or array of checkboxes)</p>
+					</div>
+					<div className="field-body">
+						<div className="field is-narrow">
+							<div className="control">
+								<div
+									className={hasError('occupation') ? 'select is-multiple is-small is-fullwidth is-danger' : 'select is-multiple is-small is-fullwidth'}
+								>
+									<select multiple {...register('occupation')}>
+										{optionsOccupation.map(option => {
+											return (
+												<option key={option} value={option}>
+													{option}
+												</option>
+											);
+										})}
+									</select>
+									<Error for="occupation">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+								</div>
+							</div>
+						</div>
+						<div className="field">
+							<div className="control">
+								{optionsOccupation.map(option => {
+									const occupations = getValue('occupation');
+									const checked = occupations.includes(option);
+									return (
+										<label className="checkbox" className="mr-2">
+											<input
+												type="checkbox"
+												key={option}
+												checked={checked}
+												className="mr-1"
+												onChange={e => {
+													let newArr = [...occupations];
+													if (e.target.checked) {
+														newArr.push(option);
+													} else {
+														newArr = newArr.filter(o => o !== option);
+													}
+													setValue('occupation', newArr);
+												}}
+											/>
+											{option}
+										</label>
+									);
+								})}
+								<Error for="occupation">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<hr />
+
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Albums</label>
+
+						<button
+							className="button is-small is-light is-primary"
+							onClick={e => {
+								e.preventDefault();
+								prepend('albums', { name: '', releaseDate: null });
+							}}
+						>
+							+ Add new
+						</button>
+
+						<Error for="albums">{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+					</div>
+
+					{getValue('albums').map((album, idx) => {
+						const k = key(album);
+						return (
+							<div key={k}>
+								<div className="field-body">
+									<div className="field is-narrow">
+										<img
+											src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
+											style={{ width: '30px', verticalAlign: 'text-top' }}
+										/>
+									</div>
+									<div className="field">
+										<input
+											type="text"
+											placeholder="Enter album name"
+											{...register(`albums.${idx}.name`)}
+											className={hasError(`albums.${idx}.name`) ? 'input is-danger' : 'input'}
+										/>
+										<Error for={`albums.${idx}.name`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+									</div>
+									<div className="field">
+										<ReactDatePicker
+											showYearDropdown
+											placeholderText="Enter release date"
+											selected={getValue(`albums.${idx}.releaseDate`)}
+											className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger' : 'input'}
+											onChange={date => {
+												setValue(`albums.${idx}.releaseDate`, date);
+											}}
+										/>
+										<Error for={`albums.${idx}.releaseDate`}>{({ message }) => <p className="help is-danger">{message}</p>}</Error>
+									</div>
+									<div className="field">
+										<button
+											className="button is-small is-light is-warning"
+											onClick={e => {
+												e.preventDefault();
+												remove('albums', idx);
+											}}
+										>
+											remove
+										</button>
+									</div>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+
+				<hr />
+
+				<div className="field is-horizontal">
+					<div className="field-label" />
+					<div className="field-body">
+						<div className="field is-expanded">
+							<div className="field has-addons">
+								<p className="control">
+									<a className="button is-static">+44</a>
+								</p>
+								<p className="control is-expanded">
+									<input className="input" type="tel" placeholder="Your phone number" />
+								</p>
+							</div>
+							<p className="help">Do not enter the first zero</p>
+						</div>
+					</div>
+				</div>
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Department</label>
+					</div>
+					<div className="field-body">
+						<div className="field is-narrow">
+							<div className="control">
+								<div className="select is-fullwidth">
+									<select>
+										<option>Business development</option>
+										<option>Marketing</option>
+										<option>Sales</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div className="field is-horizontal">
+					<div className="field-label">
+						<label className="label">Already a member?</label>
+					</div>
+					<div className="field-body">
+						<div className="field is-narrow">
+							<div className="control">
+								<label className="radio">
+									<input type="radio" name="member" />
+									Yes
+								</label>
+								<label className="radio">
+									<input type="radio" name="member" />
+									No
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Subject</label>
+					</div>
+					<div className="field-body">
+						<div className="field">
+							<div className="control">
+								<input className="input is-danger" type="text" placeholder="e.g. Partnership opportunity" />
+							</div>
+							<p className="help is-danger">This field is required</p>
+						</div>
+					</div>
+				</div>
+				<div className="field is-horizontal">
+					<div className="field-label is-normal">
+						<label className="label">Question</label>
+					</div>
+					<div className="field-body">
+						<div className="field">
+							<div className="control">
+								<textarea className="textarea" placeholder="Explain how we can help you" defaultValue="" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div className="field is-horizontal">
+					<div className="field-label">{/* Left empty for spacing */}</div>
+					<div className="field-body">
+						<div className="field">
+							<div className="control">
+								<button className="button is-primary">Send message</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<h5>{renderCount}</h5>
 			<h5>{isDirty && <>Dirty</>}</h5>
 			<a
@@ -103,104 +367,11 @@ const Demo = () => {
 			>
 				ClearMovies
 			</a>
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Title</label>
-				</div>
-				<div className={rightColumn}>
-					<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
-						{optionsTitle.map(option => {
-							return (
-								<option key={option.id} value={option.id}>
-									{option.name}
-								</option>
-							);
-						})}
-					</select>
-					{errors.title && <span className="error">{errors.title.message}</span>}
-				</div>
-			</div>
-
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Occupation</label>
-				</div>
-				<div className={rightColumn}>
-					<select multiple className={hasError('occupation') ? 'hasError' : ''} {...register('occupation')}>
-						{optionsOccupation.map(option => {
-							return (
-								<option key={option} value={option}>
-									{option}
-								</option>
-							);
-						})}
-					</select>
-					{errors.occupation && <span className="error">{errors.occupation.message}</span>}
-				</div>
-			</div>
-
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Birthdate</label>
-				</div>
-				<div className={rightColumn}>
-					<ReactDatePicker
-						showMonthDropdown
-						showYearDropdown
-						selected={getValue('birthDate')}
-						className={hasError('birthDate') ? 'hasError' : ''}
-						onChange={date => {
-							setValue('birthDate', date);
-						}}
-					/>
-					{/* <input
-						type="date"
-						id="field-date"
-						name="date"
-						className={hasError('date') ? 'hasError' : ''}
-						value={getValue('date')}
-						onChange={e => {
-							setValue('date', e.target.value);
-						}}
-					/> */}
-					{hasError('birthDate') && (
-						<span className="error" aria-live="polite">
-							{errors.birthDate.message}
-						</span>
-					)}
-				</div>
-			</div>
-
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Name</label>
-				</div>
-				<div className={rightColumn}>
-					<div className="columns is-gapless">
-						<div className="column">
-							<input type="text" {...register('firstName')} className={hasError('firstName') ? 'hasError' : ''} />
-							<input type="text" className={hasError('lastName') ? 'hasError' : ''} {...register('lastName')} />
-
-							<Error for="firstName">{({ message }) => <span className="error">{message}</span>}</Error>
-							<Error for="lastName" />
-						</div>
-					</div>
-				</div>
-			</div>
 
 			<div className="columns">
 				<div className={leftColumn}>
 					<label>Albums</label>
 					<div>
-						<button
-							onClick={e => {
-								e.preventDefault();
-								prepend('albums', { name: '', releaseDate: null });
-							}}
-						>
-							+ Add new
-						</button>
-
 						{/* <button
 							onClick={e => {
 								e.preventDefault();
@@ -213,42 +384,7 @@ const Demo = () => {
 						{hasError(`albums`) && <span className="error">{errors.albums.message}</span>}
 					</div>
 				</div>
-				<div className={rightColumn}>
-					{key(getValue('albums'))}
-					{getValue('albums').map((album, idx) => {
-						const k = key(album);
-						return (
-							<div key={k} className="columns is-gapless mb-0">
-								<div className="column">
-									{k}
-									<input type="text" {...register(`albums.${idx}.name`)} className={hasError(`albums.${idx}.name`) ? 'hasError' : ''} />
-									<Error for={`albums.${idx}.name`} />
-								</div>
-								<div className="column">
-									<ReactDatePicker
-										showYearDropdown
-										selected={getValue(`albums.${idx}.releaseDate`)}
-										className={hasError(`albums.${idx}.releaseDate`) ? 'hasError' : ''}
-										onChange={date => {
-											setValue(`albums.${idx}.releaseDate`, date);
-										}}
-									/>
-									<Error for={`albums.${idx}.releaseDate`} />
-								</div>
-								<div className="column">
-									<button
-										onClick={e => {
-											e.preventDefault();
-											remove('albums', idx);
-										}}
-									>
-										-
-									</button>
-								</div>
-							</div>
-						);
-					})}
-				</div>
+				<div className={rightColumn}>{key(getValue('albums'))}</div>
 			</div>
 			<div className="columns">
 				<div className={leftColumn}>
@@ -428,10 +564,10 @@ const Demo = () => {
 			</div>
 
 			<hr />
-			<button type="submit" onClick={handleSubmit(onSubmit)}>
+			<button type="submit" className="button is-primary mr-2" onClick={handleSubmit(onSubmit)}>
 				Submit form
 			</button>
-			<button type="submit" onClick={onReset}>
+			<button type="submit" className="button" onClick={onReset}>
 				Reset
 			</button>
 		</div>
