@@ -428,6 +428,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		getValue,
 		setValue,
 		register,
+		onChange,
+		onBlur,
 		trigger,
 		handleSubmit,
 		hasError,
