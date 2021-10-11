@@ -396,6 +396,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		const props = {
 			name,
 			onChange,
+			ref: element => {
+				refsMap.current.set(name, element);
+			},
 		};
 
 		const value = getValue(name);
@@ -407,12 +410,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 		if (mode === 'onBlur') {
 			props.onBlur = onBlur(name);
-			props.ref = element => {
-				refsMap.current.set(name, element);
-			};
 		}
 
 		return props;
+	};
+
+	const ref = name => {
+		return refsMap.current.get(name);
 	};
 
 	const Error = ({ for: path, children }) => {
@@ -430,6 +434,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		register,
 		onChange,
 		onBlur,
+		ref,
 		trigger,
 		handleSubmit,
 		hasError,
