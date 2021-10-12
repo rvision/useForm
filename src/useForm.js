@@ -421,7 +421,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const Error = ({ for: path, children }) => {
 		const err = _getNested(path, errors);
-		if (!err) {
+		if (!err || Array.isArray(err)) {
 			return false;
 		}
 		return <>{typeof children === 'function' ? children(err) : <span className="error">{err.message}</span>}</>;
