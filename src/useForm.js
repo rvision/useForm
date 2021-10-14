@@ -239,7 +239,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return targetErrors;
 	};
 
-	const trigger = (fullPath = null, newValues = values) => {
+	const trigger = (fullPath = [], newValues = values) => {
 		const newValidation = resolver(newValues) || {};
 		const error = _getNested(fullPath, newValidation);
 		const newErrors = { ...newValidation };
@@ -262,15 +262,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
 			if (validate) {
-				if (mode === 'onSubmit' || mode === 'onChange') {
-					if (hasError(fullPath)) {
-						const newErrors = clearError(fullPath);
-						const newValidation = resolver(newValues) || {};
-						const newError = _getNested(fullPath, newValidation);
-						if (newError) {
-							_setNested(fullPath, newErrors, newError);
-							setErrors(newErrors);
-						}
+				if (hasError(fullPath)) {
+					const newErrors = clearError(fullPath);
+					const newValidation = resolver(newValues) || {};
+					const newError = _getNested(fullPath, newValidation);
+					if (newError) {
+						_setNested(fullPath, newErrors, newError);
+						setErrors(newErrors);
 					}
 				}
 			}
@@ -351,21 +349,20 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		setValue(name, value);
 	};
 
-	const onBlur = name => {
-		return () => {
-			const newValidation = resolver(values) || {};
-			const newError = _getNested(name, newValidation);
-			if (newError) {
-				const newErrors = { ...errors };
-				_setNested(name, newErrors, newError);
-				setErrors(newErrors);
-				if (shouldFocusError === true) {
-					refsMap.current.get(name).focus();
-				}
-			} else {
-				clearError(name);
+	const onBlur = e => {
+		const { name } = e.target;
+		const newValidation = resolver(values) || {};
+		const newError = _getNested(name, newValidation);
+		if (newError) {
+			const newErrors = { ...errors };
+			_setNested(name, newErrors, newError);
+			setErrors(newErrors);
+			if (shouldFocusError === true) {
+				refsMap.current.get(name).focus();
 			}
-		};
+		} else {
+			clearError(name);
+		}
 	};
 
 	const handleSubmit = handler => {
@@ -376,7 +373,17 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 			const newErrors = resolver(values) || {};
 			setErrors(newErrors);
-			if (!hasError(null, newErrors)) {
+			if (hasError(null, newErrors)) {
+				if (shouldFocusError === true) {
+					let focused = false;
+					refsMap.current.forEach((value, key) => {
+						if (!focused && value && value.focus && hasError(key, newErrors)) {
+							value.focus();
+							focused = true;
+						}
+					});
+				}
+			} else {
 				handler(values);
 			}
 		};
@@ -409,13 +416,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		}
 
 		if (mode === 'onBlur') {
-			props.onBlur = onBlur(name);
+			props.onBlur = onBlur;
 		}
 
 		return props;
 	};
 
-	const ref = name => {
+	const getRef = name => {
 		return refsMap.current.get(name);
 	};
 
@@ -434,7 +441,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		register,
 		onChange,
 		onBlur,
-		ref,
+		getRef,
 		trigger,
 		handleSubmit,
 		hasError,

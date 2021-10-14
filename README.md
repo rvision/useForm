@@ -1,5 +1,15 @@
 # useForm
-React forms utility library, lightweight alternative
+React forms utility library, lightweight alternative to existing frameworks.
+
+## demo
+codesandbox links
+
+### Another form library?
+if you need performant forms framework, use react-hook-form.
+If you think formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray is complicated to use, then read on.
+
+####
+
 
 
 ## code example
