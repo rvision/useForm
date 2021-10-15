@@ -1,9 +1,14 @@
 TO BE DONE:
 ================================================================================
+error cleaning
+
+const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
+
+
 -prepend/append array?
 -onSubmit string u konstantu
 
-onChange?
+
 setValue
 {
 	shouldValidate: true,
