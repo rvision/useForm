@@ -130,7 +130,7 @@ helper method to get reference (ref) to the native input, uses fullPath concept 
 }}>
 ```
 
-**<Error for={fullPath} />**
+**Error**
 
 React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error
 ```jsx

@@ -58,14 +58,15 @@ const rightColumn = 'column is-three-quarters';
 // };
 
 const Demo = () => {
-	const { getValue, values, setValue, register, trigger, handleSubmit, key, prepend, append, remove, hasError, clearError, Error, reset, formState } = useForm({
-		defaultValues: defaultModel,
-		mode: 'onSubmit',
-		// mode: 'onBlur',
-		// mode: 'onChange',
-		shouldFocusError: true,
-		resolver: yupResolver(schema),
-	});
+	const { getValue, setValue, getRef, onBlur, onChange, register, trigger, handleSubmit, key, prepend, append, remove, hasError, clearError, Error, reset, formState } =
+		useForm({
+			defaultValues: defaultModel,
+			mode: 'onSubmit',
+			// mode: 'onBlur',
+			// mode: 'onChange',
+			shouldFocusError: true,
+			resolver: yupResolver(schema),
+		});
 
 	const { isDirty, errors } = formState;
 

@@ -251,7 +251,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return newErrors;
 	};
 
-	const getValue = fullPath => {
+	const getValue = (fullPath = []) => {
 		return _getNested(fullPath, values);
 	};
 
@@ -431,11 +431,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		if (!err || Array.isArray(err)) {
 			return false;
 		}
-		return <>{typeof children === 'function' ? children(err) : <span className="error">{err.message}</span>}</>;
+		return <>{typeof children === 'function' ? children(err) : <span className="validation-error">{err.message}</span>}</>;
 	};
 
 	return {
-		values,
 		getValue,
 		setValue,
 		register,
