@@ -134,7 +134,7 @@ helper method to get reference (ref) to the native input, uses fullPath concept 
 
 React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error
 ```jsx
-<Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="validation-error">{message}</p>}</Error>
+<Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
 {/* or */}
 <Error for="movies[3].releaseDate" />	// will render <span className="validation-error">{err.message}</span>
 ```
