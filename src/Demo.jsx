@@ -237,6 +237,7 @@ const Demo = () => {
 							+ Add new
 						</button>
 						<BulmaError for="albums" />
+						<br />
 
 						<button
 							className="button is-small is-light is-warning"
@@ -352,7 +353,7 @@ const Demo = () => {
 										<br />
 										Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
 									</div>
-									<div className="field">
+									<div className="field is-narrow">
 										<ReactDatePicker
 											dateFormat="yyyy"
 											showYearPicker
@@ -365,15 +366,23 @@ const Demo = () => {
 										/>
 										<BulmaError for={`movies.${idx}.year`} />
 									</div>
-									<div className="field">treca</div>
+									<div className="field">
+										<button
+											className="button is-small is-light is-warning"
+											onClick={e => {
+												e.preventDefault();
+												remove('movies', idx);
+											}}
+										>
+											remove x
+										</button>
+									</div>
 
 									<div className="break" style={{ width: '100%' }} />
 									<div className="field">
 										<div
 											style={{
 												fontSize: '12px',
-												maxWidth: '200px',
-												maxHeight: '40px',
 											}}
 										>
 											<Select
@@ -391,17 +400,6 @@ const Demo = () => {
 												}}
 											/>
 										</div>
-									</div>
-									<div className="field">
-										<button
-											className="button is-small is-light is-warning"
-											onClick={e => {
-												e.preventDefault();
-												remove('movies', idx);
-											}}
-										>
-											remove x
-										</button>
 									</div>
 									<div className="break" style={{ width: '100%' }} />
 								</React.Fragment>
