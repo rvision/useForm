@@ -8,7 +8,69 @@ import useForm, { yupResolver } from './useForm';
 // const Select = () => false;
 // const ReactDatePicker = () => false;
 
-let renderCount = 0;
+const optionsTitle = [
+	{ id: 'Mr', name: 'Mr' },
+	{ id: 'Mrs', name: 'Mrs' },
+	{ id: 'Ms', name: 'Ms' },
+];
+const optionsOccupation = ['actress', 'musician', 'singer', 'hedonist', 'nutcase'];
+const optionsRadio = [
+	{ id: '1', name: '1' },
+	{ id: '2', name: '2' },
+	{ id: '3', name: '3' },
+	{ id: '4', name: '4' },
+	{ id: '5', name: '5' },
+];
+const optionsGenres = [
+	{ id: 0, name: 'Action' },
+	{ id: 1, name: 'Adventure' },
+	{ id: 2, name: 'Fantasy' },
+	{ id: 3, name: 'Thriller' },
+	{ id: 4, name: 'Comedy' },
+	{ id: 5, name: 'Drama' },
+	{ id: 6, name: 'Romance' },
+];
+
+const defaultModel = Object.freeze({
+	title: 'Ms',
+	occupation: ['actress', 'singer'],
+	firstName: 'Grace',
+	lastName: 'Jones',
+	radio: '3',
+	checkbox: false,
+	birthDate: new Date('1948-05-19'),
+	albums: [
+		{ name: 'Warm Leatherette', releaseDate: new Date('1980-05-09') },
+		{ name: 'Nightclubbing', releaseDate: new Date('1981-05-11') },
+		{ name: 'Living My Life', releaseDate: new Date('1982-11-07') },
+	],
+	movies: [
+		{
+			name: 'A View to a Kill',
+			year: new Date('1985-01-01'),
+			genres: [0, 1, 3],
+			metaCritic: 40,
+			coStars: [
+				{
+					firstName: 'Roger',
+					lastName: 'Moore',
+				},
+			],
+		},
+		{
+			name: 'Conan the Destroyer',
+			year: new Date('1984-01-01'),
+			genres: [0, 1, 2],
+			metaCritic: 53,
+			coStars: [
+				{
+					firstName: 'Arnold',
+					lastName: 'Schwarzenegger',
+				},
+			],
+		},
+	],
+});
 
 const schema = yup.object().shape({
 	title: yup.string().nullable().min(1).required('Title is required'),
@@ -52,6 +114,8 @@ const schema = yup.object().shape({
 
 const optionLabel = option => option.name;
 const optionValue = option => option.id;
+
+let renderCount = 0;
 
 const Demo = () => {
 	const {
@@ -99,9 +163,6 @@ const Demo = () => {
 	};
 
 	renderCount += 1;
-	// console.log('Errors', renderCount, errors);
-	// console.log('values', values);
-	// console.log('defaultModel', defaultModel);
 
 	return (
 		<div>
@@ -391,7 +452,7 @@ const Demo = () => {
 								<div className="field-body" style={{ flexFlow: 'row wrap' }}>
 									{(getValue(`movies.${idx}.coStars`) || []).length === 0 && (
 										<div className="notification is-warning" style={{ fontSize: '11px', padding: '1em' }}>
-											? There are no actors/actresses set for this movie,{' '}
+											⚠ There are no actors/actresses set for this movie,{' '}
 											<a
 												onClick={e => {
 													e.preventDefault();
@@ -603,67 +664,3 @@ const Demo = () => {
 };
 
 export default Demo;
-
-const optionsTitle = [
-	{ id: 'Mr', name: 'Mr' },
-	{ id: 'Mrs', name: 'Mrs' },
-	{ id: 'Ms', name: 'Ms' },
-];
-const optionsOccupation = ['actress', 'musician', 'singer', 'hedonist', 'nutcase'];
-const optionsRadio = [
-	{ id: '1', name: '1' },
-	{ id: '2', name: '2' },
-	{ id: '3', name: '3' },
-	{ id: '4', name: '4' },
-	{ id: '5', name: '5' },
-];
-const optionsGenres = [
-	{ id: 0, name: 'Action' },
-	{ id: 1, name: 'Adventure' },
-	{ id: 2, name: 'Fantasy' },
-	{ id: 3, name: 'Thriller' },
-	{ id: 4, name: 'Comedy' },
-	{ id: 5, name: 'Drama' },
-	{ id: 6, name: 'Romance' },
-];
-
-const defaultModel = Object.freeze({
-	title: 'Ms',
-	occupation: ['actress', 'singer'],
-	firstName: 'Grace',
-	lastName: 'Jones',
-	radio: '3',
-	checkbox: false,
-	birthDate: new Date('1948-05-19'),
-	albums: [
-		{ name: 'Warm Leatherette', releaseDate: new Date('1980-05-09') },
-		{ name: 'Nightclubbing', releaseDate: new Date('1981-05-11') },
-		{ name: 'Living My Life', releaseDate: new Date('1982-11-07') },
-	],
-	movies: [
-		{
-			name: 'A View to a Kill',
-			year: new Date('1985-01-01'),
-			genres: [0, 1, 3],
-			metaCritic: 40,
-			coStars: [
-				{
-					firstName: 'Roger',
-					lastName: 'Moore',
-				},
-			],
-		},
-		{
-			name: 'Conan the Destroyer',
-			year: new Date('1984-01-01'),
-			genres: [0, 1, 2],
-			metaCritic: 53,
-			coStars: [
-				{
-					firstName: 'Arnold',
-					lastName: 'Schwarzenegger',
-				},
-			],
-		},
-	],
-});
