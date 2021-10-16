@@ -50,6 +50,9 @@ const schema = yup.object().shape({
 		),
 });
 
+const optionLabel = option => option.name;
+const optionValue = option => option.id;
+
 const Demo = () => {
 	const {
 		getValue,
@@ -99,9 +102,6 @@ const Demo = () => {
 	// console.log('Errors', renderCount, errors);
 	// console.log('values', values);
 	// console.log('defaultModel', defaultModel);
-
-	const optionLabel = useCallback(option => option.name);
-	const optionValue = useCallback(option => option.id);
 
 	return (
 		<div>
@@ -391,7 +391,7 @@ const Demo = () => {
 								<div className="field-body" style={{ flexFlow: 'row wrap' }}>
 									{(getValue(`movies.${idx}.coStars`) || []).length === 0 && (
 										<div className="notification is-warning" style={{ fontSize: '11px', padding: '1em' }}>
-											⚠ There are no actors/actresses set for this movie,{' '}
+											? There are no actors/actresses set for this movie,{' '}
 											<a
 												onClick={e => {
 													e.preventDefault();
@@ -626,38 +626,6 @@ const optionsGenres = [
 	{ id: 5, name: 'Drama' },
 	{ id: 6, name: 'Romance' },
 ];
-
-// const coStars = new Array(1000).fill(1).map((x, idx) => {
-// 	return {
-// 		firstName: `Actor ${idx}`,
-// 		lastName: `Actor ${idx}`,
-// 	};
-// });
-
-const resetModel = Object.freeze({
-	title: 'Mr',
-	occupation: [],
-	firstName: 'Michael',
-	lastName: 'Fox',
-	radio: '3',
-	checkbox: false,
-	birthDate: new Date('1948-05-19'),
-	albums: [{ name: 'Power Of Love', releaseDate: new Date('1980-05-09') }],
-	movies: [
-		{
-			name: 'Back To The Future',
-			year: new Date('1985-01-01'),
-			genres: [0, 1, 3],
-			metaCritic: 40,
-			coStars: [
-				{
-					firstName: 'Roger',
-					lastName: 'Moore',
-				},
-			],
-		},
-	],
-});
 
 const defaultModel = Object.freeze({
 	title: 'Ms',

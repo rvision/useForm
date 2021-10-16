@@ -99,8 +99,7 @@ const _setNested = (fullPath, target, value) => {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
 		target[path] = target[path] === undefined ? [] : target[path];
-
-		// NOTE: this line causes inputs to loose focus in .map
+		// NOTE: this line causes inputs to loose focus in .map, because key is recreated each time, it will work with stable key
 		// target[path][idx] = target[path][idx] === undefined ? {} : { ...target[path][idx] };
 		target[path][idx] = target[path][idx] === undefined ? {} : target[path][idx];
 		if (fullPath.length === 2) {
@@ -260,7 +259,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			_setNested(fullPath, newValues, value);
 			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
-			if (validate && hasError(fullPath)) {
+			if (validate && (hasError(fullPath) || mode === 'onChange')) {
 				const newErrors = clearError(fullPath);
 				const newValidation = resolver(newValues) || {};
 				const newError = _getNested(fullPath, newValidation);
@@ -269,6 +268,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 					setErrors(newErrors);
 				}
 			}
+
 			return newValues;
 		});
 
@@ -335,7 +335,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 				}
 				break;
 			case 'file':
-				[value] = files;
+				[value] = files; // TODO: test this
 				break;
 			case 'select-multiple':
 				value = [...options].filter(o => o.selected).map(o => o.value);
@@ -368,7 +368,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			key: name,
 			name,
 			onChange,
-			// FIXME: onBlur: mode === 'onBlur' ? onBlur : undefined, causes 1 extra render; why???
+			// NOTE: onBlur: mode === 'onBlur' ? onBlur : undefined, causes 1 extra render; why???
 			onBlur,
 			ref: element => {
 				refsMap.current.set(name, element);
