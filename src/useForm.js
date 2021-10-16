@@ -204,15 +204,14 @@ const _shiftErrors = (fullPath, targetErrors, callback) => {
 const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = false, resolver = () => {} }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
-	const [isTouched, setIsTouched] = useState(false);
+	const isTouched = useRef(false);
 	const isDirty = useRef(false);
-	const defaultValuesJSON = useRef('');
 	const refsMap = useRef(new Map());
+	const defaultValuesJSON = useRef('');
 	const key = useKey();
 
 	useEffect(() => {
 		defaultValuesJSON.current = JSON.stringify(defaultValues);
-		isDirty.current = false;
 		setValues(_clone(defaultValues));
 	}, [defaultValues]);
 
@@ -261,23 +260,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			_setNested(fullPath, newValues, value);
 			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
 
-			if (validate) {
-				if (hasError(fullPath)) {
-					const newErrors = clearError(fullPath);
-					const newValidation = resolver(newValues) || {};
-					const newError = _getNested(fullPath, newValidation);
-					if (newError) {
-						_setNested(fullPath, newErrors, newError);
-						setErrors(newErrors);
-					}
+			if (validate && hasError(fullPath)) {
+				const newErrors = clearError(fullPath);
+				const newValidation = resolver(newValues) || {};
+				const newError = _getNested(fullPath, newValidation);
+				if (newError) {
+					_setNested(fullPath, newErrors, newError);
+					setErrors(newErrors);
 				}
 			}
 			return newValues;
 		});
 
-		if (isTouched === false) {
-			setIsTouched(true);
-		}
+		isTouched.current = true;
 	};
 
 	const append = (fullPath, object) => {
@@ -350,6 +345,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	const onBlur = e => {
+		if (mode !== 'onBlur') {
+			return;
+		}
 		const { name } = e.target;
 		const newValidation = resolver(values) || {};
 		const newError = _getNested(name, newValidation);
@@ -363,6 +361,28 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		} else {
 			clearError(name);
 		}
+	};
+
+	const register = name => {
+		const props = {
+			key: name,
+			name,
+			onChange,
+			// FIXME: onBlur: mode === 'onBlur' ? onBlur : undefined, causes 1 extra render; why???
+			onBlur,
+			ref: element => {
+				refsMap.current.set(name, element);
+			},
+		};
+
+		const value = getValue(name);
+		if (value === true || value === false) {
+			props.checked = value;
+		} else {
+			props.value = `${value}` === '0' ? value : value || '';
+		}
+
+		return props;
 	};
 
 	const handleSubmit = handler => {
@@ -392,34 +412,11 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	const reset = (model = defaultValues, validate = true) => {
 		const newValues = _clone(model);
 		setValues(newValues);
-		setIsTouched(false);
+		isTouched.current = false;
 		isDirty.current = false;
 		if (validate) {
 			setErrors(resolver(newValues) || {});
 		}
-	};
-
-	const register = name => {
-		const props = {
-			name,
-			onChange,
-			ref: element => {
-				refsMap.current.set(name, element);
-			},
-		};
-
-		const value = getValue(name);
-		if (value === true || value === false) {
-			props.checked = value;
-		} else {
-			props.value = `${value}` === '0' ? value : value || '';
-		}
-
-		if (mode === 'onBlur') {
-			props.onBlur = onBlur;
-		}
-
-		return props;
 	};
 
 	const getRef = name => {
@@ -453,8 +450,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		Error,
 		formState: {
 			errors,
-			isValid: hasError(),
-			isTouched,
+			isValid: !hasError(),
+			isTouched: isTouched.current,
 			isDirty: isDirty.current,
 		},
 	};

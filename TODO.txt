@@ -1,9 +1,27 @@
 TO BE DONE:
 ================================================================================
-error cleaning
+<Errors>
 
 const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
 
+// normalize keys
+ref: element => {
+	refsMap.current.set(_extractPath(name).join('.'), element);
+},
+
+const flattenObject = ob => {
+	return Object.keys(ob).reduce((result, k) => {
+		if (typeof ob[k] === 'object' && ob[k]) {
+			const flatObject = flattenObject(ob[k]);
+			Object.keys(flatObject).forEach(k2 => {
+				result[`${k}.${k2}`] = flatObject[k2];
+			});
+		} else {
+			result[k] = ob[k];
+		}
+		return result;
+	}, {});
+};
 
 -prepend/append array?
 -onSubmit string u konstantu

@@ -5,14 +5,16 @@ React forms utility library, lightweight alternative to existing frameworks.
 codesandbox links
 
 ## Another form library?
-This library works with controlled components only.
+This library works with controlled components only. Performance of re-renders depends on the number and types of components used. For native inputs, it is fast. For custom components, your mileage may vary.
 
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
 
 If you think formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray is complicated to use, then read on.
 
-### Introduction
-Idea is to reference all fields in a natural way, with regards of the initial object shape/structure. For example:
+### About
+- low learning curve
+- components freedom: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields and custom components via ```getValue/setValue``` methods
+- idea is to reference all fields in a natural way, with regards of the initial object shape/structure. For example:
 
 ```js
 firstName // 1st level property
@@ -22,7 +24,7 @@ cities[2].population	// or cities.2.population, whatever suits you better - nest
 artists[1].albums[2]	// or artists.1.albums.2, whatever suits you better - nested property, third album of the second artist
 ```
 
-Let's call this identifier ```fullPath```. Most of the methods to work with fields and errors will use this naming convention for operations. Learning curve should be low.
+Let's call this identifier ```fullPath```. Most of the methods to work with fields and errors will use this naming convention for operations.
 
 ### Hook options
 ```js
@@ -73,15 +75,23 @@ const {
 
 field registration method for native inputs; uses fullPath concept to identify the field in the object hierarchy
 ```jsx
-<input
-	type="text"
-	{...register('movies[${i}].coStars[${j}].firstName')}
-/>
+<input type="text" {...register('movies[${i}].coStars[${j}].firstName')} />
+{/* or */}
+<input type="checkbox" {...register('agreeToTermsAndConditions')} />
+{/* or */}
+<input type="number" {...register('employee[5].age')} />
+{/* or */}
+<input type="radio" {...register('radio')} checked={String(getValue('radio')) === String(option.id)} value={option.id} />
+{/* or */}
+<select {...register('cars[2].stereo')}>
+	<option key="mp3" value="mp3">MP3 player</option>
+	<option key="cd" value="cd">CD player</option>
+</select>
 ```
 
 **onChange(event: ReactSyntheticEvent)**
 
-if you need additional logic when field value is changed, use onChange method; it overrides default method set by register
+if you need debouncing or additional logic when field value is changed, use onChange method; it overrides default method set by register
 ```jsx
 <input
 	type="text"
@@ -115,7 +125,7 @@ helper method to get unique keys for siblings when rendering arrays. It works by
 {getValue(`movies[${i}].coStars`).map((star) => {
 	return (
 		<li key={star.id || key(star)}>
-			...
+			...other markup
 		</li>
 	)
 }

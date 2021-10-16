@@ -5,6 +5,9 @@ import Select from 'react-select';
 import * as yup from 'yup';
 import useForm, { yupResolver } from './useForm';
 
+// const Select = () => false;
+// const ReactDatePicker = () => false;
+
 let renderCount = 0;
 
 const schema = yup.object().shape({
@@ -47,28 +50,35 @@ const schema = yup.object().shape({
 		),
 });
 
-const leftColumn = 'column is-one-quarter has-text-right';
-const rightColumn = 'column is-three-quarters';
-
-// const selectStyle = {
-// 	container: provided => ({
-// 		...provided,
-// 		fontSize: '13px',
-// 	}),
-// };
-
 const Demo = () => {
-	const { getValue, setValue, getRef, onBlur, onChange, register, trigger, handleSubmit, key, prepend, append, remove, hasError, clearError, Error, reset, formState } =
-		useForm({
-			defaultValues: defaultModel,
-			mode: 'onSubmit',
-			// mode: 'onBlur',
-			// mode: 'onChange',
-			shouldFocusError: true,
-			resolver: yupResolver(schema),
-		});
+	const {
+		getValue,
+		setValue,
+		// getRef,
+		// onBlur,
+		// onChange,
+		register,
+		// trigger,
+		handleSubmit,
+		key,
+		// prepend,
+		append,
+		remove,
+		hasError,
+		// clearError,
+		Error,
+		reset,
+		formState: { isDirty, isValid, isTouched, errors },
+	} = useForm({
+		defaultValues: defaultModel,
+		mode: 'onSubmit',
+		// mode: 'onBlur',
+		// mode: 'onChange',
+		shouldFocusError: false,
+		resolver: yupResolver(schema),
+	});
 
-	const { isDirty, errors } = formState;
+	// const { isDirty, isValid, isTouched, errors } = formState;
 
 	const onSubmit = vals => {
 		// e.preventDefault();
@@ -82,530 +92,274 @@ const Demo = () => {
 	};
 
 	const BulmaError = ({ for: path }) => {
-		return <Error for={path}>{({ message }) => <p className="help is-danger">⚠ {message}</p>}</Error>;
+		return <Error for={path}>{({ message }) => <p className="help is-danger mb-2">⚠ {message}</p>}</Error>;
 	};
 
 	renderCount += 1;
-	console.log('Errors', renderCount, errors);
+	// console.log('Errors', renderCount, errors);
 	// console.log('values', values);
 	// console.log('defaultModel', defaultModel);
 
+	const optionLabel = useCallback(option => option.name);
+	const optionValue = useCallback(option => option.id);
+
 	return (
 		<div>
-			<div>
-				<div key="1" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Celebrity</label>
-						<p className="help has-text-grey-light">(native form inputs & birthdate date picker)</p>
-					</div>
-					<div className="field-body">
-						<div className="field is-narrow">
-							<div className="select is-fullwidth">
-								<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
-									{optionsTitle.map(option => {
-										return (
-											<option key={option.id} value={option.id}>
-												{option.name}
-											</option>
-										);
-									})}
-								</select>
-							</div>
-						</div>
-						<div className="field">
-							<input
-								type="text"
-								placeholder="Enter first name"
-								{...register('firstName')}
-								className={hasError('firstName') ? 'input is-danger' : 'input'}
-							/>
-							<BulmaError for="firstName" />
-						</div>
-						<div className="field">
-							<input type="text" placeholder="Enter last name" {...register('lastName')} className={hasError('lastName') ? 'input is-danger' : 'input'} />
-							<BulmaError for="lastName" />
-						</div>
-						<div className="field">
-							<ReactDatePicker
-								showMonthDropdown
-								showYearDropdown
-								placeholderText="Enter birthdate"
-								selected={getValue('birthDate')}
-								className={hasError('birthDate') ? 'input is-danger has-text-centered' : 'input has-text-centered'}
-								onChange={date => {
-									setValue('birthDate', date);
-								}}
-							/>
-							<BulmaError for="birthDate" />
-						</div>
-					</div>
-				</div>
-
-				<div key="2" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Occupation</label>
-						<p className="help has-text-grey-light">(how to use &lt;select /&gt; multiple or array of checkboxes)</p>
-					</div>
-					<div className="field-body">
-						<div className="field is-narrow">
-							<div className="control">
-								<div
-									className={hasError('occupation') ? 'select is-multiple is-small is-fullwidth is-danger' : 'select is-multiple is-small is-fullwidth'}
-								>
-									<select multiple {...register('occupation')}>
-										{optionsOccupation.map(option => {
-											return (
-												<option key={option} value={option}>
-													{option}
-												</option>
-											);
-										})}
-									</select>
-									<BulmaError for="occupation" />
-								</div>
-							</div>
-						</div>
-						<div className="field is-narrow">
-							<div className="control is-size-7">
-								{optionsOccupation.map(option => {
-									const occupations = getValue('occupation');
-									const checked = occupations.includes(option);
-									return (
-										<React.Fragment key={option}>
-											<label className="checkbox" className="mr-2">
-												<input
-													type="checkbox"
-													key={option}
-													checked={checked}
-													className="mr-1"
-													onChange={e => {
-														let newArr = [...occupations];
-														if (e.target.checked) {
-															newArr.push(option);
-														} else {
-															newArr = newArr.filter(o => o !== option);
-														}
-														setValue('occupation', newArr);
-													}}
-												/>
-												{option}
-											</label>
-											<br />
-										</React.Fragment>
-									);
-								})}
-								<BulmaError for="occupation" />
-							</div>
-						</div>
-
-						<div className="field is-narrow">
-							<Select
-								placeholder="Select occupation(s)"
-								isMulti
-								isClearable
-								isSearchable={false}
-								options={optionsOccupation.map(name => ({ id: name, name }))}
-								getOptionLabel={option => option.name}
-								getOptionValue={option => option.id}
-								value={optionsOccupation.map(name => ({ id: name, name })).filter(option => getValue('occupation').includes(option.id))}
-								onChange={options => {
-									const optionIds = options.map(o => o.id);
-									const picked = optionsOccupation
-										.map(name => ({ id: name, name }))
-										.filter(option => optionIds.includes(option.id))
-										.map(option => option.id);
-									setValue('occupation', picked);
-								}}
-							/>
-							<BulmaError for="occupation" />
-						</div>
-					</div>
-				</div>
-
-				<hr />
-
-				<div key="3" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Albums</label>
-						<button
-							className="button is-small is-light is-primary"
-							onClick={e => {
-								e.preventDefault();
-								append('albums', { name: '', releaseDate: null });
-							}}
-						>
-							+ Add new
-						</button>
-						<BulmaError for="albums" />
-						<br />
-
-						<button
-							className="button is-small is-light is-warning"
-							onClick={e => {
-								e.preventDefault();
-								setValue('albums', []);
-							}}
-						>
-							x Clear
-						</button>
-
-						<p className="help has-text-grey-light">(dynamic rows)</p>
-					</div>
-
-					<div className="field-body" style={{ flexFlow: 'row wrap' }}>
-						{getValue('albums').map((album, idx) => {
-							return (
-								<React.Fragment key={key(album)}>
-									<div className="field is-narrow mb-4">
-										<img
-											src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
-											style={{ width: '30px', verticalAlign: 'text-top' }}
-										/>
-									</div>
-									<div className="field">
-										<input
-											type="text"
-											placeholder="Enter album name"
-											{...register(`albums.${idx}.name`)}
-											className={hasError(`albums.${idx}.name`) ? 'input is-danger' : 'input'}
-										/>
-										<BulmaError for={`albums.${idx}.name`} />
-									</div>
-									<div className="field is-narrow">
-										<ReactDatePicker
-											showYearDropdown
-											placeholderText="Enter release date"
-											selected={getValue(`albums.${idx}.releaseDate`)}
-											className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger has-text-centered' : 'input has-text-centered'}
-											onChange={date => {
-												setValue(`albums.${idx}.releaseDate`, date);
-											}}
-										/>
-										<BulmaError for={`albums.${idx}.releaseDate`} />
-									</div>
-									{/* <div className="field is-narrow">xxx</div> */}
-									<div className="field is-narrow pt-1">
-										<button
-											className="button is-small is-light is-warning"
-											onClick={e => {
-												e.preventDefault();
-												remove('albums', idx);
-											}}
-										>
-											remove x
-										</button>
-									</div>
-									<div className="break" style={{ width: '100%' }} />
-								</React.Fragment>
-							);
-						})}
-					</div>
-				</div>
-
-				<hr />
-
-				<div key="4" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Movies</label>
-
-						<button
-							className="button is-small is-light is-primary"
-							onClick={e => {
-								e.preventDefault();
-								append('movies', {
-									name: '',
-									year: null,
-									genres: [],
-									metaCritic: 0,
-									coStars: [],
-								});
-							}}
-						>
-							+ Add new
-						</button>
-
-						<BulmaError for="albums" />
-					</div>
-
-					<div className="field-body" style={{ flexFlow: 'row wrap' }}>
-						{getValue('movies').map((movie, idx) => {
-							const k = key(movie);
-							return (
-								<React.Fragment key={k}>
-									<div className="field is-narrow mb-4">
-										<img
-											src="https://cdn4.iconfinder.com/data/icons/system-basic-vol-6/20/icon-window-play-128.png"
-											style={{ width: '30px', verticalAlign: 'text-top' }}
-										/>
-									</div>
-									<div className="field">
-										<input
-											type="text"
-											placeholder="Enter movie name"
-											{...register(`movies.${idx}.name`)}
-											className={hasError(`movies.${idx}.name`) ? 'input is-danger' : 'input'}
-										/>
-										<BulmaError for={`movies.${idx}.name`} />
-									</div>
-
-									<div className="field">
-										<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
-										<br />
-										Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
-									</div>
-									<div className="field is-narrow">
-										<ReactDatePicker
-											dateFormat="yyyy"
-											showYearPicker
-											placeholderText="Enter movie date"
-											selected={getValue(`movies.${idx}.year`)}
-											className={hasError(`movies.${idx}.year`) ? 'input is-danger' : 'input'}
-											onChange={date => {
-												setValue(`movies.${idx}.year`, date);
-											}}
-										/>
-										<BulmaError for={`movies.${idx}.year`} />
-									</div>
-									<div className="field">
-										<button
-											className="button is-small is-light is-warning"
-											onClick={e => {
-												e.preventDefault();
-												remove('movies', idx);
-											}}
-										>
-											remove x
-										</button>
-									</div>
-
-									<div className="break" style={{ width: '100%' }} />
-									<div className="field">
-										<div
-											style={{
-												fontSize: '12px',
-											}}
-										>
-											<Select
-												placeholder="Select Genre(s)"
-												isMulti
-												isClearable
-												options={optionsGenres}
-												getOptionLabel={option => option.name}
-												getOptionValue={option => option.id}
-												value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
-												onChange={options => {
-													const optionIds = options.map(x => x.id);
-													const picked = optionsGenres.filter(option => optionIds.includes(option.id)).map(x => x.id);
-													setValue(`movies.${idx}.genres`, picked);
-												}}
-											/>
-										</div>
-									</div>
-									<div className="break" style={{ width: '100%' }} />
-								</React.Fragment>
-							);
-						})}
-					</div>
-				</div>
-
-				<hr />
-
-				<div key="5" className="field is-horizontal">
-					<div className="field-label" />
-					<div className="field-body">
-						<div className="field is-expanded">
-							<div className="field has-addons">
-								<p className="control">
-									<a className="button is-static">+44</a>
-								</p>
-								<p className="control is-expanded">
-									<input className="input" type="tel" placeholder="Your phone number" />
-								</p>
-							</div>
-							<p className="help">Do not enter the first zero</p>
-						</div>
-					</div>
-				</div>
-
-				<div key="6" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Department</label>
-					</div>
-					<div className="field-body">
-						<div className="field is-narrow">
-							<div className="control">
-								<div className="select is-fullwidth">
-									<select>
-										<option>Business development</option>
-										<option>Marketing</option>
-										<option>Sales</option>
-									</select>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div key="7" className="field is-horizontal">
-					<div className="field-label">
-						<label className="label">Already a member?</label>
-					</div>
-					<div className="field-body">
-						<div className="field is-narrow">
-							<div className="control">
-								<label className="radio">
-									<input type="radio" name="member" />
-									Yes
-								</label>
-								<label className="radio">
-									<input type="radio" name="member" />
-									No
-								</label>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div key="8" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Subject</label>
-					</div>
-					<div className="field-body">
-						<div className="field">
-							<div className="control">
-								<input className="input is-danger" type="text" placeholder="e.g. Partnership opportunity" />
-							</div>
-							<p className="help is-danger">This field is required</p>
-						</div>
-					</div>
-				</div>
-
-				<div key="9" className="field is-horizontal">
-					<div className="field-label is-normal">
-						<label className="label">Question</label>
-					</div>
-					<div className="field-body">
-						<div className="field">
-							<div className="control">
-								<textarea className="textarea" placeholder="Explain how we can help you" defaultValue="" />
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div key="a" className="field is-horizontal">
-					<div className="field-label" />
-					<div className="field-body">
-						<div className="field">
-							<div className="control">
-								<button className="button is-primary">Send message</button>
-							</div>
-						</div>
-					</div>
+			<div className="columns">
+				<div className="column">
+					Render count: <b className="mr-3">{renderCount}</b>
+					Is valid: <b className="mr-3">{isValid === true ? 'true' : 'false'}</b>
+					Is touched: <b className="mr-3">{isTouched === true ? 'true' : 'false'}</b>
+					Is dirty: <b className="mr-3">{isDirty === true ? 'true' : 'false'}</b>
 				</div>
 			</div>
 
-			<h5>{renderCount}</h5>
-			<h5>{isDirty && <>Dirty</>}</h5>
-			<a
-				onClick={() => {
-					trigger('movies');
-				}}
-			>
-				ValidateMovies
-			</a>
-			<a
-				onClick={() => {
-					clearError('movies[2]');
-				}}
-			>
-				ClearMovies
-			</a>
-
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Movies</label>
-					<div>
-						<button
-							onClick={e => {
-								e.preventDefault();
-								append('movies', {
-									name: '',
-									year: null,
-									genres: [],
-									metaCritic: 11,
-									coStars: [],
-								});
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<label className="label">Celebrity</label>
+					<p className="help has-text-grey-light">(native form inputs & birthdate date picker)</p>
+				</div>
+				<div className="field-body">
+					<div className="field is-narrow">
+						<div className="select is-fullwidth">
+							<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
+								{optionsTitle.map(option => {
+									return (
+										<option key={option.id} value={option.id}>
+											{option.name}
+										</option>
+									);
+								})}
+							</select>
+						</div>
+					</div>
+					<div className="field">
+						<input type="text" placeholder="Enter first name" {...register('firstName')} className={hasError('firstName') ? 'input is-danger' : 'input'} />
+						<BulmaError for="firstName" />
+					</div>
+					<div className="field">
+						<input type="text" placeholder="Enter last name" {...register('lastName')} className={hasError('lastName') ? 'input is-danger' : 'input'} />
+						<BulmaError for="lastName" />
+					</div>
+					<div className="field">
+						<ReactDatePicker
+							showMonthDropdown
+							showYearDropdown
+							placeholderText="Enter birthdate"
+							selected={getValue('birthDate')}
+							className={hasError('birthDate') ? 'input is-danger has-text-centered' : 'input has-text-centered'}
+							onChange={date => {
+								setValue('birthDate', date);
 							}}
-						>
-							+ Add new
-						</button>
-						{hasError(`movies`) && <span className="error">{errors.movies.message}</span>}
+						/>
+						<BulmaError for="birthDate" />
 					</div>
 				</div>
-				<div className={rightColumn}>
-					{key(getValue('movies'))}
-					{getValue('movies').map((movie, idx) => {
+			</div>
+			<hr />
+
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<label className="label">Albums</label>
+					<button
+						className="button is-small is-light is-primary"
+						onClick={e => {
+							e.preventDefault();
+							append('albums', { name: '', releaseDate: null });
+						}}
+					>
+						+ Add new
+					</button>
+					<BulmaError for="albums" />
+					<br />
+
+					<button
+						className="button is-small is-light is-warning"
+						onClick={e => {
+							e.preventDefault();
+							setValue('albums', []);
+						}}
+					>
+						x Clear
+					</button>
+
+					<p className="help has-text-grey-light">(dynamic rows, 1st level)</p>
+				</div>
+
+				<div className="field-body" style={{ flexFlow: 'row wrap' }}>
+					{getValue('albums').map((album, idx) => {
 						return (
-							<React.Fragment key={key(movie)}>
-								<div className="columns is-gapless mb-0">
-									{key(movie)}
-									<div className="column">
-										<input type="text" {...register(`movies[${idx}].name`)} className={hasError(`movies.${idx}.name`) ? 'hasError' : ''} />
-										{hasError(`movies.${idx}.name`) && <span className="error">{errors.movies[idx].name.message}</span>}
-									</div>
-									<div className="column">
-										<ReactDatePicker
-											dateFormat="yyyy"
-											showYearPicker
-											selected={getValue(`movies.${idx}.year`)}
-											className={hasError(`movies.${idx}.year`) ? 'hasError' : ''}
-											onChange={date => {
-												setValue(`movies.${idx}.year`, date);
+							<React.Fragment key={key(album)}>
+								<div className="field is-narrow mb-4">
+									<img
+										src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
+										style={{ width: '30px', verticalAlign: 'text-top' }}
+									/>
+								</div>
+								<div className="field">
+									<input
+										type="text"
+										placeholder="Enter album name"
+										{...register(`albums.${idx}.name`)}
+										className={hasError(`albums.${idx}.name`) ? 'input is-danger' : 'input'}
+									/>
+									<BulmaError for={`albums.${idx}.name`} />
+								</div>
+								<div className="field is-narrow">
+									<ReactDatePicker
+										showYearDropdown
+										placeholderText="Enter release date"
+										selected={getValue(`albums.${idx}.releaseDate`)}
+										className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger has-text-centered' : 'input has-text-centered'}
+										onChange={date => {
+											setValue(`albums.${idx}.releaseDate`, date);
+										}}
+									/>
+									<BulmaError for={`albums.${idx}.releaseDate`} />
+								</div>
+								<div className="field is-narrow pt-1">
+									<button
+										className="button is-small is-light is-warning"
+										onClick={e => {
+											e.preventDefault();
+											remove('albums', idx);
+										}}
+									>
+										remove x
+									</button>
+								</div>
+								<div className="break" style={{ width: '100%' }} />
+							</React.Fragment>
+						);
+					})}
+				</div>
+			</div>
+			<hr />
+
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<label className="label">Movies</label>
+
+					<button
+						className="button is-small is-light is-primary"
+						onClick={e => {
+							e.preventDefault();
+							append('movies', {
+								name: '',
+								year: null,
+								genres: [],
+								metaCritic: 0,
+								coStars: [],
+							});
+						}}
+					>
+						+ Add new
+					</button>
+
+					<BulmaError for="movies" />
+					<br />
+
+					<button
+						className="button is-small is-light is-warning"
+						onClick={e => {
+							e.preventDefault();
+							setValue('movies', []);
+						}}
+					>
+						x Clear
+					</button>
+
+					<p className="help has-text-grey-light">(dynamic nested arrays)</p>
+				</div>
+
+				<div className="field-body" style={{ flexFlow: 'row wrap' }}>
+					{getValue('movies').map((movie, idx) => {
+						const k = key(movie);
+						return (
+							<React.Fragment key={k}>
+								<div className="field is-narrow mb-4">
+									<img
+										src="https://cdn4.iconfinder.com/data/icons/system-basic-vol-6/20/icon-window-play-128.png"
+										style={{ width: '30px', verticalAlign: 'text-top' }}
+									/>
+								</div>
+								<div className="field">
+									<input
+										type="text"
+										placeholder="Enter movie name"
+										{...register(`movies.${idx}.name`)}
+										className={hasError(`movies.${idx}.name`) ? 'input is-danger' : 'input'}
+									/>
+									<BulmaError for={`movies.${idx}.name`} />
+								</div>
+								<div className="field is-narrow ">
+									<ReactDatePicker
+										dateFormat="yyyy"
+										showYearPicker
+										placeholderText="Enter movie date"
+										selected={getValue(`movies.${idx}.year`)}
+										className={hasError(`movies.${idx}.year`) ? 'input has-text-centered is-danger ' : 'input has-text-centered'}
+										onChange={date => {
+											setValue(`movies.${idx}.year`, date);
+										}}
+									/>
+									<BulmaError for={`movies.${idx}.year`} />
+								</div>
+								<div className="field">
+									<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
+									<br />
+									Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
+								</div>
+								<div className="field is-narrow">
+									<button
+										className="button is-small is-light is-warning"
+										onClick={e => {
+											e.preventDefault();
+											remove('movies', idx);
+										}}
+									>
+										remove x
+									</button>
+								</div>
+
+								<div className="break" style={{ width: '100%' }} />
+
+								<div className="field is-narrow mb-6">
+									<label className="label is-size-7 mt-2">Genres:</label>
+								</div>
+								<div className="field mb-4">
+									<div
+										style={{
+											fontSize: '12px',
+										}}
+									>
+										<Select
+											placeholder="Select Genre(s)"
+											isMulti
+											isClearable
+											options={optionsGenres}
+											getOptionLabel={optionLabel}
+											getOptionValue={optionValue}
+											value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
+											onChange={options => {
+												const optionIds = options.map(x => x.id);
+												const picked = optionsGenres.filter(option => optionIds.includes(option.id)).map(x => x.id);
+												setValue(`movies.${idx}.genres`, picked);
 											}}
 										/>
-										{hasError(`movies[${idx}].year`) && <span className="error">{errors.movies[idx].year.message}</span>}
-									</div>
-									<div className="column is-one-third">
-										<div className="select-wrapper">
-											<Select
-												placeholder="Select Genre(s)"
-												isMulti
-												isClearable
-												options={optionsGenres}
-												getOptionLabel={option => option.name}
-												getOptionValue={option => option.id}
-												value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
-												onChange={options => {
-													const optionIds = options.map(x => x.id);
-													const picked = optionsGenres.filter(option => optionIds.includes(option.id)).map(x => x.id);
-													setValue(`movies.${idx}.genres`, picked);
-												}}
-											/>
-										</div>
-										{hasError(`movies.${idx}.genres`) && <span className="error">{errors.movies[idx].genres.message}</span>}
-									</div>
-
-									<div className="column">
-										{hasError(`movies.${idx}.metaCritic`) && <span className="error">{errors.movies[idx].metaCritic.message}</span>}
-									</div>
-									<div className="column">
-										<button
-											onClick={e => {
-												e.preventDefault();
-												remove('movies', idx);
-											}}
-										>
-											-
-										</button>
+										<BulmaError for={`movies.${idx}.genres`} />
 									</div>
 								</div>
 
-								<div className="columns is-gapless mb-0">
-									<div className="column">
-										<div>
-											co-stars:
+								<div className="break" style={{ width: '100%' }} />
+
+								<div className="field-label ml-5">
+									<label className="label">Co-stars:</label>
+
+									{(getValue(`movies.${idx}.coStars`) || []).length > 0 && (
+										<>
 											<button
+												className="button is-small is-light is-primary"
 												onClick={e => {
 													e.preventDefault();
 													append(`movies.${idx}.coStars`, {
@@ -616,87 +370,234 @@ const Demo = () => {
 											>
 												+ Add new
 											</button>
-											{hasError(`movies[${idx}].coStars`) && <span className="error">{errors.movies[idx].coStars.message}</span>}
-											{getValue(`movies[${idx}].coStars`).map((star, jdx) => {
-												return (
-													<div key={key(star)} className="columns is-gapless mb-0">
-														<div className="column">
-															<input
-																type="text"
-																className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'hasError' : ''}
-																{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
-															/>
-															{hasError(`movies[${idx}].coStars[${jdx}].firstName`) && (
-																<span className="error">{errors.movies[idx].coStars[jdx].firstName.message}</span>
-															)}
-														</div>
+											<br />
 
-														<div className="column">
-															<input
-																type="text"
-																className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'hasError' : ''}
-																{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
-															/>
-															{hasError(`movies[${idx}].coStars[${jdx}].lastName`) && (
-																<span className="error">{errors.movies[idx].coStars[jdx].lastName.message}</span>
-															)}
-														</div>
+											<button
+												className="button is-small is-light is-warning"
+												onClick={e => {
+													e.preventDefault();
+													setValue(`movies.${idx}.coStars`, []);
+												}}
+											>
+												x Clear
+											</button>
 
-														<div className="column">
-															<button
-																onClick={e => {
-																	e.preventDefault();
-																	remove(`movies[${idx}].coStars`, jdx);
-																}}
-															>
-																-
-															</button>
-														</div>
-													</div>
-												);
-											})}
-										</div>
-									</div>
+											<p className="help has-text-grey-light">(movies.{idx}.coStars)</p>
+										</>
+									)}
+									<BulmaError for={`movies.${idx}.coStars`} />
 								</div>
+
+								<div className="field-body" style={{ flexFlow: 'row wrap' }}>
+									{(getValue(`movies.${idx}.coStars`) || []).length === 0 && (
+										<div className="notification is-warning" style={{ fontSize: '11px', padding: '1em' }}>
+											⚠ There are no actors/actresses set for this movie,{' '}
+											<a
+												onClick={e => {
+													e.preventDefault();
+													append(`movies.${idx}.coStars`, {
+														firstName: '',
+														lastName: '',
+													});
+												}}
+											>
+												add first one
+											</a>
+										</div>
+									)}
+									{getValue(`movies[${idx}].coStars`).map((star, jdx) => {
+										return (
+											<React.Fragment key={key(star)}>
+												<div className="field is-narrow">
+													<img
+														src="https://png.pngitem.com/pimgs/s/24-248235_user-profile-avatar-login-account-fa-user-circle.png"
+														style={{ width: '30px', verticalAlign: 'text-top' }}
+													/>
+												</div>
+												<div className="field mb-2">
+													<input
+														type="text"
+														placeholder="Enter actor's first name"
+														className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'input hasError' : 'input'}
+														{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
+													/>
+													<BulmaError for={`movies[${idx}].coStars[${jdx}].firstName`} />
+												</div>
+
+												<div className="field">
+													<input
+														type="text"
+														placeholder="Enter actor's last name"
+														className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'input  hasError' : 'input '}
+														{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
+													/>
+													<BulmaError for={`movies[${idx}].coStars[${jdx}].lastName`} />
+												</div>
+
+												<div className="field is-narrow">
+													<button
+														className="button is-small is-light is-warning"
+														onClick={e => {
+															e.preventDefault();
+															remove(`movies[${idx}].coStars`, jdx);
+														}}
+													>
+														remove x
+													</button>
+												</div>
+												<div className="break" style={{ width: '100%' }} />
+											</React.Fragment>
+										);
+									})}
+								</div>
+								<div className="break mb-5" style={{ width: '100%' }} />
 							</React.Fragment>
 						);
 					})}
 				</div>
 			</div>
+			<hr />
 
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Your rating</label>
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<label className="label">Occupation</label>
+					<p className="help has-text-grey-light">(how to use &lt;select /&gt; multiple or array of checkboxes)</p>
 				</div>
-				<div className={rightColumn}>
+				<div className="field-body">
+					<div className="field is-narrow">
+						<div className="control">
+							<div className={hasError('occupation') ? 'select is-multiple is-small is-fullwidth is-danger' : 'select is-multiple is-small is-fullwidth'}>
+								<select multiple {...register('occupation')}>
+									{optionsOccupation.map(option => {
+										return (
+											<option key={option} value={option}>
+												{option}
+											</option>
+										);
+									})}
+								</select>
+								<BulmaError for="occupation" />
+							</div>
+						</div>
+					</div>
+					<div className="field is-narrow">
+						<div className="control is-size-7">
+							{optionsOccupation.map(option => {
+								const occupations = getValue('occupation');
+								const checked = occupations.includes(option);
+								return (
+									<React.Fragment key={option}>
+										<label className="checkbox" className="mr-2">
+											<input
+												type="checkbox"
+												key={option}
+												checked={checked}
+												className="mr-1"
+												onChange={e => {
+													let newArr = [...occupations];
+													if (e.target.checked) {
+														newArr.push(option);
+													} else {
+														newArr = newArr.filter(o => o !== option);
+													}
+													setValue('occupation', newArr);
+												}}
+											/>
+											{option}
+										</label>
+										<br />
+									</React.Fragment>
+								);
+							})}
+							<BulmaError for="occupation" />
+						</div>
+					</div>
+
+					<div className="field is-narrow">
+						<Select
+							placeholder="Select occupation(s)"
+							isMulti
+							isClearable
+							isSearchable={false}
+							options={optionsOccupation.map(name => ({ id: name, name }))}
+							getOptionLabel={optionLabel}
+							getOptionValue={optionValue}
+							value={optionsOccupation.map(name => ({ id: name, name })).filter(option => getValue('occupation').includes(option.id))}
+							onChange={options => {
+								const optionIds = options.map(o => o.id);
+								const picked = optionsOccupation
+									.map(name => ({ id: name, name }))
+									.filter(option => optionIds.includes(option.id))
+									.map(option => option.id);
+								setValue('occupation', picked);
+							}}
+						/>
+						<BulmaError for="occupation" />
+					</div>
+				</div>
+			</div>
+			<hr />
+
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<label className="label">Your rating</label>
+					<p className="help has-text-grey-light">(radio usage)</p>
+				</div>
+				<div className="field-body">
 					{optionsRadio.map(option => {
 						return (
-							<label key={option.id} className="radio">
-								<input type="radio" {...register('radio')} checked={String(getValue('radio')) === String(option.id)} value={option.id} />
+							<label key={option.id} className="radio mr-1">
+								<input
+									type="radio"
+									className="radio mr-1"
+									{...register('radio')}
+									checked={String(getValue('radio')) === String(option.id)}
+									value={option.id}
+								/>
 								{option.name}
 							</label>
 						);
 					})}
 				</div>
 			</div>
+			<hr />
 
-			<div className="columns">
-				<div className={leftColumn}>
-					<label>Would recommend?</label>
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					<p className="help has-text-grey-light">(checkbox usage)</p>
 				</div>
-
-				<div className={rightColumn}>
-					<input type="checkbox" className={hasError('checkbox') ? 'hasError' : ''} {...register('checkbox')} />
+				<div className="field-body">
+					<label className="checkbox">
+						<input type="checkbox" className={hasError('checkbox') ? 'mr-2 hasError' : 'mr-2'} {...register('checkbox')} />
+						Yes I would recommend this artist
+					</label>
 				</div>
 			</div>
-
 			<hr />
-			<button type="submit" className="button is-primary mr-2" onClick={handleSubmit(onSubmit)}>
-				Submit form
-			</button>
-			<button type="submit" className="button" onClick={onReset}>
-				Reset
-			</button>
+
+			<div className="field is-horizontal mb-6 pb-6">
+				<div className="field-label is-normal" />
+				<div className="field-body">
+					<button type="submit" className="button is-primary mr-2" onClick={handleSubmit(onSubmit)}>
+						Submit form
+					</button>
+					<button type="submit" className="button" onClick={onReset}>
+						Reset
+					</button>
+				</div>
+			</div>
+			<hr />
+
+			<div className="columns">
+				<div className="column">
+					<h3>Form values</h3>
+					<pre style={{ fontSize: '12px' }}>{JSON.stringify(getValue(), null, 4)}</pre>
+				</div>
+				<div className="column">
+					<h3>Validation errors</h3>
+					<pre style={{ fontSize: '12px' }}>{JSON.stringify(errors, null, 4)}</pre>
+				</div>
+			</div>
 		</div>
 	);
 };
@@ -721,6 +622,9 @@ const optionsGenres = [
 	{ id: 1, name: 'Adventure' },
 	{ id: 2, name: 'Fantasy' },
 	{ id: 3, name: 'Thriller' },
+	{ id: 4, name: 'Comedy' },
+	{ id: 5, name: 'Drama' },
+	{ id: 6, name: 'Romance' },
 ];
 
 // const coStars = new Array(1000).fill(1).map((x, idx) => {
