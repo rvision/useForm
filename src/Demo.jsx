@@ -166,12 +166,48 @@ const Demo = () => {
 
 	return (
 		<div>
-			<div className="columns">
+			<div className="columns mb-5">
 				<div className="column">
-					Render count: <b className="mr-3">{renderCount}</b>
-					Is valid: <b className="mr-3">{isValid === true ? 'true' : 'false'}</b>
-					Is touched: <b className="mr-3">{isTouched === true ? 'true' : 'false'}</b>
-					Is dirty: <b className="mr-3">{isDirty === true ? 'true' : 'false'}</b>
+					<p className="title">useForm demo</p>
+					<p className="subtitle">demo with native inputs and custom components</p>
+				</div>
+				<div className="column has-text-right">
+					<ul>
+						<li>
+							Render count: <b className="mr-3 is-danger">{renderCount}</b>
+						</li>
+						<li>
+							Is valid: <b className="mr-3">{isValid === true ? 'true' : 'false'}</b>
+						</li>
+						<li>
+							Is touched: <b className="mr-3">{isTouched === true ? 'true' : 'false'}</b>
+						</li>
+						<li>
+							Is dirty: <b className="mr-3">{isDirty === true ? 'true' : 'false'}</b>
+						</li>
+					</ul>
+				</div>
+				<div className="column has-text-right">
+					<button
+						className="button is-small is-danger"
+						onClick={e => {
+							e.preventDefault();
+
+							const movies = new Array(100).fill(1).map((item, idx) => {
+								return {
+									name: `movie ${idx}`,
+									year: null,
+									genres: [Math.floor((Math.random() * optionsGenres.length) % optionsGenres.length)],
+									metaCritic: 0,
+									coStars: [],
+								};
+							});
+
+							setValue('movies', movies);
+						}}
+					>
+						Set 100 movies
+					</button>
 				</div>
 			</div>
 
@@ -183,7 +219,7 @@ const Demo = () => {
 				<div className="field-body">
 					<div className="field is-narrow">
 						<div className="select is-fullwidth">
-							<select className={hasError('title') ? 'hasError' : ''} {...register('title')}>
+							<select className={hasError('title') ? 'is-danger' : ''} {...register('title')}>
 								{optionsTitle.map(option => {
 									return (
 										<option key={option.id} value={option.id}>
@@ -479,7 +515,7 @@ const Demo = () => {
 													<input
 														type="text"
 														placeholder="Enter actor's first name"
-														className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'input hasError' : 'input'}
+														className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'input is-danger' : 'input'}
 														{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
 													/>
 													<BulmaError for={`movies[${idx}].coStars[${jdx}].firstName`} />
@@ -489,7 +525,7 @@ const Demo = () => {
 													<input
 														type="text"
 														placeholder="Enter actor's last name"
-														className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'input  hasError' : 'input '}
+														className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'input is-danger' : 'input '}
 														{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
 													/>
 													<BulmaError for={`movies[${idx}].coStars[${jdx}].lastName`} />
@@ -629,7 +665,7 @@ const Demo = () => {
 				</div>
 				<div className="field-body">
 					<label className="checkbox">
-						<input type="checkbox" className={hasError('checkbox') ? 'mr-2 hasError' : 'mr-2'} {...register('checkbox')} />
+						<input type="checkbox" className={hasError('checkbox') ? 'mr-2 is-danger' : 'mr-2'} {...register('checkbox')} />
 						Yes I would recommend this artist
 					</label>
 				</div>
