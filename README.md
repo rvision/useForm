@@ -5,16 +5,17 @@ React forms utility library, lightweight alternative to existing frameworks.
 codesandbox links
 
 ## Another form library?
-This library works with controlled components only. Performance of re-renders depends on the number and types of components used. For native inputs, it is fast. For custom components, your mileage may vary.
-
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
 
 If you think formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray is complicated to use, then read on.
 
-### About
-- low learning curve
-- components freedom: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields and custom components via ```getValue/setValue``` methods
-- idea is to reference all fields in a natural way, with regards of the initial object shape/structure. For example:
+### Introduction
+This library works with controlled components only. Performance of re-renders depends on the number and types of components used. For native inputs, it is fast, for custom components, your mileage may vary.
+
+### Goals
+- **low learning curve**
+- **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
+- reference to any field in a natural way, with regards of the initial object shape/structure. For example:
 
 ```js
 firstName // 1st level property
@@ -89,7 +90,7 @@ field registration method for native inputs; uses fullPath concept to identify t
 </select>
 ```
 
-**onChange(event: ReactSyntheticEvent)**
+**onChange(event: React.SyntheticEvent)**
 
 if you need debouncing or additional logic when field value is changed, use onChange method; it overrides default method set by register
 ```jsx
@@ -103,7 +104,7 @@ if you need debouncing or additional logic when field value is changed, use onCh
 />
 ```
 
-**onBlur(event: ReactSyntheticEvent)**
+**onBlur(event: React.SyntheticEvent)**
 
 same, but for onBlur event
 ```jsx
