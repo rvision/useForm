@@ -10,12 +10,12 @@ If you need performant forms library, please use [react-hook-form](https://react
 If you think ```formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray``` is complicated to use, then read on.
 
 ### Introduction
-This library works with **controlled components only**. Performance of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
+This library works with **controlled components only**. Performance and number of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
 
 ### Goals
 - **low learning curve**
 - **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
-- reference to any field in a natural way, with regards of the initial object shape/structure. For example:
+- reference to any field in a **natural way**, with regards of the initial object shape/structure. For example:
 
 ```js
 firstName // 1st level property
@@ -40,9 +40,9 @@ useForm({
 **Field**       | **Type**      | **Description**
 --------------- | ------------- | --------------------------------------------------------------
 ```defaultValues```   | ```object```        | initial form values; for new records it has to be populated with default values (e.g. empty strings, true/false, etc.)
-```mode```            | ```'onSubmit'/'onChange'/'onBlur'```   | validation behaviour: onSubmit validates form when submitting, onChange when field is edited, onBlur when field is blurred
+```mode```            | ```'onSubmit'/'onChange'/'onBlur'```   | validation behaviour: ```onSubmit``` validates form when submitting, ```onChange``` when field is edited, ```onBlur``` when field is blurred
 ```shouldFocusError``` | ```bool```        | if field has errors, it will focus on error field - when? depends on the mode
-```resolver``` | ```function(fieldValues)```    | validation function; currently only [yup](https://github.com/jquense/yup) is supported out-of-the-box (yupResolver), but adding more can be done easily
+```resolver``` | ```function(fieldValues)```    | validation function; currently only [yup](https://github.com/jquense/yup) is supported out-of-the-box (```yupResolver```), but adding more can be done easily
 
 ### Returned props
 ```js
@@ -76,7 +76,7 @@ const {
 
 **register(fullPath: string)**
 
-field registration method for native inputs; uses fullPath concept to identify the field in the object hierarchy
+field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy
 ```jsx
 <input type="text" {...register('movies[${i}].coStars[${j}].firstName')} />
 {/* or */}
@@ -94,7 +94,7 @@ field registration method for native inputs; uses fullPath concept to identify t
 
 **onChange(event: React.SyntheticEvent)**
 
-if you need debouncing or additional logic when field value is changed, use onChange method; it overrides default method set by register
+if you need debouncing or additional logic when field value is changed, use ```'onChange'``` method; it overrides default method set by register
 ```jsx
 <input
 	type="text"
@@ -108,7 +108,7 @@ if you need debouncing or additional logic when field value is changed, use onCh
 
 **onBlur(event: React.SyntheticEvent)**
 
-same, but for onBlur event
+same, but for ```onBlur``` event
 ```jsx
 <input
 	type="text"
@@ -136,7 +136,7 @@ helper method to get unique keys for siblings when rendering arrays. It works by
 
 **getRef(fullPath: string)**
 
-helper method to get reference (ref) to the native input, uses fullPath concept as field identifier
+helper method to get reference (ref) to the native input, uses ```fullPath``` concept as field identifier
 ```jsx
 <a onClick={() => {
 	getRef(`movies[${i}].coStars[0].firstName`).focus()
@@ -145,7 +145,7 @@ helper method to get reference (ref) to the native input, uses fullPath concept 
 
 **setRef(fullPath: string, element: ref-able DOM element)**
 
-helper method to store reference (ref) to the native input, uses fullPath concept as field identifier; Use it for storing refs for custom components, this way they can be focusable when clicking on the error in the list of errors from ```<Errors />``` component
+helper method to store reference (ref) to the native input, uses ```fullPath``` concept as field identifier; Use it for storing refs for custom components, this way they can be focusable when clicking on the error in the list of errors from ```<Errors />``` component
 ```jsx
 <ReactDatePicker
 	selected={getValue('birthDate')}
@@ -194,14 +194,14 @@ React component that renders all validation errors as ```<li />```, registered b
 
 **getValue(fullPath: string)**
 
-method to get value of the field, uses fullPath concept as field identifier. use it for custom components
+method to get value of the field, uses ```fullPath``` concept as field identifier. use it for custom components
 ```jsx
 <ReactDatePicker selected={getValue('birthDate')} />
 ```
 
 **setValue(fullPath: string, newValue: any, shouldRevalidate: true)**
 
-method to set value of the field, uses fullPath concept as field identifier. use it for custom components.
+method to set value of the field, uses ```fullPath``` concept as field identifier. use it for custom components.
 ```jsx
 <ReactDatePicker
 	onChange={date => {
@@ -214,14 +214,14 @@ method to set value of the field, uses fullPath concept as field identifier. use
 
 **trigger(fullPath: string?, newValues: any)**
 
-triggers validation on default form values object or passed newValues; it re-validates only the error with fullPath
+triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```
 ```jsx
 <a onClick={trigger('firstName')}>Check first name</a>
 ```
 
 **hasError(fullPath: string?)**
 
-returns bool if field value has validation errors; if fullPath is omitted returns if there are any errors for all fields
+returns bool if field value has validation errors; if ```fullPath``` is omitted returns if there are any errors for all fields
 ```jsx
 { hasError('firstName') && <p>This field has errors</p>}
 ```
@@ -235,7 +235,7 @@ clears error from the errors object
 
 **handleSubmit(handler: function)**
 
-submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and shouldFocusError is set to true)
+submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true)
 ```jsx
 <button type="submit" onClick={handleSubmit(values => console.log(values))}>
 	Save the form
@@ -300,7 +300,7 @@ object with validation errors; shape of this object follows the shape/structure 
 
 **isValid: bool**
 
-true if there are no validation errors; when mode is 'onSubmit', errors and this field will be populated when form is submitted
+true if there are no validation errors; when mode is ```'onSubmit'```, errors and this field will be populated when form is submitted
 
 **isTouched: bool**
 
