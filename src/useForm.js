@@ -442,30 +442,32 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			return false;
 		}
 
-		const errorList = [];
-		refsMap.current.forEach((value, key) => {
-			if (hasError(key, errors)) {
-				const err = _getNested(key, errors);
-				errorList.push({
-					message: err.message,
-					element: value,
-				});
-			}
-		});
+		const errorElements = Array.from(refsMap.current)
+			.filter(entry => hasError(entry[0]))
+			.map(entry => {
+				const [fullPath, element] = entry;
+				return {
+					error: _getNested(fullPath, errors),
+					element,
+				};
+			});
 
 		const result = (
-			<ul className="validation-errors">
-				{errorList.map(err => {
+			<>
+				{errorElements.map(({ error, element }) => {
 					return (
-						<li key={key(key.value)}>
-							<a onClick={() => err && err.element && err.element.focus()}>{err.message}</a>
+						<li key={key(element)}>
+							<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
 						</li>
 					);
 				})}
-			</ul>
+			</>
 		);
 
-		return <>{typeof children === 'function' ? children(result) : result}</>;
+		if (typeof children === 'function') {
+			return children(result);
+		}
+		return result;
 	};
 
 	return {

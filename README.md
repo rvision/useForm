@@ -141,6 +141,31 @@ helper method to get reference (ref) to the native input, uses fullPath concept 
 }}>
 ```
 
+**setRef(fullPath: string, element: ref-able element)**
+
+helper method to store reference (ref) to the native input, uses fullPath concept as field identifier; Use it for storing refs for custom components, this way they can be focusable when clicking on the error in the list of errors from ```<Errors />``` component
+```jsx
+<ReactDatePicker
+	selected={getValue('birthDate')}
+	ref={ref => {
+		if (ref && ref.input) {
+			setRef('birthDate', ref.input);
+		}
+	}}
+	onChange={date => {
+		setValue('birthDate', date);
+	}}
+/>
+{/* or */}
+<Select
+	placeholder="Select Genre(s)"
+	ref={ref => setRef(`movies.${idx}.genres`, ref)}
+	onChange={options => {
+		setValue(`movies.${idx}.genres`, options);
+	}}
+/>
+```
+
 **Error**
 
 React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error
@@ -152,11 +177,17 @@ React component to display field validation error, can be used with render props
 
 **Errors**
 
-React component that renders all validation errors as ```<ul />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link that when clicked, focuses on the input with errors. Can be used with render prop or without.
+React component that renders all validation errors as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link that when clicked, focuses on the input with errors. Can be used with render prop or without.
 ```jsx
-<Errors>{errorsUnorderedList => <div className="notification is-danger">{errorsUnorderedList}</div>}</Errors>
+<Errors>
+	{errorList => (
+		<div className="notification is-danger">
+			<ul className="validation-errors">{errorList}</ul>
+		</div>
+	)}
+</Errors>
 {/* or */}
-<Errors />	// will render <ul className="validation-errors"><li><a>Please enter first name</a></li></ul>
+<Errors />	// will render <li><a>Please enter first name</a></li>... etc.
 ```
 
 **getValue(fullPath: string)**

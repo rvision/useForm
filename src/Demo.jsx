@@ -216,7 +216,13 @@ const Demo = () => {
 				</div>
 			</div>
 
-			<Errors>{errList => <div className="notification is-danger">{errList}</div>}</Errors>
+			<Errors>
+				{errorList => (
+					<div className="notification is-danger">
+						<ul className="validation-errors">{errorList}</ul>
+					</div>
+				)}
+			</Errors>
 
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
@@ -319,6 +325,11 @@ const Demo = () => {
 										placeholderText="Enter release date"
 										selected={getValue(`albums.${idx}.releaseDate`)}
 										className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger has-text-centered' : 'input has-text-centered'}
+										ref={ref => {
+											if (ref && ref.input) {
+												setRef(`albums.${idx}.releaseDate`, ref.input);
+											}
+										}}
 										onChange={date => {
 											setValue(`albums.${idx}.releaseDate`, date);
 										}}
@@ -406,6 +417,11 @@ const Demo = () => {
 										placeholderText="Enter movie date"
 										selected={getValue(`movies.${idx}.year`)}
 										className={hasError(`movies.${idx}.year`) ? 'input has-text-centered is-danger ' : 'input has-text-centered'}
+										ref={ref => {
+											if (ref && ref.input) {
+												setRef(`movies.${idx}.year`, ref.input);
+											}
+										}}
 										onChange={date => {
 											setValue(`movies.${idx}.year`, date);
 										}}
