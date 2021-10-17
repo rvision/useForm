@@ -7,10 +7,10 @@ codesandbox links
 ## Another form library?
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
 
-If you think formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray is complicated to use, then read on.
+If you think ```formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray``` is complicated to use, then read on.
 
 ### Introduction
-This library works with controlled components only. Performance of re-renders depends on the number and types of components used. For native inputs, it is fast, for custom components, your mileage may vary.
+This library works with **controlled components only**. Performance of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
 
 ### Goals
 - **low learning curve**
@@ -52,7 +52,9 @@ const {
 	onBlur,
 	key,
 	getRef,
+	setRef,
 	Error,
+	Errors,
 	getValue,
 	setValue,
 	trigger,
@@ -141,7 +143,7 @@ helper method to get reference (ref) to the native input, uses fullPath concept 
 }}>
 ```
 
-**setRef(fullPath: string, element: ref-able element)**
+**setRef(fullPath: string, element: ref-able DOM element)**
 
 helper method to store reference (ref) to the native input, uses fullPath concept as field identifier; Use it for storing refs for custom components, this way they can be focusable when clicking on the error in the list of errors from ```<Errors />``` component
 ```jsx
@@ -177,7 +179,7 @@ React component to display field validation error, can be used with render props
 
 **Errors**
 
-React component that renders all validation errors as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link that when clicked, focuses on the input with errors. Can be used with render prop or without.
+React component that renders all validation errors as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked, focuses on the input with error. Can be used with render prop or without.
 ```jsx
 <Errors>
 	{errorList => (
