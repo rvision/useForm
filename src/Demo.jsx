@@ -13,6 +13,7 @@ const optionsTitle = [
 	{ id: 'Mrs', name: 'Mrs' },
 	{ id: 'Ms', name: 'Ms' },
 ];
+
 const optionsOccupation = ['actress', 'musician', 'singer', 'hedonist', 'nutcase'];
 const optionsRadio = [
 	{ id: '1', name: '1' },
@@ -38,6 +39,7 @@ const defaultModel = Object.freeze({
 	lastName: 'Jones',
 	radio: '3',
 	checkbox: false,
+	notes: 'I love this artist!',
 	birthDate: new Date('1948-05-19'),
 	albums: [
 		{ name: 'Warm Leatherette', releaseDate: new Date('1980-05-09') },
@@ -78,6 +80,7 @@ const schema = yup.object().shape({
 	firstName: yup.string().min(3, 'Please enter at least 3 chars').required('Please enter first name'),
 	lastName: yup.string().required('Please enter last name'),
 	birthDate: yup.date().nullable().required('Birth date is required').typeError('Invalid format'),
+	notes: yup.string().required('Please add some notes'),
 	albums: yup
 		.array()
 		.ensure()
@@ -214,7 +217,7 @@ const Demo = () => {
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Celebrity</label>
-					<p className="help has-text-grey-light">(native form inputs & birthdate date picker)</p>
+					<p className="help has-text-grey-light">(native form inputs & birthdate react-datepicker)</p>
 				</div>
 				<div className="field-body">
 					<div className="field is-narrow">
@@ -558,7 +561,7 @@ const Demo = () => {
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Occupation</label>
-					<p className="help has-text-grey-light">(how to use &lt;select /&gt; multiple or array of checkboxes)</p>
+					<p className="help has-text-grey-light">(how to use &lt;select /&gt; multiple, react-select or array of checkboxes)</p>
 				</div>
 				<div className="field-body">
 					<div className="field is-narrow">
@@ -637,42 +640,46 @@ const Demo = () => {
 
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
-					<label className="label">Your rating</label>
-					<p className="help has-text-grey-light">(radio usage)</p>
+					<label className="label">Misc</label>
+					<p className="help has-text-grey-light">(textarea, radio, checkbox usage))</p>
 				</div>
 				<div className="field-body">
-					{optionsRadio.map(option => {
-						return (
-							<label key={option.id} className="radio mr-1">
-								<input
-									type="radio"
-									className="radio mr-1"
-									{...register('radio')}
-									checked={String(getValue('radio')) === String(option.id)}
-									value={option.id}
-								/>
-								{option.name}
-							</label>
-						);
-					})}
+					<div className="field">
+						<label className="label">
+							Notes
+							<textarea {...register('notes')} className={hasError('notes') ? 'textarea is-danger' : 'textarea'} />
+						</label>
+						<BulmaError for="notes" />
+					</div>
+					<div className="field">
+						<label className="label">Your rating</label>
+						{optionsRadio.map(option => {
+							return (
+								<label key={option.id} className="radio mr-1">
+									<input
+										type="radio"
+										className="radio mr-1"
+										{...register('radio')}
+										checked={String(getValue('radio')) === String(option.id)}
+										value={option.id}
+									/>
+									{option.name}
+								</label>
+							);
+						})}
+					</div>
+					<div className="field">
+						<label className="label">Recommendation</label>
+						<label className="checkbox">
+							<input type="checkbox" className={hasError('checkbox') ? 'mr-2 is-danger' : 'mr-2'} {...register('checkbox')} />
+							Yes I would recommend this artist
+						</label>
+					</div>
 				</div>
 			</div>
 			<hr />
 
 			<div className="field is-horizontal">
-				<div className="field-label is-normal">
-					<p className="help has-text-grey-light">(checkbox usage)</p>
-				</div>
-				<div className="field-body">
-					<label className="checkbox">
-						<input type="checkbox" className={hasError('checkbox') ? 'mr-2 is-danger' : 'mr-2'} {...register('checkbox')} />
-						Yes I would recommend this artist
-					</label>
-				</div>
-			</div>
-			<hr />
-
-			<div className="field is-horizontal mb-6 pb-6">
 				<div className="field-label is-normal" />
 				<div className="field-body">
 					<button type="submit" className="button is-primary mr-2" onClick={handleSubmit(onSubmit)}>
