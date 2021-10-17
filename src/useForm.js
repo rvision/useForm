@@ -447,23 +447,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			}
 		});
 
-		return (
-			<>
-				{typeof children === 'function' ? (
-					children(errorList)
-				) : (
-					<ul className="validation-errors">
-						{errorList.map(err => {
-							return (
-								<li key={key(key.value)}>
-									<a onClick={() => err && err.element && err.element.focus()}>{err.message}</a>
-								</li>
-							);
-						})}
-					</ul>
-				)}
-			</>
+		const result = (
+			<ul className="validation-errors">
+				{errorList.map(err => {
+					return (
+						<li key={key(key.value)}>
+							<a onClick={() => err && err.element && err.element.focus()}>{err.message}</a>
+						</li>
+					);
+				})}
+			</ul>
 		);
+
+		return <>{typeof children === 'function' ? children(result) : result}</>;
 	};
 
 	return {

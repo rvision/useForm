@@ -215,7 +215,7 @@ const Demo = () => {
 				</div>
 			</div>
 
-			<Errors />
+			<Errors>{errList => <div className="notification is-danger">{errList}</div>}</Errors>
 
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
@@ -260,7 +260,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Albums</label>
@@ -338,7 +337,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Movies</label>
@@ -560,7 +558,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Occupation</label>
@@ -640,7 +637,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Misc</label>
@@ -681,7 +677,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="field is-horizontal">
 				<div className="field-label is-normal" />
 				<div className="field-body">
@@ -694,7 +689,6 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
-
 			<div className="columns">
 				<div className="column">
 					<h3>Form values</h3>
