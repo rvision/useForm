@@ -452,6 +452,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 				};
 			});
 
+		if (errorElements.length === 0) {
+			return false;
+		}
+
 		const result = (
 			<>
 				{errorElements.map(({ error, element }) => {

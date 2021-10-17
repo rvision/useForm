@@ -179,7 +179,7 @@ React component to display field validation error, can be used with render props
 
 **Errors**
 
-React component that renders all validation errors as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked, focuses on the input with error. Can be used with render prop or without.
+React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked, focuses on the input with error. Can be used with render prop or without.
 ```jsx
 <Errors>
 	{errorList => (
