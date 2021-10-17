@@ -125,6 +125,7 @@ const Demo = () => {
 		getValue,
 		setValue,
 		// getRef,
+		setRef,
 		// onBlur,
 		// onChange,
 		register,
@@ -251,6 +252,11 @@ const Demo = () => {
 							placeholderText="Enter birthdate"
 							selected={getValue('birthDate')}
 							className={hasError('birthDate') ? 'input is-danger has-text-centered' : 'input has-text-centered'}
+							ref={ref => {
+								if (ref && ref.input) {
+									setRef('birthDate', ref.input);
+								}
+							}}
 							onChange={date => {
 								setValue('birthDate', date);
 							}}
@@ -442,6 +448,7 @@ const Demo = () => {
 											getOptionLabel={optionLabel}
 											getOptionValue={optionValue}
 											value={optionsGenres.filter(option => getValue(`movies.${idx}.genres`).includes(option.id))}
+											ref={ref => setRef(`movies.${idx}.genres`, ref)}
 											onChange={options => {
 												const optionIds = options.map(x => x.id);
 												const picked = optionsGenres.filter(option => optionIds.includes(option.id)).map(x => x.id);

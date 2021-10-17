@@ -423,6 +423,12 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return refsMap.current.get(name);
 	};
 
+	const setRef = (name, element) => {
+		if (element) {
+			refsMap.current.set(name, element);
+		}
+	};
+
 	const Error = ({ for: path, children }) => {
 		const err = _getNested(path, errors);
 		if (!err || Array.isArray(err)) {
@@ -469,6 +475,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		onChange,
 		onBlur,
 		getRef,
+		setRef,
 		trigger,
 		handleSubmit,
 		hasError,

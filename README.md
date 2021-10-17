@@ -150,6 +150,15 @@ React component to display field validation error, can be used with render props
 <Error for="movies[3].releaseDate" />	// will render <span className="validation-error">{err.message}</span>
 ```
 
+**Errors**
+
+React component that renders all validation errors as ```<ul />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link that when clicked, focuses on the input with errors. Can be used with render prop or without.
+```jsx
+<Errors>{errorsUnorderedList => <div className="notification is-danger">{errorsUnorderedList}</div>}</Errors>
+{/* or */}
+<Errors />	// will render <ul className="validation-errors"><li><a>Please enter first name</a></li></ul>
+```
+
 **getValue(fullPath: string)**
 
 method to get value of the field, uses fullPath concept as field identifier. use it for custom components
