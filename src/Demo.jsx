@@ -137,6 +137,7 @@ const Demo = () => {
 		hasError,
 		// clearError,
 		Error,
+		Errors,
 		reset,
 		formState: { isDirty, isValid, isTouched, errors },
 	} = useForm({
@@ -213,6 +214,8 @@ const Demo = () => {
 					</button>
 				</div>
 			</div>
+
+			<Errors />
 
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
