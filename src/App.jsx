@@ -3,9 +3,11 @@ import Demo from './Demo';
 
 const App = () => {
 	return (
-		<div className="my-6 px-6">
-			<Demo />
-		</div>
+		<section>
+			<div className="my-6 px-6">
+				<Demo />
+			</div>
+		</section>
 	);
 };
 
