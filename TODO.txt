@@ -1,6 +1,7 @@
 TO BE DONE:
 ================================================================================
-<Errors>
+sredi forEach
+setError je potreban
 
 const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
 
@@ -23,7 +24,6 @@ const flattenObject = ob => {
 	}, {});
 };
 
--prepend/append array?
 -onSubmit string u konstantu
 
 
@@ -52,15 +52,4 @@ This option allows you to configure the validation before onSubmit event.
 reValidateMode: onChange | onBlur | onSubmit = 'onChange'
 
 	This option allows you to configure when inputs with errors get re-validated after submit. By default, validation is only triggered during an input change.
-
--error komponenta
-
--onBlur eventi
--validacija: kako i kada
--re-validacija: kako i kada
--prepend/append revalidira grešku
-
--focus za prepend/append? prvi prop? ne radi, jer ceo render nije okinut
-const name = `${fullPath}.${newArr.length - 1}.${Object.keys(object)[0]}`;
-refsMap.current.get(name).focus();
 
