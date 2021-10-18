@@ -153,9 +153,7 @@ const Demo = () => {
 	// const { isDirty, isValid, isTouched, errors } = formState;
 
 	const onSubmit = vals => {
-		// e.preventDefault();
-		console.log('vals');
-		console.log(vals);
+		alert(JSON.stringify(vals, null, 4));
 	};
 
 	const onReset = e => {
@@ -192,7 +190,7 @@ const Demo = () => {
 						</li>
 					</ul>
 				</div>
-				<div className="column has-text-right">
+				{/* <div className="column has-text-right">
 					<button
 						className="button is-small is-danger"
 						onClick={e => {
@@ -213,12 +211,13 @@ const Demo = () => {
 					>
 						Set 100 movies
 					</button>
-				</div>
+				</div> */}
 			</div>
 
 			<Errors>
 				{errorList => (
 					<div className="notification is-danger">
+						<h6>Your form has some errors:</h6>
 						<ul className="validation-errors">{errorList}</ul>
 					</div>
 				)}
