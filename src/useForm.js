@@ -252,7 +252,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	const trigger = (fullPath = [], newValues = values) => {
-		const newValidation = resolver(newValues) || {};
+		const newValidation = resolver(newValues);
 		const error = _getNested(fullPath, newValidation);
 		const newErrors = { ...newValidation };
 		_deleteNestedToRoot(fullPath, newErrors);
@@ -275,7 +275,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 			if (validate && (hasError(fullPath) || mode === 'onChange')) {
 				const newErrors = clearError(fullPath);
-				const newValidation = resolver(newValues) || {};
+				const newValidation = resolver(newValues);
 				const newError = _getNested(fullPath, newValidation);
 				if (newError) {
 					_setNested(fullPath, newErrors, newError);
@@ -429,7 +429,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		isTouched.current = false;
 		isDirty.current = false;
 		if (validate) {
-			setErrors(resolver(newValues) || {});
+			setErrors(resolver(newValues));
 		}
 	};
 
