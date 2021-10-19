@@ -161,7 +161,8 @@ const _deleteNestedToRoot = (fullPath, target) => {
 	});
 
 	// delete paths from deepest to shallowest
-	pathsToRoot.forEach(path => {
+	// eslint-disable-next-line no-restricted-syntax
+	for (const path of pathsToRoot) {
 		const value = _getNested(path, target);
 		if (value !== undefined) {
 			if (Array.isArray(value)) {
@@ -174,7 +175,7 @@ const _deleteNestedToRoot = (fullPath, target) => {
 				_deleteNested(path, target);
 			}
 		}
-	});
+	}
 };
 
 // clears error if exists and not array of errors (root array arror, e.g. min items)
@@ -239,12 +240,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 
 	const setErrorsExternal = errorsObj => {
 		const newErrors = { ...errors };
-		Object.keys(errorsObj).forEach(fullPath => {
+		// eslint-disable-next-line no-restricted-syntax
+		for (const fullPath of Object.keys(errorsObj)) {
 			if (hasError(fullPath)) {
 				_deleteNestedToRoot(fullPath, newErrors);
 			}
 			_setNested(fullPath, newErrors, errorsObj[fullPath]);
-		});
+		}
 		setErrors(newErrors);
 		return newErrors;
 	};
@@ -523,13 +525,14 @@ export const yupResolver = schema => {
 		try {
 			schema.validateSync(fields, { abortEarly: false });
 		} catch (validationError) {
-			validationError.inner.forEach(error => {
+			// eslint-disable-next-line no-restricted-syntax
+			for (const error of validationError.inner) {
 				const err = {
 					message: error.message,
 					type: error.type,
 				};
 				_setNested(error.path, errors, err);
-			});
+			}
 		}
 		return errors;
 	};

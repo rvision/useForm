@@ -1,8 +1,7 @@
 TO BE DONE:
 ================================================================================
-useMemo a sve custom komponente, re-renderuj samo ako je getValue() drugaciji
-className za inpute s gre�kom
-sredi forEach
+className za inpute s greškom
+debounce
 
 const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
 
