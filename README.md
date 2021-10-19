@@ -233,6 +233,22 @@ clears error from the errors object
 <a onClick={clearError('firstName')}>Clear firstname validation errors</a>
 ```
 
+**setErrors(errors: object)**
+
+used to set validation errrors from other parts of the system (API or similar); sets 1 or more errors via errors object: keys are fullPath identifiers, values are message/type error objects
+```jsx
+setErrors({
+	email: {
+		type: 'duplicate',
+		message: 'This email address is already in use',
+	},
+	['otherFields[2].otherProperty']: {
+		type: 'invalid',
+		message: 'This property is invalid',
+	},
+});
+```
+
 **handleSubmit(handler: function)**
 
 submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true)

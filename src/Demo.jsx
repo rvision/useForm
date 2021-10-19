@@ -136,6 +136,7 @@ const Demo = () => {
 		append,
 		remove,
 		hasError,
+		setErrors,
 		// clearError,
 		Error,
 		Errors,
@@ -190,7 +191,7 @@ const Demo = () => {
 						</li>
 					</ul>
 				</div>
-				{/* <div className="column has-text-right">
+				<div className="column has-text-right">
 					<button
 						className="button is-small is-danger"
 						onClick={e => {
@@ -211,7 +212,7 @@ const Demo = () => {
 					>
 						Set 100 movies
 					</button>
-				</div> */}
+				</div>
 			</div>
 
 			<Errors>

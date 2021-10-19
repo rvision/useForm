@@ -237,6 +237,18 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		return targetErrors;
 	};
 
+	const setErrorsExternal = errorsObj => {
+		const newErrors = { ...errors };
+		Object.keys(errorsObj).forEach(fullPath => {
+			if (hasError(fullPath)) {
+				_deleteNestedToRoot(fullPath, newErrors);
+			}
+			_setNested(fullPath, newErrors, errorsObj[fullPath]);
+		});
+		setErrors(newErrors);
+		return newErrors;
+	};
+
 	const trigger = (fullPath = [], newValues = values) => {
 		const newValidation = resolver(newValues) || {};
 		const error = _getNested(fullPath, newValidation);
@@ -486,6 +498,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		handleSubmit,
 		hasError,
 		clearError,
+		setErrors: setErrorsExternal,
 		append,
 		prepend,
 		remove,
