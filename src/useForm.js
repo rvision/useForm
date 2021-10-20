@@ -210,9 +210,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const defaultValuesJSON = useRef('');
 	const key = useKey();
 
+	const init = values => {
+		defaultValuesJSON.current = JSON.stringify(values);
+		setValues(_clone(values));
+	};
+
 	useEffect(() => {
-		defaultValuesJSON.current = JSON.stringify(defaultValues);
-		setValues(_clone(defaultValues));
+		init(defaultValues);
 	}, [defaultValues]);
 
 	useEffect(() => {
@@ -429,13 +433,12 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		};
 	};
 
-	const reset = (model = defaultValues, validate = true) => {
-		const newValues = _clone(model);
-		setValues(newValues);
+	const reset = (values = defaultValues, validate = true) => {
+		init(values);
 		isTouched.current = false;
 		isDirty.current = false;
 		if (validate) {
-			setErrors(resolver(newValues));
+			setErrors(resolver(values));
 		}
 	};
 
