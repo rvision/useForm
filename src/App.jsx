@@ -3,10 +3,8 @@ import Demo from './Demo';
 
 const App = () => {
 	return (
-		<div>
-			<div className="my-6 px-6">
-				<Demo />
-			</div>
+		<div style={{ width: '60rem', margin: '0 auto' }} className="pt-6">
+			<Demo />
 		</div>
 	);
 };

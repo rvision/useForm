@@ -201,7 +201,7 @@ const _shiftErrors = (fullPath, targetErrors, callback) => {
 	return targetErrors;
 };
 
-const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = false, resolver = () => {} }) => {
+const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => {} }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
@@ -359,9 +359,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 	};
 
 	const onBlur = e => {
-		if (mode !== 'onBlur') {
-			return;
-		}
 		const { name } = e.target;
 		const newValidation = resolver(values) || {};
 		const newError = _getNested(name, newValidation);
@@ -377,13 +374,12 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 		}
 	};
 
-	const register = name => {
+	const register = (name, { className = false } = {}) => {
 		const props = {
 			key: name,
 			name,
 			onChange,
-			// NOTE: onBlur: mode === 'onBlur' ? onBlur : undefined, causes 1 extra render; why???
-			onBlur,
+			onBlur: mode === 'onBlur' ? onBlur : undefined,
 			ref: element => {
 				refsMap.current.set(name, element);
 			},
@@ -394,6 +390,16 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', shouldFocusError = fal
 			props.checked = value;
 		} else {
 			props.value = `${value}` === '0' ? value : value || '';
+		}
+
+		if (classNameError !== null || !!className) {
+			let classNameGenerated = className || '';
+			if (hasError(name)) {
+				classNameGenerated = `${classNameGenerated} ${classNameError}`;
+			}
+			if (classNameGenerated) {
+				props.className = classNameGenerated;
+			}
 		}
 
 		return props;

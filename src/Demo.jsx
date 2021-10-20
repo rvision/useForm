@@ -147,6 +147,7 @@ const Demo = () => {
 		mode: 'onSubmit',
 		// mode: 'onBlur',
 		// mode: 'onChange',
+		classNameError: 'is-danger',
 		shouldFocusError: false,
 		resolver: yupResolver(schema),
 	});
@@ -232,7 +233,7 @@ const Demo = () => {
 				<div className="field-body">
 					<div className="field is-narrow">
 						<div className="select is-fullwidth">
-							<select className={hasError('title') ? 'is-danger' : ''} {...register('title')}>
+							<select {...register('title')}>
 								{optionsTitle.map(option => {
 									return (
 										<option key={option.id} value={option.id}>
@@ -244,11 +245,11 @@ const Demo = () => {
 						</div>
 					</div>
 					<div className="field">
-						<input type="text" placeholder="Enter first name" {...register('firstName')} className={hasError('firstName') ? 'input is-danger' : 'input'} />
+						<input type="text" placeholder="Enter first name" {...register('firstName', { className: 'input' })} />
 						<BulmaError for="firstName" />
 					</div>
 					<div className="field">
-						<input type="text" placeholder="Enter last name" {...register('lastName')} className={hasError('lastName') ? 'input is-danger' : 'input'} />
+						<input type="text" placeholder="Enter last name" {...register('lastName', { className: 'input' })} />
 						<BulmaError for="lastName" />
 					</div>
 					<div className="field">
@@ -256,8 +257,9 @@ const Demo = () => {
 							showMonthDropdown
 							showYearDropdown
 							placeholderText="Enter birthdate"
+							// className={hasError('birthDate') ? 'input is-danger has-text-centered' : 'input has-text-centered'}
+							{...register('birthDate', { className: 'input has-text-centered' })}
 							selected={getValue('birthDate')}
-							className={hasError('birthDate') ? 'input is-danger has-text-centered' : 'input has-text-centered'}
 							ref={ref => {
 								if (ref && ref.input) {
 									setRef('birthDate', ref.input);
@@ -304,19 +306,14 @@ const Demo = () => {
 					{getValue('albums').map((album, idx) => {
 						return (
 							<React.Fragment key={key(album)}>
-								<div className="field is-narrow mb-4">
+								<div className="field is-narrow mb-5">
 									<img
 										src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
 										style={{ width: '30px', verticalAlign: 'text-top' }}
 									/>
 								</div>
 								<div className="field">
-									<input
-										type="text"
-										placeholder="Enter album name"
-										{...register(`albums.${idx}.name`)}
-										className={hasError(`albums.${idx}.name`) ? 'input is-danger' : 'input'}
-									/>
+									<input type="text" placeholder="Enter album name" {...register(`albums.${idx}.name`, { className: 'input' })} />
 									<BulmaError for={`albums.${idx}.name`} />
 								</div>
 								<div className="field is-narrow">
@@ -402,12 +399,7 @@ const Demo = () => {
 									/>
 								</div>
 								<div className="field">
-									<input
-										type="text"
-										placeholder="Enter movie name"
-										{...register(`movies.${idx}.name`)}
-										className={hasError(`movies.${idx}.name`) ? 'input is-danger' : 'input'}
-									/>
+									<input type="text" placeholder="Enter movie name" {...register(`movies.${idx}.name`, { className: 'input' })} />
 									<BulmaError for={`movies.${idx}.name`} />
 								</div>
 								<div className="field is-narrow ">
@@ -450,7 +442,7 @@ const Demo = () => {
 								<div className="field is-narrow mb-6">
 									<label className="label is-size-7 mt-2">Genres:</label>
 								</div>
-								<div className="field mb-4">
+								<div className="field mb-4 mt-1">
 									<div
 										style={{
 											fontSize: '12px',
@@ -542,8 +534,7 @@ const Demo = () => {
 													<input
 														type="text"
 														placeholder="Enter actor's first name"
-														className={hasError(`movies[${idx}].coStars[${jdx}].firstName`) ? 'input is-danger' : 'input'}
-														{...register(`movies[${idx}].coStars[${jdx}].firstName`)}
+														{...register(`movies[${idx}].coStars[${jdx}].firstName`, { className: 'input' })}
 													/>
 													<BulmaError for={`movies[${idx}].coStars[${jdx}].firstName`} />
 												</div>
@@ -552,8 +543,7 @@ const Demo = () => {
 													<input
 														type="text"
 														placeholder="Enter actor's last name"
-														className={hasError(`movies[${idx}].coStars[${jdx}].lastName`) ? 'input is-danger' : 'input '}
-														{...register(`movies[${idx}].coStars[${jdx}].lastName`)}
+														{...register(`movies[${idx}].coStars[${jdx}].lastName`, { className: 'input' })}
 													/>
 													<BulmaError for={`movies[${idx}].coStars[${jdx}].lastName`} />
 												</div>

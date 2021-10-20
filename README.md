@@ -41,6 +41,7 @@ useForm({
 --------------- | ------------- | --------------------------------------------------------------
 ```defaultValues```   | ```object```        | initial form values; for new records it has to be populated with default values (e.g. empty strings, true/false, etc.)
 ```mode```            | ```'onSubmit'/'onChange'/'onBlur'```   | validation behaviour: ```onSubmit``` validates form when submitting, ```onChange``` when field is edited, ```onBlur``` when field is blurred
+```classNameError``` | ```string```        | If set, registered fields with errors will have this css class name appended to their className list
 ```shouldFocusError``` | ```bool```        | if field has errors, it will focus on error field - when? depends on the mode
 ```resolver``` | ```function(fieldValues)```    | validation function; currently only [yup](https://github.com/jquense/yup) is supported out-of-the-box (```yupResolver```), but adding more can be done easily
 
@@ -74,15 +75,15 @@ const {
 } = useForm(options);
 ```
 
-**register(fullPath: string)**
+**register(fullPath: string, { className: string })**
 
-field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy
+field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has valdiation error
 ```jsx
 <input type="text" {...register('movies[${i}].coStars[${j}].firstName')} />
 {/* or */}
 <input type="checkbox" {...register('agreeToTermsAndConditions')} />
 {/* or */}
-<input type="number" {...register('employee[5].age')} />
+<input type="number" {...register('employee[5].age', { className: 'has-error' } )} />
 {/* or */}
 <input type="radio" {...register('radio')} checked={String(getValue('radio')) === String(option.id)} value={option.id} />
 {/* or */}
