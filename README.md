@@ -32,6 +32,7 @@ Let's call this identifier ```fullPath```. Most of the methods to work with fiel
 useForm({
 	defaultValues: {},
 	mode: 'onSubmit',
+	classNameError: null,
 	shouldFocusError: false,
 	resolver: () => {}
 });
