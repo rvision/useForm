@@ -77,7 +77,7 @@ const {
 
 **register(fullPath: string, { className: string })**
 
-field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has valdiation error
+field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has validation error
 ```jsx
 <input type="text" {...register('movies[${i}].coStars[${j}].firstName')} />
 {/* or */}
