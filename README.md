@@ -232,7 +232,7 @@ returns bool if field value has validation errors; if ```fullPath``` is omitted 
 
 clears error from the errors object
 ```jsx
-<a onClick={clearError('firstName')}>Clear firstname validation errors</a>
+<a onClick={clearError('firstName')}>Clear firstname validation error</a>
 ```
 
 **setErrors(errors: object)**
