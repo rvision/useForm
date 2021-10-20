@@ -84,7 +84,7 @@ field registration method for native inputs; uses ```fullPath``` concept to iden
 {/* or */}
 <input type="checkbox" {...register('agreeToTermsAndConditions')} />
 {/* or */}
-<input type="number" {...register('employee[5].age', { className: 'has-error' } )} />
+<input type="number" {...register('employee[5].age', { className: 'my-number-input' } )} />
 {/* or */}
 <input type="radio" {...register('radio')} checked={String(getValue('radio')) === String(option.id)} value={option.id} />
 {/* or */}
