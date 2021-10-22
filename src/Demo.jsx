@@ -184,9 +184,6 @@ const Demo = () => {
 
 	renderCount += 1;
 
-	console.log('getValue()');
-	console.log(getValue());
-
 	return (
 		<div>
 			<div className="columns mb-5">

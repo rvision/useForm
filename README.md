@@ -94,6 +94,27 @@ field registration method for native inputs; uses ```fullPath``` concept to iden
 	<option key="cd" value="cd">CD player</option>
 </select>
 ```
+**NOTE**
+Only input type that doesn't allow automatic registration is file type, because of the browser security. You can only use ```onChange``` event to set the value, but you cannot display it. Here is an example how to deal with those fields:
+```jsx
+<div className="field-body">
+	{getValue('files').map((file, idx) => {
+		return (
+			<React.Fragment key={key(file || key())}>
+				<div className="file">
+					<label className="file-label">
+						<input className="file-input" name={`files[${idx}]`} type="file" onChange={onChange} />
+						<span className="file-cta">
+							<span className="file-label">{(file || {}).name || 'Choose a file…'}</span>
+						</span>
+					</label>
+				</div>
+				<BulmaError for={`files[${idx}]`} />
+			</React.Fragment>
+		);
+	})}
+</div>
+```
 
 **onChange(event: React.SyntheticEvent)**
 
