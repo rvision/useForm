@@ -1,19 +1,20 @@
 # useForm
 React forms utility library, lightweight alternative to existing frameworks.
 
-## demo
-codesandbox links
+## [codesandbox demo](https://k7s4y.csb.app/)
+
 
 ## Another form library?
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
 
 If you think ```formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray``` is complicated to use, then read on.
 
-### Introduction
+## Introduction
 This library works with **controlled components only**. Performance and number of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
 
-### Goals
+## Goals
 - **low learning curve**
+- **nested arrays** support without hassle
 - **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
 - reference to any field in a **natural way**, with regards of the initial object shape/structure. For example:
 

@@ -1,8 +1,5 @@
 TO BE DONE:
 ================================================================================
-className za inpute s greškom
-debounce
-
 const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
 
 // normalize keys

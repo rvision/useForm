@@ -39,6 +39,7 @@ const defaultModel = Object.freeze({
 	lastName: 'Jones',
 	radio: '3',
 	checkbox: false,
+	files: [],
 	notes: 'I love this artist!',
 	birthDate: new Date('1948-05-19'),
 	albums: [
@@ -81,6 +82,20 @@ const schema = yup.object().shape({
 	lastName: yup.string().required('Please enter last name'),
 	birthDate: yup.date().nullable().required('Birth date is required').typeError('Invalid format'),
 	notes: yup.string().required('Please add some notes'),
+	files: yup
+		.array()
+		.ensure()
+		.min(1, 'Please enter at least 1 file to upload (txt,jpg,png,gif)')
+		.of(
+			yup
+				.mixed()
+				.test(
+					'format',
+					'Unsupported Format',
+					value => value === null || (value && ['application/pdf', 'text/plain', 'image/jpg', 'image/jpeg', 'image/gif', 'image/png'].includes(value.type)),
+				)
+				.required('File is required'),
+		),
 	albums: yup
 		.array()
 		.ensure()
@@ -127,7 +142,7 @@ const Demo = () => {
 		// getRef,
 		setRef,
 		// onBlur,
-		// onChange,
+		onChange,
 		register,
 		// trigger,
 		handleSubmit,
@@ -168,6 +183,9 @@ const Demo = () => {
 	};
 
 	renderCount += 1;
+
+	console.log('getValue()');
+	console.log(getValue());
 
 	return (
 		<div>
@@ -276,7 +294,7 @@ const Demo = () => {
 			<hr />
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
-					<label className="label">Albums</label>
+					<label className="label">Albums:</label>
 					<button
 						className="button is-small is-light is-primary"
 						onClick={e => {
@@ -306,7 +324,7 @@ const Demo = () => {
 					{getValue('albums').map((album, idx) => {
 						return (
 							<React.Fragment key={key(album)}>
-								<div className="field is-narrow mb-5">
+								<div className="field is-narrow mb-4 pt-1">
 									<img
 										src="https://is5-ssl.mzstatic.com/image/thumb/Purple125/v4/d4/26/96/d4269693-47e7-991d-e3af-31e9234a6818/source/256x256bb.jpg"
 										style={{ width: '30px', verticalAlign: 'text-top' }}
@@ -353,7 +371,7 @@ const Demo = () => {
 			<hr />
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
-					<label className="label">Movies</label>
+					<label className="label">Movies:</label>
 
 					<button
 						className="button is-small is-light is-primary"
@@ -392,7 +410,7 @@ const Demo = () => {
 						const k = key(movie);
 						return (
 							<React.Fragment key={k}>
-								<div className="field is-narrow mb-4">
+								<div className="field is-narrow mb-4 pt-1">
 									<img
 										src="https://cdn4.iconfinder.com/data/icons/system-basic-vol-6/20/icon-window-play-128.png"
 										style={{ width: '30px', verticalAlign: 'text-top' }}
@@ -420,7 +438,7 @@ const Demo = () => {
 									/>
 									<BulmaError for={`movies.${idx}.year`} />
 								</div>
-								<div className="field">
+								<div className="field has-text-centered">
 									<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
 									<br />
 									Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
@@ -439,8 +457,8 @@ const Demo = () => {
 
 								<div className="break" style={{ width: '100%' }} />
 
-								<div className="field is-narrow mb-6">
-									<label className="label is-size-7 mt-2">Genres:</label>
+								<div className="field is-narrow mb-4">
+									<div style={{ width: '30px' }} />
 								</div>
 								<div className="field mb-4 mt-1">
 									<div
@@ -524,7 +542,7 @@ const Demo = () => {
 									{getValue(`movies[${idx}].coStars`).map((star, jdx) => {
 										return (
 											<React.Fragment key={key(star)}>
-												<div className="field is-narrow">
+												<div className="field is-narrow mb-4 pt-1">
 													<img
 														src="https://png.pngitem.com/pimgs/s/24-248235_user-profile-avatar-login-account-fa-user-circle.png"
 														style={{ width: '30px', verticalAlign: 'text-top' }}
@@ -556,7 +574,7 @@ const Demo = () => {
 															remove(`movies[${idx}].coStars`, jdx);
 														}}
 													>
-														remove x
+														x
 													</button>
 												</div>
 												<div className="break" style={{ width: '100%' }} />
@@ -690,6 +708,43 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
+
+			<div className="field is-horizontal">
+				<div className="field-label is-normal">
+					Here is test for file upload
+					<br />
+					<button
+						className="button is-small is-light is-primary"
+						onClick={e => {
+							e.preventDefault();
+							append('files', null);
+						}}
+					>
+						+ Add new
+					</button>
+					<br />
+					<BulmaError for="files" />
+				</div>
+				<div className="field-body">
+					{getValue('files').map((file, idx) => {
+						return (
+							<React.Fragment key={key(file || key())}>
+								<div className="file">
+									<label className="file-label">
+										<input className="file-input" name={`files[${idx}]`} type="file" onChange={onChange} />
+										<span className="file-cta">
+											<span className="file-label">{(file || {}).name || 'Choose a file…'}</span>
+										</span>
+									</label>
+								</div>
+								<BulmaError for={`files[${idx}]`} />
+							</React.Fragment>
+						);
+					})}
+				</div>
+			</div>
+			<hr />
+
 			<div className="field is-horizontal">
 				<div className="field-label is-normal" />
 				<div className="field-body">
@@ -702,6 +757,7 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
+
 			<div className="columns">
 				<div className="column">
 					<h3>Form values</h3>

@@ -331,7 +331,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 
 	const onChange = e => {
-		const { name, type, checked, options, files } = e.target;
+		const { name, type, checked, options, files, multiple } = e.target;
+
 		let { value } = e.target;
 		switch (type) {
 			default:
@@ -353,7 +354,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				}
 				break;
 			case 'file':
-				[value] = files; // TODO: test this
+				value = multiple ? files : files.item(0);
 				break;
 			case 'select-multiple':
 				value = [...options].filter(o => o.selected).map(o => o.value);
@@ -457,7 +458,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		if (!err || Array.isArray(err)) {
 			return false;
 		}
-		return <>{typeof children === 'function' ? children(err) : <span className="validation-error">{err.message}</span>}</>;
+
+		return <>{typeof children === 'function' ? children(err) : <span className={`${classNameError} ${err.type}`}>{err.message}</span>}</>;
 	};
 
 	const Errors = ({ children }) => {
