@@ -146,7 +146,9 @@ same, but for ```onBlur``` event
 
 **key(any?)**
 
-helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key())
+helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()).
+
+
 **NOTE:** it is advised to use stable keys, so if you have database uuid, give it a priority:
 ```jsx
 {getValue(`movies[${i}].coStars`).map((star) => {
@@ -198,7 +200,7 @@ React component to display field validation error, can be used with render props
 ```jsx
 <Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
 {/* or */}
-<Error for="movies[3].releaseDate" />	// will render <span className="validation-error">{err.message}</span>
+<Error for="firstName" />	// will render <span className="required  classNameError">First name is required</span>
 ```
 
 **Errors**
@@ -321,6 +323,16 @@ removes array item from the existing array
 	e.preventDefault();
 	remove('movies[3].actors', 3);
 }}>Remove this actor</button>
+```
+
+**swap(fullPath: string, index1: int, index2: int)**
+
+swaps item positions in the existing array, useful for drag'n'drop operations
+```jsx
+<button onClick={e => {
+	e.preventDefault();
+	swap('movies[3].actors', 0, 1);
+}}>Swap actors</button>
 ```
 
 ### Form state props

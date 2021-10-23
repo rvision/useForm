@@ -330,6 +330,27 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return newArr;
 	};
 
+	const swap = (fullPath, idx1, idx2) => {
+		const swap_ = (target, fullPath, idx1, idx2) => {
+			const arr = _getNested(fullPath, target);
+			if (Array.isArray(arr)) {
+				const newArr = [...arr];
+				const el = newArr[idx1];
+				newArr[idx1] = newArr[idx2];
+				newArr[idx2] = el;
+				return newArr;
+			}
+			return arr;
+		};
+		const newArr = swap_(values, fullPath, idx1, idx2);
+		setValue(fullPath, newArr);
+
+		const newErr = swap_(errors, fullPath, idx1, idx2);
+		const newErrors = { ...errors };
+		_setNested(fullPath, newErrors, newErr);
+		setErrors(newErrors);
+	};
+
 	const onChange = e => {
 		const { name, type, checked, options, files, multiple } = e.target;
 
@@ -515,6 +536,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		append,
 		prepend,
 		remove,
+		swap,
 		key,
 		reset,
 		Error,

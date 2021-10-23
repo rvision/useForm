@@ -85,7 +85,7 @@ const schema = yup.object().shape({
 	files: yup
 		.array()
 		.ensure()
-		.min(1, 'Please enter at least 1 file to upload (txt,jpg,png,gif)')
+		.min(1, 'Please enter at least 1 file to upload (txt, jpg, png, gif)')
 		.of(
 			yup
 				.mixed()
@@ -149,6 +149,7 @@ const Demo = () => {
 		key,
 		// prepend,
 		append,
+		swap,
 		remove,
 		hasError,
 		setErrors,
@@ -297,6 +298,7 @@ const Demo = () => {
 						onClick={e => {
 							e.preventDefault();
 							append('albums', { name: '', releaseDate: null });
+							// swap('albums', 0, 1);
 						}}
 					>
 						+ Add new
@@ -725,10 +727,10 @@ const Demo = () => {
 				<div className="field-body">
 					{getValue('files').map((file, idx) => {
 						return (
-							<React.Fragment key={key(file || key())}>
+							<React.Fragment key={key()}>
 								<div className="file">
 									<label className="file-label">
-										<input className="file-input" name={`files[${idx}]`} type="file" onChange={onChange} />
+										<input className="file-inputX" name={`files[${idx}]`} type="file" onChange={onChange} />
 										<span className="file-cta">
 											<span className="file-label">{(file || {}).name || 'Choose a file…'}</span>
 										</span>
