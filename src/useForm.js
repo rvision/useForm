@@ -2,7 +2,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
+// NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
+const isFunction = obj => typeof obj === 'function';
+const isArray = arr => Array.isArray(arr);
+const toJSON = obj => JSON.stringify(obj);
+const objectKeys = obj => Object.keys(obj);
 
 const splitRegEx = /\[([^\]]+)\]/g;
 let splitCache = {};
@@ -27,7 +32,7 @@ const _clone = obj => {
 		return new Date(obj.getTime());
 	}
 
-	if (Array.isArray(obj)) {
+	if (isArray(obj)) {
 		return obj.reduce((arr, item, i) => {
 			arr[i] = _clone(item);
 			return arr;
@@ -35,7 +40,7 @@ const _clone = obj => {
 	}
 
 	if (obj instanceof Object) {
-		return Object.keys(obj).reduce((newObj, key) => {
+		return objectKeys(obj).reduce((newObj, key) => {
 			newObj[key] = _clone(obj[key]);
 			return newObj;
 		}, {});
@@ -45,7 +50,7 @@ const _clone = obj => {
 };
 
 const _getNested = (fullPath, source) => {
-	if (!Array.isArray(fullPath)) {
+	if (!isArray(fullPath)) {
 		return _getNested(_extractPath(fullPath), source);
 	}
 
@@ -79,7 +84,7 @@ const _getNested = (fullPath, source) => {
 };
 
 const _setNested = (fullPath, target, value) => {
-	if (!Array.isArray(fullPath)) {
+	if (!isArray(fullPath)) {
 		_setNested(_extractPath(fullPath), target, value);
 		return;
 	}
@@ -114,7 +119,7 @@ const _setNested = (fullPath, target, value) => {
 };
 
 const _deleteNested = (fullPath, target) => {
-	if (!Array.isArray(fullPath)) {
+	if (!isArray(fullPath)) {
 		_deleteNested(_extractPath(fullPath), target);
 		return;
 	}
@@ -148,7 +153,7 @@ const _deleteNested = (fullPath, target) => {
 
 // removes all entries to the root of the object
 const _deleteNestedToRoot = (fullPath, target) => {
-	if (!Array.isArray(fullPath)) {
+	if (!isArray(fullPath)) {
 		_deleteNestedToRoot(_extractPath(fullPath), target);
 		return;
 	}
@@ -165,13 +170,13 @@ const _deleteNestedToRoot = (fullPath, target) => {
 	for (const path of pathsToRoot) {
 		const value = _getNested(path, target);
 		if (value !== undefined) {
-			if (Array.isArray(value)) {
+			if (isArray(value)) {
 				// check if array is empty (no items) or each of them is undefined/empty
-				if (value.length === 0 || value.every(item => Object.keys(item || {}).length === 0)) {
+				if (value.length === 0 || value.every(item => objectKeys(item || {}).length === 0)) {
 					_deleteNested(path, target);
 				}
 			} // check if object is empty
-			else if (Object.keys(value || {}).length === 0) {
+			else if (objectKeys(value || {}).length === 0) {
 				_deleteNested(path, target);
 			}
 		}
@@ -181,7 +186,7 @@ const _deleteNestedToRoot = (fullPath, target) => {
 // clears error if exists and not array of errors (root array arror, e.g. min items)
 const _clearObjectError = (fullPath, targetErrors) => {
 	const arrError = _getNested(fullPath, targetErrors);
-	if (arrError && !Array.isArray(arrError)) {
+	if (arrError && !isArray(arrError)) {
 		const newErrors = { ...targetErrors };
 		_deleteNestedToRoot(fullPath, newErrors);
 		return newErrors;
@@ -192,7 +197,7 @@ const _clearObjectError = (fullPath, targetErrors) => {
 // shifts errors in array for prepend/remove operations
 const _shiftErrors = (fullPath, targetErrors, callback) => {
 	const arrError = _getNested(fullPath, targetErrors);
-	if (arrError && Array.isArray(arrError)) {
+	if (arrError && isArray(arrError)) {
 		const newErrors = { ...targetErrors };
 		const newArrErrrors = callback([...arrError]);
 		_setNested(fullPath, newErrors, newArrErrrors);
@@ -211,7 +216,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const key = useKey();
 
 	const init = values => {
-		defaultValuesJSON.current = JSON.stringify(values);
+		defaultValuesJSON.current = toJSON(values);
 		setValues(_clone(values));
 	};
 
@@ -227,7 +232,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const hasError = (fullPath = null, targetErrors = errors) => {
 		if (fullPath === null) {
-			return Object.keys(targetErrors || {}).length > 0;
+			return objectKeys(targetErrors || {}).length > 0;
 		}
 		return _getNested(fullPath, targetErrors) !== undefined;
 	};
@@ -242,10 +247,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return targetErrors;
 	};
 
-	const setErrorsExternal = errorsObj => {
+	const setCustomErrors = errorsObj => {
 		const newErrors = { ...errors };
 		// eslint-disable-next-line no-restricted-syntax
-		for (const fullPath of Object.keys(errorsObj)) {
+		for (const fullPath of objectKeys(errorsObj)) {
 			if (hasError(fullPath)) {
 				_deleteNestedToRoot(fullPath, newErrors);
 			}
@@ -275,12 +280,11 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		setValues(values => {
 			const newValues = { ...values };
 			_setNested(fullPath, newValues, value);
-			isDirty.current = defaultValuesJSON.current !== JSON.stringify(newValues);
+			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
 			if (validate && (hasError(fullPath) || mode === 'onChange')) {
 				const newErrors = clearError(fullPath);
-				const newValidation = resolver(newValues);
-				const newError = _getNested(fullPath, newValidation);
+				const newError = _getNested(fullPath, resolver(newValues));
 				if (newError) {
 					_setNested(fullPath, newErrors, newError);
 					setErrors(newErrors);
@@ -331,9 +335,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 
 	const swap = (fullPath, idx1, idx2) => {
-		const swap_ = (target, fullPath, idx1, idx2) => {
+		const _swap = (target, fullPath, idx1, idx2) => {
 			const arr = _getNested(fullPath, target);
-			if (Array.isArray(arr)) {
+			if (isArray(arr)) {
 				const newArr = [...arr];
 				const el = newArr[idx1];
 				newArr[idx1] = newArr[idx2];
@@ -342,10 +346,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 			return arr;
 		};
-		const newArr = swap_(values, fullPath, idx1, idx2);
+		const newArr = _swap(values, fullPath, idx1, idx2);
 		setValue(fullPath, newArr);
 
-		const newErr = swap_(errors, fullPath, idx1, idx2);
+		const newErr = _swap(errors, fullPath, idx1, idx2);
 		const newErrors = { ...errors };
 		_setNested(fullPath, newErrors, newErr);
 		setErrors(newErrors);
@@ -386,8 +390,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const onBlur = e => {
 		const { name } = e.target;
-		const newValidation = resolver(values) || {};
-		const newError = _getNested(name, newValidation);
+		const newError = _getNested(name, resolver(values));
 		if (newError) {
 			const newErrors = { ...errors };
 			_setNested(name, newErrors, newError);
@@ -400,15 +403,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
+	const ref = element => {
+		if (element) {
+			refsMap.current.set(element.name, element);
+		}
+	};
+
 	const register = (name, { className = false } = {}) => {
 		const props = {
 			key: name,
 			name,
 			onChange,
 			onBlur: mode === 'onBlur' ? onBlur : undefined,
-			ref: element => {
-				refsMap.current.set(name, element);
-			},
+			ref,
 		};
 
 		const value = getValue(name);
@@ -437,7 +444,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				e.preventDefault();
 			}
 
-			const newErrors = resolver(values) || {};
+			const newErrors = resolver(values);
 			setErrors(newErrors);
 			if (hasError(null, newErrors)) {
 				if (shouldFocusError === true) {
@@ -476,11 +483,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const Error = ({ for: path, children }) => {
 		const err = _getNested(path, errors);
-		if (!err || Array.isArray(err)) {
+		if (!err || isArray(err)) {
 			return false;
 		}
-
-		return <>{typeof children === 'function' ? children(err) : <span className={`${classNameError} ${err.type}`}>{err.message}</span>}</>;
+		return isFunction(children) ? children(err) : <span className={`${classNameError} ${err.type}`}>{err.message}</span>;
 	};
 
 	const Errors = ({ children }) => {
@@ -504,20 +510,15 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 		const result = (
 			<>
-				{errorElements.map(({ error, element }) => {
-					return (
-						<li key={key(element)}>
-							<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
-						</li>
-					);
-				})}
+				{errorElements.map(({ error, element }) => (
+					<li key={key(error)}>
+						<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
+					</li>
+				))}
 			</>
 		);
 
-		if (typeof children === 'function') {
-			return children(result);
-		}
-		return result;
+		return isFunction(children) ? children(result) : result;
 	};
 
 	return {
@@ -532,7 +533,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		handleSubmit,
 		hasError,
 		clearError,
-		setErrors: setErrorsExternal,
+		setErrors: setCustomErrors,
 		append,
 		prepend,
 		remove,
