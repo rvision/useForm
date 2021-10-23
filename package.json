@@ -1,72 +1,88 @@
 {
   "name": "@rvision/use-form",
-  "description": "forms utility library",
   "version": "1.0.0",
-  "license": "MIT",
-  "author": "Nenad Rogic <nenad.rogic@gmail.com>",
-  "keywords": [],
-  "private": true,
-  "main": "index.js",
-  "browserslist": [
-    ">1%",
-    "last 2 versions",
-    "Firefox ESR",
-    "not ie < 11",
-    "not op_mini all"
+  "description": "Forms utility library, lightweight alternative to existing frameworks.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "lint": "eslint --report-unused-disable-directives src",
+    "fix": "eslint --fix --report-unused-disable-directives src",
+    "test": "jest --coverage",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "setup": "cp ./.github/hooks/pre-commit ./.git/hooks/pre-commit && chmod +x ./.git/hooks/pre-commit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rvision/useForm.git"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "form",
+    "forms",
+    "react-hooks"
   ],
+  "author": "Nenad Rogic <nenad.rogic@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rvision/useForm/issues"
+  },
+  "homepage": "https://github.com/rvision/useForm",
   "devDependencies": {
-    "@babel/core": "^7.10.4",
-    "@babel/preset-env": "^7.10.4",
-    "@babel/preset-react": "^7.10.4",
+    "@babel/core": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.8.7",
+    "@babel/preset-react": "^7.8.3",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.1.0",
-    "clean-webpack-plugin": "^3.0.0",
-    "copy-webpack-plugin": "^6.2.0",
-    "css-loader": "^4.3.0",
-    "dotenv-webpack": "^3.0.0",
-    "esbuild-loader": "^2.9.2",
-    "eslint": "^7.10.0",
+    "babel-loader": "8.1.0",
+    "coveralls": "^3.0.9",
+    "css-loader": "^5.1.0",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.2",
+    "enzyme-to-json": "^3.4.3",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.12.0",
-    "eslint-loader": "^4.0.2",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jsx-a11y": "^6.3.1",
-    "eslint-plugin-prettier": "^3.1.4",
-    "eslint-plugin-react": "^7.20.3",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "file-loader": "^6.1.0",
-    "html-webpack-plugin": "^4.3.0",
-    "mini-css-extract-plugin": "^0.11.2",
-    "node-sass": "^4.14.1",
-    "optimize-css-assets-webpack-plugin": "^5.0.4",
-    "postcss-loader": "^4.0.2",
-    "prettier": "^2.4.1",
-    "react-hot-loader": "^4.12.21",
-    "sass": "^1.26.11",
-    "sass-loader": "^10.0.2",
-    "style-loader": "^1.2.1",
-    "terser-webpack-plugin": "^4.2.2",
-    "url-loader": "^4.1.0",
-    "webpack": "^4.43.0",
-    "webpack-bundle-analyzer": "^3.8.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0",
-    "webpack-merge": "^5.0.9",
-    "webpack-visualizer-plugin": "^0.1.11"
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-react": "^7.17.0",
+    "jest": "^26.0.1",
+    "jest-css-modules-transform": "^4.0.0",
+    "jest-enzyme": "^7.1.2",
+    "mini-css-extract-plugin": "^0.9.0",
+    "node-sass": "^4.13.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "sass-loader": "^8.0.2",
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11"
   },
-  "dependencies": {
-    "bulma": "^0.9.3",
-    "prop-types": "^15.7.2",
-    "react": "^17.0.1",
-    "react-datepicker": "^4.2.1",
-    "react-dom": "^17.0.1",
-    "react-select": "^5.0.0",
-    "yup": "^0.32.9"
+  "dependencies": {},
+  "peerDependencies": {
+	"react": "^17.0.1",
+	"react-dom": "^17.0.1"
   },
-  "scripts": {
-    "start": "webpack-dev-server --config ./config/webpack.js --env.env=development --progress --port 8080",
-    "build": "webpack --config ./config/webpack.js --env.env=production --progress",
-    "report": "npm run build -- --env.addon=bundleanalyze --env.addon=bundlevisualizer",
-    "test": "echo \"Error: no test specified\" && exit 0"
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,mjs}",
+      "!src/index.js"
+    ],
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/node_modules/jest-enzyme/lib/index.js",
+      "<rootDir>/jest-setup-tests.js"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest",
+      ".+\\.(css|styl|less|sass|scss)$": "<rootDir>/node_modules/jest-css-modules-transform"
+    }
   }
 }

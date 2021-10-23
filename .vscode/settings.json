@@ -1,0 +1,8 @@
+{
+	"jumpToAliasFile.alias": {
+		"components": "c:\\Projects\\useForm\\src\\components",
+		"modules": "c:\\Projects\\useForm\\src\\modules",
+		"utils": "c:\\Projects\\useForm\\src\\utils",
+		"store": "c:\\Projects\\useForm\\src\\store"
+	}
+}
