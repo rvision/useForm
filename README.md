@@ -13,6 +13,7 @@ If you think ```formState, control, Controller, useController, useFormContext, w
 This library works with **controlled components only**. Performance and number of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
 
 ## Goals
+- **0 dependencies**
 - **low learning curve**
 - **nested arrays** support without hassle
 - **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
