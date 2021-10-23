@@ -85,7 +85,7 @@ const schema = yup.object().shape({
 	files: yup
 		.array()
 		.ensure()
-		.min(1, 'Please enter at least 1 file to upload (txt, jpg, png, gif)')
+		// .min(1, 'Please enter at least 1 file to upload (txt, jpg, png, gif)')
 		.of(
 			yup
 				.mixed()
@@ -207,8 +207,6 @@ const Demo = () => {
 							Is dirty: <b className="mr-3">{isDirty === true ? 'true' : 'false'}</b>
 						</li>
 					</ul>
-				</div>
-				<div className="column has-text-right">
 					<button
 						className="button is-small is-danger"
 						onClick={e => {
@@ -227,7 +225,7 @@ const Demo = () => {
 							setValue('movies', movies);
 						}}
 					>
-						Set 100 movies
+						⚠ Set 100 movies
 					</button>
 				</div>
 			</div>
@@ -728,15 +726,24 @@ const Demo = () => {
 					{getValue('files').map((file, idx) => {
 						return (
 							<React.Fragment key={key()}>
-								<div className="file">
+								<div className="field is-narrow">
 									<label className="file-label">
-										<input className="file-inputX" name={`files[${idx}]`} type="file" onChange={onChange} />
-										<span className="file-cta">
+										<input className="file-input" name={`files[${idx}]`} type="file" onChange={onChange} />
+										<span className="file-cta is-size-7">
 											<span className="file-label">{(file || {}).name || 'Choose a file…'}</span>
 										</span>
+										<button
+											className="button is-small is-light is-warning"
+											onClick={e => {
+												e.preventDefault();
+												remove('files', idx);
+											}}
+										>
+											x
+										</button>
 									</label>
+									<BulmaError for={`files[${idx}]`} />
 								</div>
-								<BulmaError for={`files[${idx}]`} />
 							</React.Fragment>
 						);
 					})}
@@ -747,10 +754,10 @@ const Demo = () => {
 			<div className="field is-horizontal">
 				<div className="field-label is-normal" />
 				<div className="field-body">
-					<button type="submit" className="button is-primary mr-2" onClick={handleSubmit(onSubmit)}>
+					<button type="submit" className="button is-large is-primary mr-2" onClick={handleSubmit(onSubmit)}>
 						Submit form
 					</button>
-					<button type="submit" className="button" onClick={onReset}>
+					<button type="submit" className="button is-large" onClick={onReset}>
 						Reset
 					</button>
 				</div>
