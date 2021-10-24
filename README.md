@@ -1,8 +1,49 @@
 # useForm
 React forms utility library, lightweight alternative to existing frameworks.
 
-## [codesandbox demo](https://k7s4y.csb.app/)
+[demo](https://k7s4y.csb.app/)
 
+## Quickstart: basic usage
+```jsx
+const {
+	register,
+	handleSubmit,
+} = useForm({
+	defaultValues: {
+		firstName: '',
+		lastName: '',
+		email: '',
+		agree: false
+	},
+	mode: 'onSubmit'
+});
+
+const onSubmit = values => console.log(values);
+
+return (
+	<div>
+			<label>
+				Enter first name:
+				<input type="text" {...register('firstName')} />
+			</label>
+			<label>
+				Enter last name:
+				<input type="text" {...register('lastName')} />
+			</label>
+			<label>
+				Enter email:
+				<input type="email" {...register('email')} />
+			</label>
+			<label>
+				<input type="checkbox" {...register('agree')} />
+				I agree to terms and conditions
+			</label>
+			<button type="submit" onClick={handleSubmit(onSubmit)}>
+				Submit form
+			</button>
+	</div>
+)
+```
 
 ## Another form library?
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
@@ -14,10 +55,11 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **low learning curve**
+- **lightweight**
+- **simplicity: low learning curve**
 - **nested arrays** support without hassle
-- **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
-- reference to any field in a **natural way**, with regards of the initial object shape/structure. For example:
+- **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
+- **natural way** to reference to any field with regards of the initial object shape/structure. For example:
 
 ```js
 firstName // 1st level property

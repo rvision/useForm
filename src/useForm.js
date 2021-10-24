@@ -474,9 +474,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const handleSubmit = handler => {
 		return e => {
-			if (e && e.preventDefault) {
-				e.preventDefault();
-			}
+			// eslint-disable-next-line no-unused-expressions
+			e && e.preventDefault();
 
 			const newErrors = resolver(values);
 			setErrors(newErrors);
