@@ -39,6 +39,11 @@ const defaultModel = Object.freeze({
 	lastName: 'Jones',
 	radio: '3',
 	checkbox: false,
+	time: '14:10',
+	url: 'https://example.com/',
+	email: 'some.name@example.com',
+	date: '2021-10-28',
+	color: '#d73737',
 	files: [],
 	notes: 'I love this artist!',
 	birthDate: new Date('1948-05-19'),
@@ -665,12 +670,18 @@ const Demo = () => {
 				</div>
 			</div>
 			<hr />
+
 			<div className="field is-horizontal">
 				<div className="field-label is-normal">
 					<label className="label">Misc</label>
-					<p className="help has-text-grey-light">(textarea, radio, checkbox usage))</p>
+					<p className="help has-text-grey-light">
+						Native inputs, all working with register method:
+						<br />
+						textarea, radio, checkbox, color <br />
+						url, email, date, time
+					</p>
 				</div>
-				<div className="field-body">
+				<div className="field-body" style={{ flexFlow: 'row wrap' }}>
 					<div className="field">
 						<label className="label">
 							Notes
@@ -701,6 +712,28 @@ const Demo = () => {
 							<input type="checkbox" className={hasError('checkbox') ? 'mr-2 is-danger' : 'mr-2'} {...register('checkbox')} />
 							Yes I would recommend this artist
 						</label>
+					</div>
+					<div className="field">
+						<input type="color" {...register('color', { className: 'input' })} />
+						<BulmaError for="color" />
+					</div>
+					<div className="break" style={{ width: '100%' }} />
+
+					<div className="field">
+						<input type="url" placeholder="Enter url" {...register('url', { className: 'input' })} />
+						<BulmaError for="url" />
+					</div>
+					<div className="field">
+						<input type="email" placeholder="Enter email" {...register('email', { className: 'input' })} />
+						<BulmaError for="email" />
+					</div>
+					<div className="field">
+						<input type="date" {...register('date', { className: 'input' })} />
+						<BulmaError for="date" />
+					</div>
+					<div className="field">
+						<input type="time" placeholder="Enter time" {...register('time', { className: 'input' })} />
+						<BulmaError for="time" />
 					</div>
 				</div>
 			</div>
