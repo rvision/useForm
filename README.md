@@ -14,8 +14,7 @@ const {
 		lastName: '',
 		email: '',
 		agree: false
-	},
-	mode: 'onSubmit'
+	}
 });
 
 const onSubmit = values => console.log(values);
@@ -39,7 +38,7 @@ return (
 				I agree to terms and conditions
 			</label>
 			<button type="submit" onClick={handleSubmit(onSubmit)}>
-				Submit form
+				Register
 			</button>
 	</div>
 )
