@@ -38,6 +38,7 @@ const useKey = () => {
 
 // NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
+const parseI = num => parseInt(num, 10);
 const isFunction = obj => typeof obj === 'function';
 const { isArray } = Array;
 const toJSON = JSON.stringify;
@@ -106,7 +107,7 @@ const _getNested = (fullPath, source) => {
 	}
 
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -133,7 +134,7 @@ const _setNested = (fullPath, target, value) => {
 		return;
 	}
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
@@ -173,7 +174,7 @@ const _deleteNested = (fullPath, target) => {
 	}
 
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			delete target[path][idx];
@@ -400,7 +401,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				value = checked;
 				break;
 			case 'range':
-				value = parseInt(value, 10);
+				value = parseI(value);
 				break;
 			case 'number':
 				if (value === '') {
