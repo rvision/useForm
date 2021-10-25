@@ -1,5 +1,14 @@
 TO BE DONE:
 ================================================================================
+npm config set registry https //registry.npmjs.org/
+npm publish
+
+npm config set registry http://packages.paycor.com/npm/NpmFeed/
+
+
+useMemo za register funkciju?
+const result = useMemo(() => myNumber * 5, [myNumber])
+
 const isAsyncFunction = (v) => Object.prototype.toString.call(v) === '[object AsyncFunction]';
 
 // normalize keys
