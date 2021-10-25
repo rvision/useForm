@@ -39,9 +39,9 @@ const useKey = () => {
 // NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
 const isFunction = obj => typeof obj === 'function';
-const isArray = arr => Array.isArray(arr);
-const toJSON = obj => JSON.stringify(obj);
-const objectKeys = obj => Object.keys(obj);
+const { isArray } = Array;
+const toJSON = JSON.stringify;
+const objectKeys = Object.keys;
 
 const splitRegEx = /\[([^\]]+)\]/g;
 let splitCache = {};
