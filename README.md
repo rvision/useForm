@@ -5,7 +5,7 @@ React forms utility library, lightweight alternative to existing frameworks.
 
 ## Quickstart: basic usage
 ```jsx
-const defaultValues: = {
+const defaultValues = {
   firstName: '',
   lastName: '',
   email: '',
