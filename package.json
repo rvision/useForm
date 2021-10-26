@@ -11,6 +11,9 @@
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "setup": "cp ./.github/hooks/pre-commit ./.git/hooks/pre-commit && chmod +x ./.git/hooks/pre-commit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/rvision/useForm.git"
@@ -57,10 +60,11 @@
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"
   },
-  "dependencies": {},
+  "dependencies": {
+  },
   "peerDependencies": {
-	"react": "^17.0.1",
-	"react-dom": "^17.0.1"
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   },
   "jest": {
     "collectCoverageFrom": [
