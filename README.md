@@ -54,7 +54,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**
+- **lightweight**: 3.7kb minified + gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
@@ -95,21 +95,21 @@ const {
 	register,
 	onChange,
 	onBlur,
-	key,
+	getValue,
+	setValue,
+	trigger,
 	getRef,
 	setRef,
 	Error,
 	Errors,
-	getValue,
-	setValue,
-	trigger,
-	handleSubmit,
 	hasError,
 	clearError,
+	key,
 	append,
 	prepend,
 	remove,
 	reset,
+	handleSubmit,
 	formState: {
 		errors,
 		isValid,
