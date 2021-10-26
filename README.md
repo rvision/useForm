@@ -104,10 +104,12 @@ const {
 	Errors,
 	hasError,
 	clearError,
+	setErrors,
 	key,
 	append,
 	prepend,
 	remove,
+	swap,
 	reset,
 	handleSubmit,
 	formState: {
