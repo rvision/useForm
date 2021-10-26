@@ -5,43 +5,47 @@ React forms utility library, lightweight alternative to existing frameworks.
 
 ## Quickstart: basic usage
 ```jsx
-const {
-	register,
-	handleSubmit,
-} = useForm({
-	defaultValues: {
-		firstName: '',
-		lastName: '',
-		email: '',
-		agree: false
-	}
-});
+const defaultValues: = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  agree: false
+};
 
-const onSubmit = values => console.log(values);
+const Form = () => {
+  const {
+    register,
+    handleSubmit,
+  } = useForm({
+    defaultValues
+  });
 
-return (
-	<div>
-			<label>
-				Enter first name:
-				<input type="text" {...register('firstName')} />
-			</label>
-			<label>
-				Enter last name:
-				<input type="text" {...register('lastName')} />
-			</label>
-			<label>
-				Enter email:
-				<input type="email" {...register('email')} />
-			</label>
-			<label>
-				<input type="checkbox" {...register('agree')} />
-				I agree to terms and conditions
-			</label>
-			<button type="submit" onClick={handleSubmit(onSubmit)}>
-				Register
-			</button>
-	</div>
-)
+  const onSubmit = values => console.log(values);
+
+  return (
+    <div>
+        <label>
+          Enter first name:
+          <input type="text" {...register('firstName')} />
+        </label>
+        <label>
+          Enter last name:
+          <input type="text" {...register('lastName')} />
+        </label>
+        <label>
+          Enter email:
+          <input type="email" {...register('email')} />
+        </label>
+        <label>
+          <input type="checkbox" {...register('agree')} />
+          I agree to terms and conditions
+        </label>
+        <button type="submit" onClick={handleSubmit(onSubmit)}>
+          Register
+        </button>
+    </div>
+  );
+}
 ```
 
 ## Another form library?
