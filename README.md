@@ -1,7 +1,14 @@
 # useForm
 React forms utility library, lightweight alternative to existing frameworks.
 
-[demo](https://k7s4y.csb.app/)
+[see full demo](https://k7s4y.csb.app/)
+
+## Installation
+`npm install --save @rvision/use-form`
+
+or
+
+`yarn add @rvision/use-form`
 
 ## Quickstart: basic usage
 ```jsx
