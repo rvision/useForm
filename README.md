@@ -65,7 +65,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: 3.7kb minified + gzipped
+- **lightweight**: 3.8kb minified + gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
