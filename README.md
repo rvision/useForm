@@ -108,11 +108,11 @@ const {
 	onBlur,
 	getValue,
 	setValue,
-	trigger,
 	getRef,
 	setRef,
 	Error,
 	Errors,
+	trigger,
 	hasError,
 	clearError,
 	setErrors,
@@ -255,14 +255,14 @@ React component to display field validation error, can be used with render props
 ```jsx
 <Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
 {/* or */}
-<Error for="firstName" />	// will render <span className="required  classNameError">First name is required</span>
+<Error for="firstName" />	// will render <span className="required classNameError">First name is required</span>
 ```
 
 **Errors**
 
-React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked, focuses on the input with error. Can be used with render prop or without.
+React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked if prop, focuses on the input with error. Can be used with render prop or without.
 ```jsx
-<Errors>
+<Errors focusable>
 	{errorList => (
 		<div className="notification is-danger">
 			<ul className="validation-errors">{errorList}</ul>
@@ -270,7 +270,7 @@ React component that renders all validation errors **for focusable inputs** as `
 	)}
 </Errors>
 {/* or */}
-<Errors />	// will render <li><a>Please enter first name</a></li>... etc.
+<Errors focusable={false} />	// will render <li>Please enter first name</li>... etc.
 ```
 
 **getValue(fullPath: string)**

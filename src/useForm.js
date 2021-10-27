@@ -358,7 +358,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const onChange = e => {
 		const { name, type, checked, options, files, multiple } = e.target;
-
 		let { value } = e.target;
 		switch (type) {
 			default:
@@ -481,15 +480,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
+	const _errClassName = err => ({
+		className:`${classNameError || ''} ${err.type}`
+	});
+
 	const Error = ({ for: path, children }) => {
 		const err = _getNested(path, errors);
 		if (!err || isArray(err)) {
 			return false;
 		}
-		return isFunction(children) ? children(err) : <span className={`${classNameError || ''} ${err.type}`}>{err.message}</span>;
+		return isFunction(children) ? children(err) : <span {..._errClassName(err)}>{err.message}</span>;
 	};
 
-	const Errors = ({ children }) => {
+	const Errors = ({ children, focusable = false }) => {
 		if (!hasError()) {
 			return false;
 		}
@@ -509,8 +512,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 
 		const result = errorElements.map(({ error, element }) => (
-			<li key={key(error)} className={`${classNameError || ''} ${error.type}`}>
-				<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
+			<li key={key(error)} {..._errClassName(error)}>
+				{
+					focusable ?
+					<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
+					:
+					error.message
+				}
 			</li>
 		));
 
