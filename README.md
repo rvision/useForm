@@ -1,8 +1,59 @@
 # useForm
 React forms utility library, lightweight alternative to existing frameworks.
 
-## [codesandbox demo](https://k7s4y.csb.app/)
+[see full demo](https://k7s4y.csb.app/)
 
+## Installation
+`npm install --save @rvision/use-form`
+
+or
+
+`yarn add @rvision/use-form`
+
+## Quickstart: basic usage
+```jsx
+const defaultValues = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  agree: false
+};
+
+const Form = () => {
+  const {
+    register,
+    handleSubmit,
+  } = useForm({
+    defaultValues
+  });
+
+  const onSubmit = values => console.log(values);
+
+  return (
+    <div>
+        <label>
+          Enter first name:
+          <input type="text" {...register('firstName')} />
+        </label>
+        <label>
+          Enter last name:
+          <input type="text" {...register('lastName')} />
+        </label>
+        <label>
+          Enter email:
+          <input type="email" {...register('email')} />
+        </label>
+        <label>
+          <input type="checkbox" {...register('agree')} />
+          I agree to terms and conditions
+        </label>
+        <button type="submit" onClick={handleSubmit(onSubmit)}>
+          Register
+        </button>
+    </div>
+  );
+}
+```
 
 ## Another form library?
 If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
@@ -13,10 +64,12 @@ If you think ```formState, control, Controller, useController, useFormContext, w
 This library works with **controlled components only**. Performance and number of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
 
 ## Goals
-- **low learning curve**
+- **0 dependencies**
+- **lightweight**: 3.8kb minified + gzipped
+- **simplicity: low learning curve**
 - **nested arrays** support without hassle
-- **components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
-- reference to any field in a **natural way**, with regards of the initial object shape/structure. For example:
+- **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
+- **natural way** to reference to any field with regards of the initial object shape/structure. For example:
 
 ```js
 firstName // 1st level property
@@ -53,21 +106,23 @@ const {
 	register,
 	onChange,
 	onBlur,
-	key,
+	getValue,
+	setValue,
 	getRef,
 	setRef,
 	Error,
 	Errors,
-	getValue,
-	setValue,
 	trigger,
-	handleSubmit,
 	hasError,
 	clearError,
+	setErrors,
+	key,
 	append,
 	prepend,
 	remove,
+	swap,
 	reset,
+	handleSubmit,
 	formState: {
 		errors,
 		isValid,
@@ -200,14 +255,14 @@ React component to display field validation error, can be used with render props
 ```jsx
 <Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
 {/* or */}
-<Error for="firstName" />	// will render <span className="required  classNameError">First name is required</span>
+<Error for="firstName" />	// will render <span className="required classNameError">First name is required</span>
 ```
 
 **Errors**
 
-React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked, focuses on the input with error. Can be used with render prop or without.
+React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked if prop, focuses on the input with error. Can be used with render prop or without.
 ```jsx
-<Errors>
+<Errors focusable>
 	{errorList => (
 		<div className="notification is-danger">
 			<ul className="validation-errors">{errorList}</ul>
@@ -215,7 +270,7 @@ React component that renders all validation errors **for focusable inputs** as `
 	)}
 </Errors>
 {/* or */}
-<Errors />	// will render <li><a>Please enter first name</a></li>... etc.
+<Errors focusable={false} />	// will render <li>Please enter first name</li>... etc.
 ```
 
 **getValue(fullPath: string)**
