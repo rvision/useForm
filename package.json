@@ -1,7 +1,7 @@
 {
   "name": "@rvision/use-form",
   "description": "forms utility library",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Nenad Rogic <nenad.rogic@gmail.com>",
   "keywords": [],
