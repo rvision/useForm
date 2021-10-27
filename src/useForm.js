@@ -4,6 +4,7 @@ import useKey from './useKey';
 
 // NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
+const parseI = num => parseInt(num, 10);
 const isFunction = obj => typeof obj === 'function';
 const { isArray } = Array;
 const toJSON = JSON.stringify;
@@ -72,7 +73,7 @@ const _getNested = (fullPath, source) => {
 	}
 
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -99,7 +100,7 @@ const _setNested = (fullPath, target, value) => {
 		return;
 	}
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
@@ -139,7 +140,7 @@ const _deleteNested = (fullPath, target) => {
 	}
 
 	const next = fullPath[1];
-	const idx = parseInt(next, 10);
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			delete target[path][idx];
@@ -357,7 +358,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const onChange = e => {
 		const { name, type, checked, options, files, multiple } = e.target;
-
 		let { value } = e.target;
 		switch (type) {
 			default:
@@ -366,7 +366,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				value = checked;
 				break;
 			case 'range':
-				value = parseInt(value, 10);
+				value = parseI(value);
 				break;
 			case 'number':
 				if (value === '') {
@@ -440,9 +440,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const handleSubmit = handler => {
 		return e => {
-			if (e && e.preventDefault) {
-				e.preventDefault();
-			}
+			// eslint-disable-next-line no-unused-expressions
+			e && e.preventDefault();
 
 			const newErrors = resolver(values);
 			setErrors(newErrors);
@@ -481,15 +480,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
+	const _errClassName = err => ({
+		className:`${classNameError || ''} ${err.type}`
+	});
+
 	const Error = ({ for: path, children }) => {
 		const err = _getNested(path, errors);
 		if (!err || isArray(err)) {
 			return false;
 		}
-		return isFunction(children) ? children(err) : <span className={`${classNameError} ${err.type}`}>{err.message}</span>;
+		return isFunction(children) ? children(err) : <span {..._errClassName(err)}>{err.message}</span>;
 	};
 
-	const Errors = ({ children }) => {
+	const Errors = ({ children, focusable = false }) => {
 		if (!hasError()) {
 			return false;
 		}
@@ -508,15 +511,16 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			return false;
 		}
 
-		const result = (
-			<>
-				{errorElements.map(({ error, element }) => (
-					<li key={key(error)}>
-						<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
-					</li>
-				))}
-			</>
-		);
+		const result = errorElements.map(({ error, element }) => (
+			<li key={key(error)} {..._errClassName(error)}>
+				{
+					focusable ?
+					<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
+					:
+					error.message
+				}
+			</li>
+		));
 
 		return isFunction(children) ? children(result) : result;
 	};
@@ -551,8 +555,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 };
 
-export default useForm;
-
 export const yupResolver = schema => {
 	return fields => {
 		const errors = {};
@@ -571,3 +573,6 @@ export const yupResolver = schema => {
 		return errors;
 	};
 };
+
+
+export default useForm;

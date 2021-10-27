@@ -230,7 +230,7 @@ const Demo = () => {
 				</div>
 			</div>
 
-			<Errors>
+			<Errors focusable>
 				{errorList => (
 					<div className="notification is-danger">
 						<h6>Your form has some errors:</h6>
