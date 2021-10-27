@@ -1,6 +1,6 @@
 {
   "name": "@rvision/use-form",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forms utility library, lightweight alternative to existing frameworks.",
   "main": "./dist/index.js",
   "scripts": {
