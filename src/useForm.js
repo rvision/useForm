@@ -1,40 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-// https://github.com/Poyoman39/react-key-from-object/blob/main/src/index.js
-const compatibleKeyTypes = ['object', 'function'];
-
-let now = Date.now();
-
-const useKey = () => {
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
-	const map = useRef(new WeakMap());
-	useEffect(() => {
-		return () => {
-			if (map && map.current) {
-				map.current = new WeakMap();
-			}
-		};
-	}, []);
-
-	const keyFn = useCallback((object = {}) => {
-		const c = map.current;
-		if (c.has(object)) {
-			return c.get(object);
-		}
-
-		if (!compatibleKeyTypes.includes(typeof object)) {
-			return `key-${object}`;
-		}
-		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString
-		const key = (++now).toString(36);
-		c.set(object, key);
-		return key;
-	}, []);
-
-	return keyFn;
-};
-
+import useKey from './useKey';
 
 // NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
@@ -520,7 +486,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		if (!err || isArray(err)) {
 			return false;
 		}
-		return isFunction(children) ? children(err) : <span className={`${classNameError} ${err.type}`}>{err.message}</span>;
+		return isFunction(children) ? children(err) : <span className={`${classNameError || ''} ${err.type}`}>{err.message}</span>;
 	};
 
 	const Errors = ({ children }) => {
@@ -542,15 +508,11 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			return false;
 		}
 
-		const result = (
-			<>
-				{errorElements.map(({ error, element }) => (
-					<li key={key(error)}>
-						<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
-					</li>
-				))}
-			</>
-		);
+		const result = errorElements.map(({ error, element }) => (
+			<li key={key(error)} className={`${classNameError || ''} ${error.type}`}>
+				<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
+			</li>
+		));
 
 		return isFunction(children) ? children(result) : result;
 	};
