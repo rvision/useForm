@@ -216,6 +216,12 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const defaultValuesJSON = useRef('');
 	const key = useKey();
 
+	const cachedRegisters = useRef(new Map());
+	const prevCachedRegistersKeys = useRef(new Map());
+
+	const isOnBlurMode = mode === 'onBlur';
+	const isOnChangeMode = mode === 'onChange';
+
 	const init = values => {
 		defaultValuesJSON.current = toJSON(values);
 		setValues(_clone(values));
@@ -283,7 +289,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			_setNested(fullPath, newValues, value);
 			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
-			if (validate && (hasError(fullPath) || mode === 'onChange')) {
+			if (validate && (hasError(fullPath) || isOnChangeMode)) {
 				const newErrors = clearError(fullPath);
 				const newError = _getNested(fullPath, resolver(newValues));
 				if (newError) {
@@ -409,16 +415,25 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
-	const register = (name, { className = false } = {}) => {
+	const _register = (fullPath, value, hasFieldError, className) => {
+		const cacheKey = `${fullPath}*${value}*${hasFieldError}*${className}`;
+		// return the cached version
+		if (cachedRegisters.current.has(cacheKey)) {
+			const props = cachedRegisters.current.get(cacheKey);
+			// NOTE: update handlers each time because of stale closures
+			props.onChange = onChange;
+			props.onBlur = isOnBlurMode ? onBlur : undefined;
+			return props;
+		}
+
 		const props = {
-			key: name,
-			name,
+			key: fullPath,
+			name: fullPath,
 			onChange,
-			onBlur: mode === 'onBlur' ? onBlur : undefined,
+			onBlur: isOnBlurMode ? onBlur : undefined,
 			ref,
 		};
 
-		const value = getValue(name);
 		if (value === true || value === false) {
 			props.checked = value;
 		} else {
@@ -427,7 +442,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 		if (classNameError !== null || !!className) {
 			let classNameGenerated = className || '';
-			if (hasError(name)) {
+			if (hasFieldError) {
 				classNameGenerated = `${classNameGenerated} ${classNameError}`;
 			}
 			if (classNameGenerated) {
@@ -435,7 +450,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 		}
 
+		// remove old cached version (different key)
+		const oldKey = prevCachedRegistersKeys.current.get(fullPath);
+		cachedRegisters.current.delete(oldKey);
+
+		// set cached version and new key
+		cachedRegisters.current.set(cacheKey, props);
+		prevCachedRegistersKeys.current.set(fullPath, cacheKey);
+
 		return props;
+	};
+
+	const register = (fullPath, { className = false } = {}) => {
+		return _register(fullPath, getValue(fullPath), hasError(fullPath), className);
 	};
 
 	const handleSubmit = handler => {
@@ -481,7 +508,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 
 	const _errClassName = err => ({
-		className:`${classNameError || ''} ${err.type}`
+		className: `${classNameError || ''} ${err.type}`,
 	});
 
 	const Error = ({ for: path, children }) => {
@@ -513,12 +540,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 		const result = errorElements.map(({ error, element }) => (
 			<li key={key(error)} {..._errClassName(error)}>
-				{
-					focusable ?
-					<a onClick={() => element && element.focus && element.focus()}>{error.message}</a>
-					:
-					error.message
-				}
+				{focusable ? <a onClick={() => element && element.focus && element.focus()}>{error.message}</a> : error.message}
 			</li>
 		));
 
@@ -573,6 +595,5 @@ export const yupResolver = schema => {
 		return errors;
 	};
 };
-
 
 export default useForm;
