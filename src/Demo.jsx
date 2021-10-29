@@ -208,6 +208,24 @@ const Demo = () => {
 						</li>
 					</ul>
 					<button
+						className="button is-small is-danger mb-1"
+						onClick={e => {
+							e.preventDefault();
+
+							const albums = new Array(100).fill(1).map((item, idx) => {
+								return {
+									name: `album ${idx}`,
+									year: null,
+								};
+							});
+
+							setValue('albums', albums);
+						}}
+					>
+						⚠ Set 100 albums
+					</button>
+					<br />
+					<button
 						className="button is-small is-danger"
 						onClick={e => {
 							e.preventDefault();
