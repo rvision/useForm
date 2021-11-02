@@ -298,7 +298,7 @@ const Demo = () => {
 								}
 							}}
 							onChange={date => {
-								setValue('birthDate', date);
+								setValue('birthDate', date ? new Date(date.getTime() - date.getTimezoneOffset() * 60000) : null);
 							}}
 						/>
 						<BulmaError for="birthDate" />
@@ -361,7 +361,7 @@ const Demo = () => {
 											}
 										}}
 										onChange={date => {
-											setValue(`albums.${idx}.releaseDate`, date);
+											setValue(`albums.${idx}.releaseDate`, date ? new Date(date.getTime() - date.getTimezoneOffset() * 60000) : null);
 										}}
 									/>
 									<BulmaError for={`albums.${idx}.releaseDate`} />
