@@ -5,9 +5,4 @@ import '../assets/styles/index.scss';
 import App from './App';
 
 // run
-ReactDOM.render(
-	<React.StrictMode>
-		<App />
-	</React.StrictMode>,
-	document.getElementById('app'),
-);
+ReactDOM.render(<App />, document.getElementById('app'));
