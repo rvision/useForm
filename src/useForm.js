@@ -72,16 +72,16 @@ const _getNested = (fullPath, source) => {
 		return undefined;
 	}
 
-	const subSource = source[path];
-	const idx = parseI(fullPath[1]);
+	const next = fullPath[1];
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
-			return subSource[idx];
+			return source[path][idx];
 		}
-		return _getNested(fullPath.slice(2), subSource[idx]);
+		return _getNested(fullPath.slice(2), source[path][idx]);
 	}
 
-	return _getNested(fullPath.slice(1), subSource);
+	return _getNested(fullPath.slice(1), source[path]);
 };
 
 const _setNested = (fullPath, target, value) => {
@@ -99,23 +99,23 @@ const _setNested = (fullPath, target, value) => {
 		target[path] = value;
 		return;
 	}
-	const subTarget = target[path];
-	const idx = parseI(fullPath[1]);
+	const next = fullPath[1];
+	const idx = parseI(next);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
-		target[path] = subTarget === undefined ? [] : subTarget;
+		target[path] = target[path] === undefined ? [] : target[path];
 		// NOTE: this line causes inputs to loose focus in .map, because key is recreated each time, it will work with stable key
 		// target[path][idx] = target[path][idx] === undefined ? {} : { ...target[path][idx] };
-		subTarget[idx] = subTarget[idx] === undefined ? {} : subTarget[idx];
+		target[path][idx] = target[path][idx] === undefined ? {} : target[path][idx];
 		if (fullPath.length === 2) {
-			subTarget[idx] = value;
+			target[path][idx] = value;
 		} else {
-			_setNested(fullPath.slice(2), subTarget[idx], value);
+			_setNested(fullPath.slice(2), target[path][idx], value);
 		}
 	} else {
-		target[path] = subTarget === undefined ? {} : { ...subTarget };
-		_setNested(fullPath.slice(1), subTarget, value);
+		target[path] = target[path] === undefined ? {} : { ...target[path] };
+		_setNested(fullPath.slice(1), target[path], value);
 	}
 };
 
@@ -135,8 +135,7 @@ const _deleteNested = (fullPath, target) => {
 		return;
 	}
 
-	const subTarget = target[path];
-	if (subTarget === undefined) {
+	if (target[path] === undefined) {
 		return;
 	}
 
@@ -144,12 +143,12 @@ const _deleteNested = (fullPath, target) => {
 	const idx = parseI(next);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
-			delete subTarget[idx];
+			delete target[path][idx];
 		} else {
-			_deleteNested(fullPath.slice(2), subTarget[idx]);
+			_deleteNested(fullPath.slice(2), target[path][idx]);
 		}
 	} else {
-		_deleteNested(fullPath.slice(1), subTarget[next]);
+		_deleteNested(fullPath.slice(1), target[path][idx]);
 	}
 };
 
