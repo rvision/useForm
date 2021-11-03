@@ -72,8 +72,7 @@ const _getNested = (fullPath, source) => {
 		return undefined;
 	}
 
-	const next = fullPath[1];
-	const idx = parseI(next);
+	const idx = parseI(fullPath[1]);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -99,8 +98,7 @@ const _setNested = (fullPath, target, value) => {
 		target[path] = value;
 		return;
 	}
-	const next = fullPath[1];
-	const idx = parseI(next);
+	const idx = parseI(fullPath[1]);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
