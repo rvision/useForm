@@ -1,5 +1,19 @@
 TO BE DONE:
 ================================================================================
+state: sve u jednoj variabli: radiće kešing za register
+	state.v, state.e
+
+centralizuj fokusiranje:
+	element && element.focus && element.focus()
+
+remove:
+	newArr.filter((item, i) => idx !== i)
+
+_deleteNested:
+	const target2 = target[path][idx];
+	_deleteNested(fullPath.slice(2), target2);
+
+
 npm config set registry https //registry.npmjs.org/
 npm publish
 
