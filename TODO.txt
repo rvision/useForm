@@ -1,13 +1,5 @@
 TO BE DONE:
 ================================================================================
-remove:
-	newArr.filter((item, i) => idx !== i)
-
-_deleteNested:
-	const target2 = target[path][idx];
-	_deleteNested(fullPath.slice(2), target2);
-
-
 state: sve u jednoj variabli: radiće kešing za register
 	state.v, state.e
 
