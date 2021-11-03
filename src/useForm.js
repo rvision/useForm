@@ -72,8 +72,7 @@ const _getNested = (fullPath, source) => {
 		return undefined;
 	}
 
-	const next = fullPath[1];
-	const idx = parseI(next);
+	const idx = parseI(fullPath[1]);
 	if (isNumber(idx)) {
 		if (fullPath.length === 2) {
 			return source[path][idx];
@@ -99,8 +98,7 @@ const _setNested = (fullPath, target, value) => {
 		target[path] = value;
 		return;
 	}
-	const next = fullPath[1];
-	const idx = parseI(next);
+	const idx = parseI(fullPath[1]);
 	if (isNumber(idx)) {
 		// NOTE: this makes entries undefined instead of empty
 		// target[path] = target[path] === undefined ? [] : [...target[path]];
@@ -205,6 +203,14 @@ const _shiftErrors = (fullPath, targetErrors, callback) => {
 		return newErrors;
 	}
 	return targetErrors;
+};
+
+const _focus = element => {
+	if (element && element.focus) {
+		element.focus();
+		return true;
+	}
+	return false;
 };
 
 const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => {} }) => {
@@ -326,8 +332,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 
 	const remove = (fullPath, idx) => {
-		const newArr = [..._getNested(fullPath, values)];
-		newArr.splice(idx, 1);
+		const newArr = _getNested(fullPath, values).filter((item, i) => idx !== i);
 		setValue(fullPath, newArr, false);
 
 		let newErrors = _clearObjectError(fullPath, errors);
@@ -401,8 +406,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			const newErrors = { ...errors };
 			_setNested(name, newErrors, newError);
 			setErrors(newErrors);
-			if (shouldFocusError === true) {
-				refsMap.current.get(name).focus();
+			if (shouldFocusError) {
+				_focus(refsMap.current.get(name));
 			}
 		} else {
 			clearError(name);
@@ -473,12 +478,11 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			const newErrors = resolver(values);
 			setErrors(newErrors);
 			if (hasError(null, newErrors)) {
-				if (shouldFocusError === true) {
-					let focused = false;
+				if (shouldFocusError) {
+					let isFocused = false;
 					refsMap.current.forEach((value, key) => {
-						if (!focused && value && value.focus && hasError(key, newErrors)) {
-							value.focus();
-							focused = true;
+						if (!isFocused && hasError(key, newErrors)) {
+							isFocused = _focus(value);
 						}
 					});
 				}
@@ -540,7 +544,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 		const result = errorElements.map(({ error, element }) => (
 			<li key={key(error)} {..._errClassName(error)}>
-				{focusable ? <a onClick={() => element && element.focus && element.focus()}>{error.message}</a> : error.message}
+				{focusable ? <a onClick={() => _focus(element)}>{error.message}</a> : error.message}
 			</li>
 		));
 
