@@ -230,20 +230,17 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const isOnBlurMode = mode === 'onBlur';
 	const isOnChangeMode = mode === 'onChange';
 
-	const init = values => {
-		defaultValuesJSON.current = toJSON(values);
-		setValues(_clone(values));
+	const init = initValues => {
+		defaultValuesJSON.current = toJSON(initValues);
+		setValues(_clone(initValues));
 	};
 
 	useEffect(() => {
 		init(defaultValues);
-	}, [defaultValues]);
-
-	useEffect(() => {
 		return () => {
-			splitCache = {}; // cleanup
+			splitCache = {}; // cleanup, ALWAYS
 		};
-	}, []);
+	}, [defaultValues]);
 
 	const hasError = (fullPath = null, targetErrors = errors) => {
 		if (fullPath === null) {
