@@ -205,7 +205,7 @@ const _shiftErrors = (fullPath, targetErrors, callback) => {
 	return targetErrors;
 };
 
-const _errClassName = (error, classNameError, className) => `${className || ''} ${classNameError || ''} ${error.type || ''}`.trim();
+const _errClassName = (error, classNameError, className) => `${className || ''} ${classNameError || ''} ${error.type ? `error-${error.type}` : ''}`.trim();
 
 const _focus = element => {
 	if (element && element.focus) {
@@ -419,7 +419,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
-	const _register = (fullPath, value, hasFieldError, className) => {
+	const register = (fullPath, { className } = {}) => {
+		const value = getValue(fullPath);
+		const hasFieldError = hasError(fullPath);
 		const cacheKey = `${fullPath}*${value}*${hasFieldError}*${className}`;
 		const onBlurHandler = isOnBlurMode ? onBlur : undefined;
 		// return the cached version
@@ -455,10 +457,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		prevCachedRegistersKeys.current.set(fullPath, cacheKey);
 
 		return props;
-	};
-
-	const register = (fullPath, { className = false } = {}) => {
-		return _register(fullPath, getValue(fullPath), hasError(fullPath), className);
 	};
 
 	const handleSubmit = handler => {
