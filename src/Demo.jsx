@@ -692,7 +692,7 @@ const Demo = () => {
 					<div className="field">
 						<label className="label">
 							Notes
-							<textarea {...register('notes')} className={hasError('notes') ? 'textarea is-danger' : 'textarea'} />
+							<textarea {...register('notes', { className: 'textarea' })} />
 						</label>
 						<BulmaError for="notes" />
 					</div>
