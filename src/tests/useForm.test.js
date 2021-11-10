@@ -13,7 +13,7 @@ describe('useForm', () => {
 	});
 
 	test('initial component render', () => {
-		 const { screen } = render(<FormAllTypes model={modelDefault} schema={schema} onSubmit={()=>{}} />);
+		const { screen } = render(<FormAllTypes model={modelDefault} schema={schema} onSubmit={()=>{}} />);
 
 		//  expect(mockDispatch).toHaveBeenCalledTimes(2);
 		//  expect(mockDispatch).toHaveBeenNthCalledWith(1, actions.loadActivityTypes());
