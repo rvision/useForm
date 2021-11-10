@@ -21,7 +21,7 @@ const FormAllTypes = ({ schema,model, onSubmit}) => {
       <label>
         Enter email:
         <input type="email" {...register("email")} />
-      </label>
+      				</label>
       <label>
         <input type="checkbox" {...register("agree")} />I agree to terms and
         conditions
