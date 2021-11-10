@@ -1,7 +1,10 @@
-import { within } from '@testing-library/dom';
+import { render, within } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import * as React from 'react';
 import useForm from '../useForm';
+import FormAllTypes from './FormAllTypes';
+import modelDefault from './modelDefault';
+
 
 
 describe('useForm', () => {
@@ -10,22 +13,22 @@ describe('useForm', () => {
 	});
 
 	test('initial component render', () => {
-		// const { mockDispatch } = renderRedux(<ActivityTypesPage />, mockState);
+		 const { screen } = render(<FormAllTypes model={modelDefault} schema={schema} onSubmit={()=>{}} />);
 
-		// expect(mockDispatch).toHaveBeenCalledTimes(2);
-		// expect(mockDispatch).toHaveBeenNthCalledWith(1, actions.loadActivityTypes());
-		// expect(mockDispatch).toHaveBeenNthCalledWith(2, actions.loadCustomActivityTypes());
+		//  expect(mockDispatch).toHaveBeenCalledTimes(2);
+		//  expect(mockDispatch).toHaveBeenNthCalledWith(1, actions.loadActivityTypes());
+		//  expect(mockDispatch).toHaveBeenNthCalledWith(2, actions.loadCustomActivityTypes());
 
-		// expect(screen.getByRole('heading', { name: /default/i })).toBeTruthy();
-		// expect(screen.getByText(/DEFAULT TYPE 1/i)).toBeTruthy();
-		// expect(screen.getByText(/DEFAULT TYPE 2/i)).toBeTruthy();
-		// expect(screen.getByText(/DEFAULT TYPE 3/i)).toBeTruthy();
+		//  expect(screen.getByRole('heading', { name: /default/i })).toBeTruthy();
+		//  expect(screen.getByText(/DEFAULT TYPE 1/i)).toBeTruthy();
+		//  expect(screen.getByText(/DEFAULT TYPE 2/i)).toBeTruthy();
+		//  expect(screen.getByText(/DEFAULT TYPE 3/i)).toBeTruthy();
 
-		// expect(screen.getByRole('heading', { name: /custom/i })).toBeTruthy();
-		// expect(screen.getByRole('checkbox', { name: /hide inactive activity types/i })).toBeChecked();
+		 expect(screen.getByRole('heading', { name: /custom/i })).toBeTruthy();
+		 expect(screen.getByRole('checkbox', { name: /hide inactive activity types/i })).toBeChecked();
 
-		// const { getAllByRole } = within(screen.getByRole('list', { name: /custom-types/i }));
-		// expect(getAllByRole('listitem').length).toBe(1); // only one active custom type
+		//  const { getAllByRole } = within(screen.getByRole('list', { name: /custom-types/i }));
+		//  expect(getAllByRole('listitem').length).toBe(1); // only one active custom type
 		expect(1).toBe(1);
 	});
 
