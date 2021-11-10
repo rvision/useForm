@@ -4,7 +4,7 @@ import * as React from 'react';
 import useForm from '../useForm';
 import FormAllTypes from './FormAllTypes';
 import modelDefault from './modelDefault';
-
+import schema from './schemaAllTypes';
 
 
 describe('useForm', () => {
