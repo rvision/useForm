@@ -1,3 +1,5 @@
+// @ts-check
+
 /* eslint-disable no-underscore-dangle */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
@@ -215,7 +217,7 @@ const _focus = element => {
 	return false;
 };
 
-const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => {} }) => {
+const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = foo => ({}) }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
@@ -272,7 +274,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return newErrors;
 	};
 
-	const trigger = (fullPath = [], newValues = values) => {
+	const trigger = (fullPath = '', newValues = values) => {
 		const newValidation = resolver(newValues);
 		const error = _getNested(fullPath, newValidation);
 		const newErrors = { ...newValidation };
@@ -284,7 +286,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return newErrors;
 	};
 
-	const getValue = (fullPath = []) => {
+	const getValue = (fullPath = '') => {
 		return _getNested(fullPath, values);
 	};
 
@@ -345,7 +347,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return newArr;
 	};
 
-	const swap = (fullPath, idx1, idx2) => {
+	const swap = (fullPath, index1, index2) => {
 		const _swap = (target, fullPath, idx1, idx2) => {
 			const arr = _getNested(fullPath, target);
 			if (isArray(arr)) {
@@ -357,10 +359,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 			return arr;
 		};
-		const newArr = _swap(values, fullPath, idx1, idx2);
+		const newArr = _swap(values, fullPath, index1, index2);
 		setValue(fullPath, newArr);
 
-		const newErr = _swap(errors, fullPath, idx1, idx2);
+		const newErr = _swap(errors, fullPath, index1, index2);
 		const newErrors = { ...errors };
 		_setNested(fullPath, newErrors, newErr);
 		setErrors(newErrors);
@@ -419,7 +421,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
-	const register = (fullPath, { className } = {}) => {
+	const register = (fullPath, { className = '' } = {}) => {
 		const value = getValue(fullPath);
 		const hasFieldError = hasError(fullPath);
 		const cacheKey = `${fullPath}*${value}*${hasFieldError}*${className}`;
@@ -436,6 +438,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		const props = {
 			key: fullPath,
 			name: fullPath,
+			['aria-invalid']: `${hasFieldError}`,
 			className: _errClassName({}, hasFieldError ? classNameError : false, className),
 			onChange,
 			onBlur: onBlurHandler,
@@ -490,18 +493,18 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	};
 
-	const getRef = name => {
-		return refsMap.current.get(name);
+	const getRef = fullPath => {
+		return refsMap.current.get(fullPath);
 	};
 
-	const setRef = (name, element) => {
+	const setRef = (fullPath, element) => {
 		if (element) {
-			refsMap.current.set(name, element);
+			refsMap.current.set(fullPath, element);
 		}
 	};
 
-	const Error = ({ for: path, children }) => {
-		const error = _getNested(path, errors);
+	const Error = ({ for: fullPath, children }) => {
+		const error = _getNested(fullPath, errors);
 		if (!error || isArray(error)) {
 			return false;
 		}

@@ -1,5 +1,9 @@
 TO BE DONE:
 ================================================================================
+<input type="text" placeholder="Valid" aria-invalid="false">
+<input type="text" placeholder="Invalid" aria-invalid="true">
+
+
 yarn test ./src/tests/useKey.test.js
 yarn test ./src/tests/index.test.js
 

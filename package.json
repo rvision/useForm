@@ -3,6 +3,7 @@
   "version": "1.0.3",
   "description": "Forms utility library, lightweight alternative to existing frameworks.",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "webpack --mode production",
     "lint": "eslint --report-unused-disable-directives src",
