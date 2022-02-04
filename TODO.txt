@@ -1,7 +1,18 @@
 TO BE DONE:
 ================================================================================
-<input type="text" placeholder="Valid" aria-invalid="false">
-<input type="text" placeholder="Invalid" aria-invalid="true">
+
+
+
+publishing:
+================================================================================
+npm config set registry https://registry.npmjs.org/
+
+npm login
+	nenad.rogic@gmail.com
+	pwd: std za binance
+
+npm publish --access=public
+
 
 
 yarn test ./src/tests/useKey.test.js
@@ -10,11 +21,6 @@ yarn test ./src/tests/index.test.js
 yarn test *.test.js
 
 
-publish
-
-
-index.d.ts
-source maps
 https://github.com/DefinitelyTyped/DefinitelyTyped
 https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html
 

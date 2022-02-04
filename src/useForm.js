@@ -370,7 +370,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const onChange = e => {
 		const { name, type, checked, options, files, multiple } = e.target;
-		let { value } = e.target;
+		let { value, valueAsNumber } = e.target;
 		switch (type) {
 			default:
 				break;
@@ -378,7 +378,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				value = checked;
 				break;
 			case 'range':
-				value = parseI(value);
+				value = valueAsNumber;
 				break;
 			case 'number':
 				if (value === '') {
@@ -465,7 +465,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const handleSubmit = handler => {
 		return e => {
 			// eslint-disable-next-line no-unused-expressions
-			e && e.preventDefault();
+			e && e.preventDefault && e.preventDefault();
 
 			const newErrors = resolver(values);
 			setErrors(newErrors);
@@ -478,8 +478,10 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 						}
 					});
 				}
+				return false;
 			} else {
 				handler(values);
+				return true;
 			}
 		};
 	};
