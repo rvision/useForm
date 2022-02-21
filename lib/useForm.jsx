@@ -1,7 +1,5 @@
-// @ts-check
-
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useKey from './useKey';
 
 // NOTE: make aliases for better minification

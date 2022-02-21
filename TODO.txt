@@ -12,8 +12,9 @@ publishing:
 npm config set registry https://registry.npmjs.org/
 
 npm login
-	nenad.rogic@gmail.com
+	rvision
 	pwd: std za binance
+	nenad.rogic@gmail.com
 
 npm publish --access=public
 
@@ -30,17 +31,6 @@ https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html
 
 
 unit testovi
-
-
-20-30ms, besmisleno, sve je iste brzine
-state: sve u jednoj variabli: radiće kešing za register
-
-
-npm config set registry https //registry.npmjs.org/
-npm publish
-
-npm config set registry http://packages.paycor.com/npm/NpmFeed/
-
 
 useMemo za register funkciju?
 const result = useMemo(() => myNumber * 5, [myNumber])
@@ -65,8 +55,6 @@ const flattenObject = ob => {
 		return result;
 	}, {});
 };
-
--onSubmit string u konstantu
 
 
 setValue
