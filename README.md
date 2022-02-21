@@ -65,7 +65,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: 3.9kb minified + gzipped
+- **lightweight**: ~4kb minified & gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
@@ -330,9 +330,9 @@ setErrors({
 });
 ```
 
-**handleSubmit(handler: function)**
+**handleSubmit(handler: function) : bool** :
 
-submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true)
+submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true); returns true/false if form was submitted
 ```jsx
 <button type="submit" onClick={handleSubmit(values => console.log(values))}>
 	Save the form

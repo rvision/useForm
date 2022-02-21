@@ -1,6 +1,10 @@
 TO BE DONE:
 ================================================================================
-
+v1.04 history:
+  fix for valueAsNumber
+  return value for onsubmit handler
+  setValue('', {}) is working
+  setValue(fullpath, value, validatePath) - validatePath - dodato zbog validacije duplikata, ovo ne radi dobro
 
 
 publishing:

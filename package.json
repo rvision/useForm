@@ -1,17 +1,19 @@
 {
   "name": "@rvision/use-form",
   "version": "1.0.4",
-  "description": "Forms utility library, lightweight alternative to existing frameworks.",
-  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "webpack --mode production",
-    "lint": "eslint --report-unused-disable-directives src",
-    "fix": "eslint --fix --report-unused-disable-directives src",
-    "test": "jest --coverage",
-    "coveralls": "cat ./coverage/lcov.info | coveralls",
-    "setup": "cp ./.github/hooks/pre-commit ./.git/hooks/pre-commit && chmod +x ./.git/hooks/pre-commit"
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js"
+    }
   },
+  "description": "Forms utility library, lightweight alternative to existing frameworks.",
   "publishConfig": {
     "access": "public"
   },
@@ -32,66 +34,20 @@
     "url": "https://github.com/rvision/useForm/issues"
   },
   "homepage": "https://github.com/rvision/useForm",
-  "devDependencies": {
-    "@babel/core": "^7.8.7",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/preset-env": "^7.8.7",
-    "@babel/preset-react": "^7.8.3",
-    "@testing-library/dom": "^8.11.0",
-    "@testing-library/jest-dom": "^5.15.0",
-    "@testing-library/react-hooks": "^7.0.2",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "8.1.0",
-    "coveralls": "^3.0.9",
-    "css-loader": "^5.1.0",
-    "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.2",
-    "enzyme-to-json": "^3.4.3",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb": "^18.2.0",
-    "eslint-config-prettier": "^6.12.0",
-    "eslint-plugin-import": "^2.20.0",
-    "eslint-plugin-react": "^7.17.0",
-    "jest": "^26.0.1",
-    "jest-css-modules-transform": "^4.0.0",
-    "jest-enzyme": "^7.1.2",
-    "mini-css-extract-plugin": "^0.9.0",
-    "node-sass": "^4.13.1",
-    "prettier": "^2.4.1",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
-    "sass-loader": "^8.0.2",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11",
-    "yup": "^0.32.11"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "dependencies": {},
   "peerDependencies": {
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,mjs}",
-      "!src/index.js"
-    ],
-    "testEnvironment": "node",
-    "moduleFileExtensions": [
-      "js",
-      "jsx"
-    ],
-    "moduleDirectories": [
-      "node_modules",
-      "src"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/node_modules/jest-enzyme/lib/index.js",
-      "<rootDir>/jest-setup-tests.js"
-    ],
-    "transform": {
-      "^.+\\.js$": "babel-jest",
-      ".+\\.(css|styl|less|sass|scss)$": "<rootDir>/node_modules/jest-css-modules-transform"
-    }
-  }
+  "devDependencies": {
+    "@vitejs/plugin-react": "^1.2.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "vite": "^2.8.4"
+  },
+  "dependencies": {}
 }

@@ -292,8 +292,11 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 	const setValue = (fullPath, value, validate = true) => {
 		setValues(values => {
+			const newProps = fullPath === '' ? value : values;
 			const newValues = { ...values };
+
 			_setNested(fullPath, newValues, value);
+
 			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
 			if (validate && (hasError(fullPath) || isOnChangeMode)) {
@@ -438,7 +441,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		const props = {
 			key: fullPath,
 			name: fullPath,
-			['aria-invalid']: `${hasFieldError}`,
+			'aria-invalid': `${hasFieldError}`,
 			className: _errClassName({}, hasFieldError ? classNameError : false, className),
 			onChange,
 			onBlur: onBlurHandler,
@@ -479,10 +482,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 					});
 				}
 				return false;
-			} else {
-				handler(values);
-				return true;
 			}
+			handler(values);
+			return true;
 		};
 	};
 
