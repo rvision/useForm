@@ -367,6 +367,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		const newErrors = { ...errors };
 		_setNested(fullPath, newErrors, newErr);
 		setErrors(newErrors);
+
+		return newArr;
 	};
 
 	const onChange = e => {
