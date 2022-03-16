@@ -37,7 +37,7 @@ const useKey = () => {
     const key = (++now).toString(36);
     c.set(object, key);
     return key;
-  }, []);
+  }, [map]);
   return keyFn;
 };
 var jsxRuntime = { exports: {} };
@@ -446,6 +446,7 @@ const useForm = ({
     const newErrors = __spreadValues({}, errors);
     _setNested(fullPath, newErrors, newErr);
     setErrors(newErrors);
+    return newArr;
   };
   const onChange = (e) => {
     const {
