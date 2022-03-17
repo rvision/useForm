@@ -4,11 +4,13 @@ React forms utility library, lightweight alternative to existing frameworks.
 [see full demo](https://k7s4y.csb.app/)
 
 ## Installation
-`npm install --save @rvision/use-form`
-
+```bash
+npm install --save @rvision/use-form
+```
 or
-
-`yarn add @rvision/use-form`
+```bash
+yarn add @rvision/use-form
+```
 
 ## Quickstart: basic usage
 ```jsx
@@ -132,7 +134,7 @@ const {
 } = useForm(options);
 ```
 
-**register(fullPath: string, { className: string })**
+#### register(fullPath: string, { className: string })
 
 field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has validation error
 ```jsx
@@ -171,7 +173,7 @@ Only input type that doesn't allow automatic registration is file type, because 
 </div>
 ```
 
-**onChange(event: React.SyntheticEvent)**
+#### onChange(event: React.SyntheticEvent)
 
 if you need debouncing or additional logic when field value is changed, use ```'onChange'``` method; it overrides default method set by register
 ```jsx
@@ -185,7 +187,7 @@ if you need debouncing or additional logic when field value is changed, use ```'
 />
 ```
 
-**onBlur(event: React.SyntheticEvent)**
+#### onBlur(event: React.SyntheticEvent)
 
 same, but for ```onBlur``` event
 ```jsx
@@ -199,7 +201,7 @@ same, but for ```onBlur``` event
 />
 ```
 
-**key(any?)**
+#### key(any?)
 
 helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()).
 
@@ -215,7 +217,7 @@ helper method to get unique keys for siblings when rendering arrays. It works by
 }
 ```
 
-**getRef(fullPath: string)**
+#### getRef(fullPath: string)
 
 helper method to get reference (ref) to the native input, uses ```fullPath``` concept as field identifier
 ```jsx
@@ -224,7 +226,7 @@ helper method to get reference (ref) to the native input, uses ```fullPath``` co
 }}>
 ```
 
-**setRef(fullPath: string, element: ref-able DOM element)**
+#### setRef(fullPath: string, element: ref-able DOM element)
 
 helper method to store reference (ref) to the native input, uses ```fullPath``` concept as field identifier; Use it for storing refs for custom components, this way they can be focusable when clicking on the error in the list of errors from ```<Errors />``` component
 ```jsx
@@ -249,7 +251,7 @@ helper method to store reference (ref) to the native input, uses ```fullPath``` 
 />
 ```
 
-**Error**
+#### Error
 
 React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error
 ```jsx
@@ -258,7 +260,7 @@ React component to display field validation error, can be used with render props
 <Error for="firstName" />	// will render <span className="required classNameError">First name is required</span>
 ```
 
-**Errors**
+#### Errors
 
 React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked if prop, focuses on the input with error. Can be used with render prop or without.
 ```jsx
@@ -273,14 +275,14 @@ React component that renders all validation errors **for focusable inputs** as `
 <Errors focusable={false} />	// will render <li>Please enter first name</li>... etc.
 ```
 
-**getValue(fullPath: string)**
+#### getValue(fullPath: string) : any
 
 method to get value of the field, uses ```fullPath``` concept as field identifier. use it for custom components
 ```jsx
 <ReactDatePicker selected={getValue('birthDate')} />
 ```
 
-**setValue(fullPath: string, newValue: any, shouldRevalidate: true)**
+#### setValue(fullPath: string, newValue: any, shouldRevalidate: true)
 
 method to set value of the field, uses ```fullPath``` concept as field identifier. use it for custom components.
 ```jsx
@@ -293,28 +295,28 @@ method to set value of the field, uses ```fullPath``` concept as field identifie
 <a onClick={setValue('movies',[])}>Clear movie list</a>
 ```
 
-**trigger(fullPath: string?, newValues: any)**
+#### trigger(fullPath: string?, newValues: any) : any
 
-triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```
+triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors
 ```jsx
 <a onClick={trigger('firstName')}>Check first name</a>
 ```
 
-**hasError(fullPath: string?)**
+#### hasError(fullPath: string?) : bool
 
 returns bool if field value has validation errors; if ```fullPath``` is omitted returns if there are any errors for all fields
 ```jsx
 { hasError('firstName') && <p>This field has errors</p>}
 ```
 
-**clearError(fullPath: string)**
+#### clearError(fullPath: string) : any
 
-clears error from the errors object
+clears error from the errors object, returns errors
 ```jsx
 <a onClick={clearError('firstName')}>Clear firstname validation error</a>
 ```
 
-**setErrors(errors: object)**
+#### setErrors(errors: object) : any
 
 used to set validation errrors from other parts of the system (API or similar); sets 1 or more errors via errors object: keys are fullPath identifiers, values are message/type error objects
 ```jsx
@@ -330,7 +332,7 @@ setErrors({
 });
 ```
 
-**handleSubmit(handler: function) : bool** :
+#### handleSubmit(handler: function) : bool
 
 submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true); returns true/false if form was submitted
 ```jsx
@@ -339,7 +341,7 @@ submits form data to handler function; performs validation first; prevents defau
 </button>
 ```
 
-**reset(newValues: any?, reValidate: bool)**
+#### reset(newValues: any?, reValidate: bool)
 
 resets the form to newValues or default ones; triggers revalidation based on second parameter
 ```jsx
@@ -350,9 +352,9 @@ resets the form to newValues or default ones; triggers revalidation based on sec
 
 ### Methods to work with arrays
 
-**append(fullPath: string, newValue: any)**
+#### append(fullPath: string, newValue: any) : any[]
 
-appends new object to the existing array of objects
+appends new object to the existing array of objects; returns resulting array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -360,9 +362,9 @@ appends new object to the existing array of objects
 }}>Add new album</button>
 ```
 
-**prepend(fullPath: string, newValue: any)**
+#### prepend(fullPath: string, newValue: any) : any[]
 
-prepends new object to the existing array of objects
+prepends new object to the existing array of objects; returns resulting array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -370,9 +372,9 @@ prepends new object to the existing array of objects
 }}>Add new actor</button>
 ```
 
-**remove(fullPath: string, index: int)**
+#### remove(fullPath: string, index: int) : any[]
 
-removes array item from the existing array
+removes array item from the existing array; returns resulting array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -380,9 +382,9 @@ removes array item from the existing array
 }}>Remove this actor</button>
 ```
 
-**swap(fullPath: string, index1: int, index2: int)**
+#### swap(fullPath: string, index1: int, index2: int) : any[]
 
-swaps item positions in the existing array, useful for drag'n'drop operations
+swaps item positions in the existing array, useful for drag'n'drop operations; returns resulting array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -401,19 +403,19 @@ formState: {
 }
 ```
 
-**errors: object**
+#### errors: object
 
 object with validation errors; shape of this object follows the shape/structure of form values
 
-**isValid: bool**
+#### isValid: bool
 
 true if there are no validation errors; when mode is ```'onSubmit'```, errors and this field will be populated when form is submitted
 
-**isTouched: bool**
+#### isTouched: bool
 
 true if any of the fields are changed
 
-**isDirty: bool**
+#### isDirty: bool
 
 true if any of form values is different than default ones provided
 
