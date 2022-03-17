@@ -201,7 +201,7 @@ same, but for ```onBlur``` event
 />
 ```
 
-#### key(any?)
+#### key(any?): string
 
 helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()).
 
@@ -253,7 +253,7 @@ helper method to store reference (ref) to the native input, uses ```fullPath``` 
 
 #### Error
 
-React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error
+React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error; if set, uses classNameError from the options
 ```jsx
 <Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
 {/* or */}
@@ -318,7 +318,7 @@ clears error from the errors object, returns errors
 
 #### setErrors(errors: object) : any
 
-used to set validation errrors from other parts of the system (API or similar); sets 1 or more errors via errors object: keys are fullPath identifiers, values are message/type error objects
+used to set validation errrors from other parts of the system (API or similar); sets 1 or more errors via errors object: keys are fullPath identifiers, values are message/type error objects; returns errors
 ```jsx
 setErrors({
 	email: {
