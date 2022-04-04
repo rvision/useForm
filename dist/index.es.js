@@ -152,6 +152,22 @@ const {
 } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
+const sTrue = "true";
+const sFalse = "false";
+const registerProps = {
+  key: "",
+  name: "",
+  "aria-invalid": "",
+  className: "",
+  onChange: () => {
+  },
+  onBlur: () => {
+  },
+  ref: () => {
+  },
+  value: "",
+  checked: false
+};
 const splitRegEx = /\[([^\]]+)\]/g;
 let splitCache = {};
 const _extractPath = (string) => {
@@ -193,24 +209,14 @@ const _getNested = (fullPath, source) => {
   if (source === void 0) {
     return void 0;
   }
-  if (fullPath.length === 0) {
-    return source;
+  switch (fullPath.length) {
+    case 0:
+      return source;
+    case 1:
+      return source[fullPath[0]];
+    default:
+      return _getNested(fullPath.slice(1), source[fullPath[0]]);
   }
-  const path = fullPath[0];
-  if (fullPath.length === 1) {
-    return source[path];
-  }
-  if (source[path] === void 0) {
-    return void 0;
-  }
-  const idx = parseI(fullPath[1]);
-  if (isNumber(idx)) {
-    if (fullPath.length === 2) {
-      return source[path][idx];
-    }
-    return _getNested(fullPath.slice(2), source[path][idx]);
-  }
-  return _getNested(fullPath.slice(1), source[path]);
 };
 const _setNested = (fullPath, target, value) => {
   if (!isArray(fullPath)) {
@@ -289,6 +295,38 @@ const _deleteNestedToRoot = (fullPath, target) => {
     }
   }
 };
+const _getInputValue = (e) => {
+  const {
+    value,
+    type,
+    checked,
+    options,
+    files,
+    multiple,
+    valueAsNumber
+  } = e.target;
+  switch (type) {
+    default:
+      return value;
+    case "checkbox":
+      return checked;
+    case "range":
+      return valueAsNumber;
+    case "number":
+      if (value === "") {
+        return null;
+      }
+      const parsed = Number.parseFloat(value);
+      if (!isNumber(parsed)) {
+        return void 0;
+      }
+      return parsed;
+    case "file":
+      return multiple ? files : files.item(0);
+    case "select-multiple":
+      return [...options].filter((o) => o.selected).map((o) => o.value);
+  }
+};
 const _clearObjectError = (fullPath, targetErrors) => {
   const arrError = _getNested(fullPath, targetErrors);
   if (arrError && !isArray(arrError)) {
@@ -307,6 +345,17 @@ const _shiftErrors = (fullPath, targetErrors, callback) => {
     return newErrors;
   }
   return targetErrors;
+};
+const _swap = (target, fullPath, idx1, idx2) => {
+  const arr = _getNested(fullPath, target);
+  if (isArray(arr)) {
+    const newArr = [...arr];
+    const el = newArr[idx1];
+    newArr[idx1] = newArr[idx2];
+    newArr[idx2] = el;
+    return newArr;
+  }
+  return arr;
 };
 const _errClassName = (error, classNameError, className) => `${className || ""} ${classNameError || ""} ${error.type ? `error-${error.type}` : ""}`.trim();
 const _focus = (element) => {
@@ -330,27 +379,25 @@ const useForm = ({
   const refsMap = useRef(/* @__PURE__ */ new Map());
   const defaultValuesJSON = useRef("");
   const key = useKey();
-  const cachedRegisters = useRef(/* @__PURE__ */ new Map());
-  const prevCachedRegistersKeys = useRef(/* @__PURE__ */ new Map());
   const isOnBlurMode = mode === "onBlur";
   const isOnChangeMode = mode === "onChange";
-  const init = (initValues) => {
+  const init = useCallback((initValues) => {
     defaultValuesJSON.current = toJSON(initValues);
     setValues(_clone(initValues));
-  };
+  }, []);
   useEffect(() => {
     init(defaultValues);
     return () => {
       splitCache = {};
     };
   }, [defaultValues]);
-  const hasError = (fullPath = null, targetErrors = errors) => {
+  const hasError = useCallback((fullPath = null, targetErrors = errors) => {
     if (fullPath === null) {
       return objectKeys(targetErrors || {}).length > 0;
     }
     return _getNested(fullPath, targetErrors) !== void 0;
-  };
-  const clearError = (fullPath, targetErrors = errors) => {
+  }, [errors]);
+  const clearError = useCallback((fullPath, targetErrors = errors) => {
     if (hasError(fullPath)) {
       const newErrors = __spreadValues({}, targetErrors);
       _deleteNestedToRoot(fullPath, newErrors);
@@ -358,8 +405,8 @@ const useForm = ({
       return newErrors;
     }
     return targetErrors;
-  };
-  const setCustomErrors = (errorsObj) => {
+  }, [errors]);
+  const setCustomErrors = useCallback((errorsObj) => {
     const newErrors = __spreadValues({}, errors);
     for (const fullPath of objectKeys(errorsObj)) {
       if (hasError(fullPath)) {
@@ -369,7 +416,7 @@ const useForm = ({
     }
     setErrors(newErrors);
     return newErrors;
-  };
+  }, [errors]);
   const trigger = (fullPath = "", newValues = values) => {
     const newValidation = resolver(newValues);
     const error = _getNested(fullPath, newValidation);
@@ -386,7 +433,7 @@ const useForm = ({
   };
   const setValue = (fullPath, value, validate = true) => {
     setValues((values2) => {
-      const newValues = __spreadValues({}, values2);
+      const newValues = __spreadValues({}, fullPath === "" ? value : values2);
       _setNested(fullPath, newValues, value);
       isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
       if (validate && (hasError(fullPath) || isOnChangeMode)) {
@@ -429,17 +476,6 @@ const useForm = ({
     return newArr;
   };
   const swap = (fullPath, index1, index2) => {
-    const _swap = (target, fullPath2, idx1, idx2) => {
-      const arr = _getNested(fullPath2, target);
-      if (isArray(arr)) {
-        const newArr2 = [...arr];
-        const el = newArr2[idx1];
-        newArr2[idx1] = newArr2[idx2];
-        newArr2[idx2] = el;
-        return newArr2;
-      }
-      return arr;
-    };
     const newArr = _swap(values, fullPath, index1, index2);
     setValue(fullPath, newArr);
     const newErr = _swap(errors, fullPath, index1, index2);
@@ -448,46 +484,21 @@ const useForm = ({
     setErrors(newErrors);
     return newArr;
   };
-  const onChange = (e) => {
-    const {
-      name,
-      type,
-      checked,
-      options,
-      files,
-      multiple
-    } = e.target;
-    let {
-      value,
-      valueAsNumber
-    } = e.target;
-    switch (type) {
-      default:
-        break;
-      case "checkbox":
-        value = checked;
-        break;
-      case "range":
-        value = valueAsNumber;
-        break;
-      case "number":
-        if (value === "") {
-          value = null;
-        } else {
-          value = Number.parseFloat(value);
-          if (!isNumber(value)) {
-            value = void 0;
-          }
-        }
-        break;
-      case "file":
-        value = multiple ? files : files.item(0);
-        break;
-      case "select-multiple":
-        value = [...options].filter((o) => o.selected).map((o) => o.value);
-        break;
+  const ref = useCallback((element) => {
+    if (element) {
+      refsMap.current.set(element.name, element);
     }
-    setValue(name, value);
+  }, [refsMap]);
+  const getRef = useCallback((fullPath) => {
+    return refsMap.current.get(fullPath);
+  }, [refsMap]);
+  const setRef = useCallback((fullPath, element) => {
+    if (element) {
+      refsMap.current.set(fullPath, element);
+    }
+  }, [refsMap]);
+  const onChange = (e) => {
+    setValue(e.target.name, _getInputValue(e));
   };
   const onBlur = (e) => {
     const {
@@ -505,43 +516,23 @@ const useForm = ({
       clearError(name);
     }
   };
-  const ref = (element) => {
-    if (element) {
-      refsMap.current.set(element.name, element);
-    }
-  };
-  const register = (fullPath, {
-    className = ""
-  } = {}) => {
+  const register = (fullPath, className = "") => {
     const value = getValue(fullPath);
     const hasFieldError = hasError(fullPath);
-    const cacheKey = `${fullPath}*${value}*${hasFieldError}*${className}`;
-    const onBlurHandler = isOnBlurMode ? onBlur : void 0;
-    if (cachedRegisters.current.has(cacheKey)) {
-      const props2 = cachedRegisters.current.get(cacheKey);
-      props2.onChange = onChange;
-      props2.onBlur = onBlurHandler;
-      return props2;
-    }
-    const props = {
-      key: fullPath,
-      name: fullPath,
-      "aria-invalid": `${hasFieldError}`,
-      className: _errClassName({}, hasFieldError ? classNameError : false, className),
-      onChange,
-      onBlur: onBlurHandler,
-      ref
-    };
+    registerProps.key = registerProps.name = fullPath;
+    registerProps["aria-invalid"] = hasFieldError ? sTrue : sFalse;
+    registerProps.className = _errClassName({}, hasFieldError ? classNameError : false, className);
+    registerProps.onChange = onChange;
+    registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
+    registerProps.ref = ref;
     if (value === true || value === false) {
-      props.checked = value;
+      registerProps.checked = value;
+      registerProps.value = void 0;
     } else {
-      props.value = `${value}` === "0" ? value : value || "";
+      registerProps.value = `${value}` === "0" ? value : value || "";
+      registerProps.checked = void 0;
     }
-    const oldKey = prevCachedRegistersKeys.current.get(fullPath);
-    cachedRegisters.current.delete(oldKey);
-    cachedRegisters.current.set(cacheKey, props);
-    prevCachedRegistersKeys.current.set(fullPath, cacheKey);
-    return props;
+    return registerProps;
   };
   const handleSubmit = (handler) => {
     return (e) => {
@@ -563,23 +554,15 @@ const useForm = ({
       return true;
     };
   };
-  const reset = (values2 = defaultValues, validate = true) => {
+  const reset = useCallback((values2 = defaultValues, validate = true) => {
     init(values2);
     isTouched.current = false;
     isDirty.current = false;
     if (validate) {
       setErrors(resolver(values2));
     }
-  };
-  const getRef = (fullPath) => {
-    return refsMap.current.get(fullPath);
-  };
-  const setRef = (fullPath, element) => {
-    if (element) {
-      refsMap.current.set(fullPath, element);
-    }
-  };
-  const Error2 = ({
+  }, []);
+  const Error2 = useCallback(({
     for: fullPath,
     children
   }) => {
@@ -591,8 +574,8 @@ const useForm = ({
       className: _errClassName(error, classNameError),
       children: error.message
     });
-  };
-  const Errors = ({
+  }, [errors]);
+  const Errors = useCallback(({
     children,
     focusable = false
   }) => {
@@ -620,7 +603,7 @@ const useForm = ({
       }) : error.message
     }, key(error)));
     return isFunction(children) ? children(result) : result;
-  };
+  }, [errors]);
   return {
     getValue,
     setValue,
