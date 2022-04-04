@@ -390,7 +390,7 @@ const useForm = ({
     return () => {
       splitCache = {};
     };
-  }, [defaultValues]);
+  }, [defaultValues, init]);
   const hasError = useCallback((fullPath = null, targetErrors = errors) => {
     if (fullPath === null) {
       return objectKeys(targetErrors || {}).length > 0;
@@ -405,7 +405,7 @@ const useForm = ({
       return newErrors;
     }
     return targetErrors;
-  }, [errors]);
+  }, [errors, hasError]);
   const setCustomErrors = useCallback((errorsObj) => {
     const newErrors = __spreadValues({}, errors);
     for (const fullPath of objectKeys(errorsObj)) {
@@ -416,7 +416,7 @@ const useForm = ({
     }
     setErrors(newErrors);
     return newErrors;
-  }, [errors]);
+  }, [errors, hasError]);
   const trigger = (fullPath = "", newValues = values) => {
     const newValidation = resolver(newValues);
     const error = _getNested(fullPath, newValidation);
@@ -561,7 +561,7 @@ const useForm = ({
     if (validate) {
       setErrors(resolver(values2));
     }
-  }, []);
+  }, [defaultValues, init, resolver]);
   const Error2 = useCallback(({
     for: fullPath,
     children
@@ -574,7 +574,7 @@ const useForm = ({
       className: _errClassName(error, classNameError),
       children: error.message
     });
-  }, [errors]);
+  }, [errors, classNameError]);
   const Errors = useCallback(({
     children,
     focusable = false
@@ -603,7 +603,7 @@ const useForm = ({
       }) : error.message
     }, key(error)));
     return isFunction(children) ? children(result) : result;
-  }, [errors]);
+  }, [errors, hasError, classNameError, key]);
   return {
     getValue,
     setValue,

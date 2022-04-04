@@ -276,7 +276,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return () => {
 			splitCache = {}; // cleanup, ALWAYS
 		};
-	}, [defaultValues]);
+	}, [defaultValues, init]);
 
 	const hasError = useCallback(
 		(fullPath = null, targetErrors = errors) => {
@@ -298,7 +298,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 			return targetErrors;
 		},
-		[errors],
+		[errors, hasError],
 	);
 
 	const setCustomErrors = useCallback(
@@ -314,7 +314,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			setErrors(newErrors);
 			return newErrors;
 		},
-		[errors],
+		[errors, hasError],
 	);
 
 	const trigger = (fullPath = '', newValues = values) => {
@@ -494,14 +494,17 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		};
 	};
 
-	const reset = useCallback((values = defaultValues, validate = true) => {
-		init(values);
-		isTouched.current = false;
-		isDirty.current = false;
-		if (validate) {
-			setErrors(resolver(values));
-		}
-	}, []);
+	const reset = useCallback(
+		(values = defaultValues, validate = true) => {
+			init(values);
+			isTouched.current = false;
+			isDirty.current = false;
+			if (validate) {
+				setErrors(resolver(values));
+			}
+		},
+		[defaultValues, init, resolver],
+	);
 
 	const Error = useCallback(
 		({ for: fullPath, children }) => {
@@ -511,7 +514,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 			return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
 		},
-		[errors],
+		[errors, classNameError],
 	);
 
 	const Errors = useCallback(
@@ -542,7 +545,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 			return isFunction(children) ? children(result) : result;
 		},
-		[errors],
+		[errors, hasError, classNameError, key],
 	);
 
 	return {
