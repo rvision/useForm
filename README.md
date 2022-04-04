@@ -67,7 +67,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~4kb minified & gzipped
+- **lightweight**: ~3.1kb minified & gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
@@ -134,7 +134,7 @@ const {
 } = useForm(options);
 ```
 
-#### register(fullPath: string, { className: string })
+#### register(fullPath: string, className: string )
 
 field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has validation error
 ```jsx
@@ -142,7 +142,7 @@ field registration method for native inputs; uses ```fullPath``` concept to iden
 {/* or */}
 <input type="checkbox" {...register('agreeToTermsAndConditions')} />
 {/* or */}
-<input type="number" {...register('employee[5].age', { className: 'my-number-input' } )} />
+<input type="number" {...register('employee[5].age', 'my-number-input' )} />
 {/* or */}
 <input type="radio" {...register('radio')} checked={String(getValue('radio')) === String(option.id)} value={option.id} />
 {/* or */}
@@ -424,6 +424,12 @@ PRs welcome
 
 #### Roadmap
 - no fields validation code will be introduced; it's pointless since there are alredy a bunch of libraries that do that
+
+
+## Changelog
+
+v1.0.8:
+- register method does not accept object as second parameter (className), but plain string
 
 
 ## License
