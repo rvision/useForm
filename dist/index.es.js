@@ -14,7 +14,19 @@ var __spreadValues = (a, b) => {
     }
   return a;
 };
-import require$$0, { useRef, useEffect, useCallback, useState } from "react";
+import require$$0, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
+const throwReferenceError = () => {
+  throw new ReferenceError("Callback was called directly while rendering, pass it as a callback prop instead.");
+};
+const useEvent = (handler) => {
+  const handlerRef = useRef(throwReferenceError);
+  useLayoutEffect(() => {
+    handlerRef.current = handler;
+  });
+  return useCallback((...args) => {
+    return handlerRef.current(...args);
+  }, []);
+};
 const compatibleKeyTypes = ["object", "function"];
 let now = Date.now();
 const useKey = () => {
@@ -42,75 +54,8 @@ const useKey = () => {
 };
 var jsxRuntime = { exports: {} };
 var reactJsxRuntime_production_min = {};
-/*
-object-assign
-(c) Sindre Sorhus
-@license MIT
-*/
-var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-function toObject(val) {
-  if (val === null || val === void 0) {
-    throw new TypeError("Object.assign cannot be called with null or undefined");
-  }
-  return Object(val);
-}
-function shouldUseNative() {
-  try {
-    if (!Object.assign) {
-      return false;
-    }
-    var test1 = new String("abc");
-    test1[5] = "de";
-    if (Object.getOwnPropertyNames(test1)[0] === "5") {
-      return false;
-    }
-    var test2 = {};
-    for (var i = 0; i < 10; i++) {
-      test2["_" + String.fromCharCode(i)] = i;
-    }
-    var order2 = Object.getOwnPropertyNames(test2).map(function(n2) {
-      return test2[n2];
-    });
-    if (order2.join("") !== "0123456789") {
-      return false;
-    }
-    var test3 = {};
-    "abcdefghijklmnopqrst".split("").forEach(function(letter) {
-      test3[letter] = letter;
-    });
-    if (Object.keys(Object.assign({}, test3)).join("") !== "abcdefghijklmnopqrst") {
-      return false;
-    }
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-shouldUseNative() ? Object.assign : function(target, source) {
-  var from;
-  var to = toObject(target);
-  var symbols;
-  for (var s = 1; s < arguments.length; s++) {
-    from = Object(arguments[s]);
-    for (var key in from) {
-      if (hasOwnProperty.call(from, key)) {
-        to[key] = from[key];
-      }
-    }
-    if (getOwnPropertySymbols) {
-      symbols = getOwnPropertySymbols(from);
-      for (var i = 0; i < symbols.length; i++) {
-        if (propIsEnumerable.call(from, symbols[i])) {
-          to[symbols[i]] = from[symbols[i]];
-        }
-      }
-    }
-  }
-  return to;
-};
-/** @license React v17.0.2
+/**
+ * @license React
  * react-jsx-runtime.production.min.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -118,26 +63,20 @@ shouldUseNative() ? Object.assign : function(target, source) {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var f = require$$0, g = 60103;
-reactJsxRuntime_production_min.Fragment = 60107;
-if (typeof Symbol === "function" && Symbol.for) {
-  var h = Symbol.for;
-  g = h("react.element");
-  reactJsxRuntime_production_min.Fragment = h("react.fragment");
-}
-var m = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, n = Object.prototype.hasOwnProperty, p = { key: true, ref: true, __self: true, __source: true };
-function q(c, a, k) {
-  var b, d = {}, e = null, l = null;
-  k !== void 0 && (e = "" + k);
+var f = require$$0, k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p = { key: true, ref: true, __self: true, __source: true };
+function q(c, a, g) {
+  var b, d = {}, e = null, h = null;
+  g !== void 0 && (e = "" + g);
   a.key !== void 0 && (e = "" + a.key);
-  a.ref !== void 0 && (l = a.ref);
+  a.ref !== void 0 && (h = a.ref);
   for (b in a)
-    n.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
+    m.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
   if (c && c.defaultProps)
     for (b in a = c.defaultProps, a)
       d[b] === void 0 && (d[b] = a[b]);
-  return { $$typeof: g, type: c, key: e, ref: l, props: d, _owner: m.current };
+  return { $$typeof: k, type: c, key: e, ref: h, props: d, _owner: n.current };
 }
+reactJsxRuntime_production_min.Fragment = l;
 reactJsxRuntime_production_min.jsx = q;
 reactJsxRuntime_production_min.jsxs = q;
 {
@@ -152,12 +91,10 @@ const {
 } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
-const sTrue = "true";
-const sFalse = "false";
 const registerProps = {
   key: "",
   name: "",
-  "aria-invalid": "",
+  "aria-invalid": false,
   className: "",
   onChange: () => {
   },
@@ -370,7 +307,7 @@ const useForm = ({
   mode = "onSubmit",
   classNameError = null,
   shouldFocusError = false,
-  resolver = (foo) => ({})
+  resolver = () => ({})
 }) => {
   const [values, setValues] = useState(defaultValues);
   const [errors, setErrors] = useState({});
@@ -417,7 +354,7 @@ const useForm = ({
     setErrors(newErrors);
     return newErrors;
   }, [errors, hasError]);
-  const trigger = (fullPath = "", newValues = values) => {
+  const trigger = useEvent((fullPath = "", newValues = values) => {
     const newValidation = resolver(newValues);
     const error = _getNested(fullPath, newValidation);
     const newErrors = __spreadValues({}, newValidation);
@@ -427,11 +364,11 @@ const useForm = ({
     }
     setErrors(newErrors);
     return newErrors;
-  };
+  });
   const getValue = (fullPath = "") => {
     return _getNested(fullPath, values);
   };
-  const setValue = (fullPath, value, validate = true) => {
+  const setValue = useEvent((fullPath, value, validate = true) => {
     setValues((values2) => {
       const newValues = __spreadValues({}, fullPath === "" ? value : values2);
       _setNested(fullPath, newValues, value);
@@ -447,23 +384,23 @@ const useForm = ({
       return newValues;
     });
     isTouched.current = true;
-  };
-  const append = (fullPath, object) => {
+  });
+  const append = useEvent((fullPath, object) => {
     const newArr = [..._getNested(fullPath, values), object];
     setValue(fullPath, newArr, false);
     const newErrors = _clearObjectError(fullPath, errors);
     setErrors(newErrors);
     return newArr;
-  };
-  const prepend = (fullPath, object) => {
+  });
+  const prepend = useEvent((fullPath, object) => {
     const newArr = [object, ..._getNested(fullPath, values)];
     setValue(fullPath, newArr, false);
     let newErrors = _clearObjectError(fullPath, errors);
     newErrors = _shiftErrors(fullPath, newErrors, (arrErrors) => [void 0, ...arrErrors]);
     setErrors(newErrors);
     return newArr;
-  };
-  const remove = (fullPath, idx) => {
+  });
+  const remove = useEvent((fullPath, idx) => {
     const newArr = _getNested(fullPath, values).filter((item, i) => idx !== i);
     setValue(fullPath, newArr, false);
     let newErrors = _clearObjectError(fullPath, errors);
@@ -474,8 +411,8 @@ const useForm = ({
     });
     setErrors(newErrors);
     return newArr;
-  };
-  const swap = (fullPath, index1, index2) => {
+  });
+  const swap = useEvent((fullPath, index1, index2) => {
     const newArr = _swap(values, fullPath, index1, index2);
     setValue(fullPath, newArr);
     const newErr = _swap(errors, fullPath, index1, index2);
@@ -483,24 +420,24 @@ const useForm = ({
     _setNested(fullPath, newErrors, newErr);
     setErrors(newErrors);
     return newArr;
-  };
+  });
   const ref = useCallback((element) => {
     if (element) {
       refsMap.current.set(element.name, element);
     }
-  }, [refsMap]);
+  }, [refsMap.current]);
   const getRef = useCallback((fullPath) => {
     return refsMap.current.get(fullPath);
-  }, [refsMap]);
+  }, [refsMap.current]);
   const setRef = useCallback((fullPath, element) => {
     if (element) {
       refsMap.current.set(fullPath, element);
     }
-  }, [refsMap]);
-  const onChange = (e) => {
+  }, [refsMap.current]);
+  const onChange = useEvent((e) => {
     setValue(e.target.name, _getInputValue(e));
-  };
-  const onBlur = (e) => {
+  });
+  const onBlur = useEvent((e) => {
     const {
       name
     } = e.target;
@@ -515,12 +452,12 @@ const useForm = ({
     } else {
       clearError(name);
     }
-  };
+  });
   const register = (fullPath, className = "") => {
     const value = getValue(fullPath);
     const hasFieldError = hasError(fullPath);
     registerProps.key = registerProps.name = fullPath;
-    registerProps["aria-invalid"] = hasFieldError ? sTrue : sFalse;
+    registerProps["aria-invalid"] = hasFieldError;
     registerProps.className = _errClassName({}, hasFieldError ? classNameError : false, className);
     registerProps.onChange = onChange;
     registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
@@ -535,7 +472,7 @@ const useForm = ({
     return registerProps;
   };
   const handleSubmit = (handler) => {
-    return (e) => {
+    return useEvent((e) => {
       e && e.preventDefault && e.preventDefault();
       const newErrors = resolver(values);
       setErrors(newErrors);
@@ -552,28 +489,30 @@ const useForm = ({
       }
       handler(values);
       return true;
-    };
+    });
   };
-  const reset = useCallback((values2 = defaultValues, validate = true) => {
+  const reset = useEvent((values2 = defaultValues, validate = true) => {
     init(values2);
     isTouched.current = false;
     isDirty.current = false;
     if (validate) {
       setErrors(resolver(values2));
     }
-  }, [defaultValues, init, resolver]);
-  const Error2 = useCallback(({
-    for: fullPath,
-    children
-  }) => {
-    const error = _getNested(fullPath, errors);
-    if (!error || isArray(error)) {
-      return false;
-    }
-    return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
-      className: _errClassName(error, classNameError),
-      children: error.message
-    });
+  });
+  const Error2 = useMemo(() => {
+    return ({
+      for: fullPath,
+      children
+    }) => {
+      const error = _getNested(fullPath, errors);
+      if (!error || isArray(error)) {
+        return false;
+      }
+      return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
+        className: _errClassName(error, classNameError),
+        children: error.message
+      });
+    };
   }, [errors, classNameError]);
   const Errors = useCallback(({
     children,
@@ -633,4 +572,23 @@ const useForm = ({
     }
   };
 };
-export { useForm as default };
+const yupResolver = (schema) => {
+  return (fields) => {
+    const errors = {};
+    try {
+      schema.validateSync(fields, {
+        abortEarly: false
+      });
+    } catch (validationError) {
+      for (const error of validationError.inner) {
+        const err = {
+          message: error.message,
+          type: error.type
+        };
+        _setNested(error.path, errors, err);
+      }
+    }
+    return errors;
+  };
+};
+export { useForm as default, yupResolver };

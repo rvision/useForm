@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import useEvent from './useEvent';
 import useKey from './useKey';
 
 // NOTE: make aliases for better minification
@@ -9,13 +10,11 @@ const isFunction = obj => typeof obj === 'function';
 const { isArray } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
-const sTrue = 'true';
-const sFalse = 'false';
 
 const registerProps = {
 	key: '',
 	name: '',
-	'aria-invalid': '',
+	'aria-invalid': false,
 	className: '',
 	onChange: () => {},
 	onBlur: () => {},
@@ -254,7 +253,7 @@ const _focus = element => {
 	return false;
 };
 
-const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = foo => ({}) }) => {
+const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => ({}) }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
@@ -317,7 +316,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		[errors, hasError],
 	);
 
-	const trigger = (fullPath = '', newValues = values) => {
+	const trigger = useEvent((fullPath = '', newValues = values) => {
 		const newValidation = resolver(newValues);
 		const error = _getNested(fullPath, newValidation);
 		const newErrors = { ...newValidation };
@@ -327,13 +326,13 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 		setErrors(newErrors);
 		return newErrors;
-	};
+	});
 
 	const getValue = (fullPath = '') => {
 		return _getNested(fullPath, values);
 	};
 
-	const setValue = (fullPath, value, validate = true) => {
+	const setValue = useEvent((fullPath, value, validate = true) => {
 		setValues(values => {
 			const newValues = { ...(fullPath === '' ? value : values) };
 
@@ -354,9 +353,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		});
 
 		isTouched.current = true;
-	};
+	});
 
-	const append = (fullPath, object) => {
+	const append = useEvent((fullPath, object) => {
 		const newArr = [..._getNested(fullPath, values), object];
 		setValue(fullPath, newArr, false);
 
@@ -364,9 +363,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		setErrors(newErrors);
 
 		return newArr;
-	};
+	});
 
-	const prepend = (fullPath, object) => {
+	const prepend = useEvent((fullPath, object) => {
 		const newArr = [object, ..._getNested(fullPath, values)];
 		setValue(fullPath, newArr, false);
 
@@ -375,9 +374,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		setErrors(newErrors);
 
 		return newArr;
-	};
+	});
 
-	const remove = (fullPath, idx) => {
+	const remove = useEvent((fullPath, idx) => {
 		const newArr = _getNested(fullPath, values).filter((item, i) => idx !== i);
 		setValue(fullPath, newArr, false);
 
@@ -390,9 +389,9 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		setErrors(newErrors);
 
 		return newArr;
-	};
+	});
 
-	const swap = (fullPath, index1, index2) => {
+	const swap = useEvent((fullPath, index1, index2) => {
 		const newArr = _swap(values, fullPath, index1, index2);
 		setValue(fullPath, newArr);
 
@@ -402,7 +401,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		setErrors(newErrors);
 
 		return newArr;
-	};
+	});
 
 	const ref = useCallback(
 		element => {
@@ -410,14 +409,14 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				refsMap.current.set(element.name, element);
 			}
 		},
-		[refsMap],
+		[refsMap.current],
 	);
 
 	const getRef = useCallback(
 		fullPath => {
 			return refsMap.current.get(fullPath);
 		},
-		[refsMap],
+		[refsMap.current],
 	);
 
 	const setRef = useCallback(
@@ -426,14 +425,14 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 				refsMap.current.set(fullPath, element);
 			}
 		},
-		[refsMap],
+		[refsMap.current],
 	);
 
-	const onChange = e => {
+	const onChange = useEvent(e => {
 		setValue(e.target.name, _getInputValue(e));
-	};
+	});
 
-	const onBlur = e => {
+	const onBlur = useEvent(e => {
 		const { name } = e.target;
 		const newError = _getNested(name, resolver(values));
 		if (newError) {
@@ -446,7 +445,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		} else {
 			clearError(name);
 		}
-	};
+	});
 
 	const register = (fullPath, className = '') => {
 		const value = getValue(fullPath);
@@ -454,7 +453,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 
 		// eslint-disable-next-line no-multi-assign
 		registerProps.key = registerProps.name = fullPath;
-		registerProps['aria-invalid'] = hasFieldError ? sTrue : sFalse;
+		registerProps['aria-invalid'] = hasFieldError;
 		registerProps.className = _errClassName({}, hasFieldError ? classNameError : false, className);
 		registerProps.onChange = onChange;
 		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;
@@ -472,7 +471,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 
 	const handleSubmit = handler => {
-		return e => {
+		return useEvent(e => {
 			// eslint-disable-next-line no-unused-expressions
 			e && e.preventDefault && e.preventDefault();
 
@@ -491,31 +490,27 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			}
 			handler(values);
 			return true;
-		};
+		});
 	};
 
-	const reset = useCallback(
-		(values = defaultValues, validate = true) => {
-			init(values);
-			isTouched.current = false;
-			isDirty.current = false;
-			if (validate) {
-				setErrors(resolver(values));
-			}
-		},
-		[defaultValues, init, resolver],
-	);
+	const reset = useEvent((values = defaultValues, validate = true) => {
+		init(values);
+		isTouched.current = false;
+		isDirty.current = false;
+		if (validate) {
+			setErrors(resolver(values));
+		}
+	});
 
-	const Error = useCallback(
-		({ for: fullPath, children }) => {
+	const Error = useMemo(() => {
+		return ({ for: fullPath, children }) => {
 			const error = _getNested(fullPath, errors);
 			if (!error || isArray(error)) {
 				return false;
 			}
 			return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
-		},
-		[errors, classNameError],
-	);
+		};
+	}, [errors, classNameError]);
 
 	const Errors = useCallback(
 		({ children, focusable = false }) => {

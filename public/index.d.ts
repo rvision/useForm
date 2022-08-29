@@ -47,4 +47,5 @@ declare function useForm(options: UseFormOptions): {
     };
 };
 export default useForm;
-export function yupResolver(schema: any): (fields: any) => {};
+
+export const yupResolver: (schema: any) => (values: any) => any;

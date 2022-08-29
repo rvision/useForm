@@ -14,7 +14,7 @@ module.exports = {
 		node: true,
 	},
 	extends: ['airbnb', 'prettier', 'prettier/react'],
-	plugins: ['prettier'],
+	plugins: ['prettier', 'react-hooks'],
 	rules: {
 		'prettier/prettier': ['warn'],
 		'import/no-extraneous-dependencies': 0,
