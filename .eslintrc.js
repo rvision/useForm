@@ -1,6 +1,8 @@
 module.exports = {
-	parser: './node_modules/babel-eslint',
 	settings: {
+		react: {
+			version: 'detect', // Tells eslint-plugin-react to automatically detect the version of React to use.
+		},
 		'import/resolver': {
 			node: {
 				paths: ['src'],
@@ -13,10 +15,9 @@ module.exports = {
 		es6: true,
 		node: true,
 	},
-	extends: ['airbnb', 'prettier', 'prettier/react'],
-	plugins: ['prettier', 'react-hooks'],
+	extends: ['eslint:recommended', 'airbnb', 'prettier', 'eslint-config-prettier'],
+	plugins: ['react-hooks'],
 	rules: {
-		'prettier/prettier': ['warn'],
 		'import/no-extraneous-dependencies': 0,
 		'jsx-a11y/anchor-is-valid': 0,
 		'jsx-a11y/click-events-have-key-events': 0,
