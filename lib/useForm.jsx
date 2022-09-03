@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useEvent from './useEvent';
 import useKey from './useKey';
 
@@ -10,6 +10,7 @@ const isFunction = obj => typeof obj === 'function';
 const { isArray } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
+const EMPTY = {};
 
 const registerProps = {
 	key: '',
@@ -159,9 +160,7 @@ const _deleteNestedToRoot = (fullPath, target) => {
 	_deleteNested(fullPath, target);
 
 	// make array of paths to the root of the object, starting from deepest one
-	const pathsToRoot = fullPath.map((part, idx) => {
-		return idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx);
-	});
+	const pathsToRoot = fullPath.map((part, idx) => (idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx)));
 
 	// delete paths from deepest to shallowest
 	// eslint-disable-next-line no-restricted-syntax
@@ -170,11 +169,11 @@ const _deleteNestedToRoot = (fullPath, target) => {
 		if (value !== undefined) {
 			if (isArray(value)) {
 				// check if array is empty (no items) or each of them is undefined/empty
-				if (value.length === 0 || value.every(item => objectKeys(item || {}).length === 0)) {
+				if (value.length === 0 || value.every(item => objectKeys(item || EMPTY).length === 0)) {
 					_deleteNested(path, target);
 				}
 			} // check if object is empty
-			else if (objectKeys(value || {}).length === 0) {
+			else if (objectKeys(value || EMPTY).length === 0) {
 				_deleteNested(path, target);
 			}
 		}
@@ -184,8 +183,6 @@ const _deleteNestedToRoot = (fullPath, target) => {
 const _getInputValue = e => {
 	const { value, type, checked, options, files, multiple, valueAsNumber } = e.target;
 	switch (type) {
-		default:
-			return value;
 		case 'checkbox':
 			return checked;
 		case 'range':
@@ -204,6 +201,8 @@ const _getInputValue = e => {
 			return multiple ? files : files.item(0);
 		case 'select-multiple':
 			return [...options].filter(o => o.selected).map(o => o.value);
+		default:
+			return value;
 	}
 };
 
@@ -253,7 +252,7 @@ const _focus = element => {
 	return false;
 };
 
-const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => ({}) }) => {
+const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => EMPTY }) => {
 	const [values, setValues] = useState(defaultValues);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
@@ -280,57 +279,52 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	const hasError = useCallback(
 		(fullPath = null, targetErrors = errors) => {
 			if (fullPath === null) {
-				return objectKeys(targetErrors || {}).length > 0;
+				return objectKeys(targetErrors || EMPTY).length > 0;
 			}
 			return _getNested(fullPath, targetErrors) !== undefined;
 		},
 		[errors],
 	);
 
-	const clearError = useCallback(
-		(fullPath, targetErrors = errors) => {
-			if (hasError(fullPath)) {
-				const newErrors = { ...targetErrors };
-				_deleteNestedToRoot(fullPath, newErrors);
-				setErrors(newErrors);
-				return newErrors;
-			}
-			return targetErrors;
-		},
-		[errors, hasError],
-	);
-
-	const setCustomErrors = useCallback(
-		errorsObj => {
-			const newErrors = { ...errors };
-			// eslint-disable-next-line no-restricted-syntax
-			for (const fullPath of objectKeys(errorsObj)) {
-				if (hasError(fullPath)) {
-					_deleteNestedToRoot(fullPath, newErrors);
-				}
-				_setNested(fullPath, newErrors, errorsObj[fullPath]);
-			}
+	const clearError = useEvent((fullPath, targetErrors = errors) => {
+		if (hasError(fullPath, targetErrors)) {
+			const newErrors = { ...targetErrors };
+			_deleteNestedToRoot(fullPath, newErrors);
 			setErrors(newErrors);
 			return newErrors;
-		},
-		[errors, hasError],
-	);
+		}
+		return targetErrors;
+	});
 
-	const trigger = useEvent((fullPath = '', newValues = values) => {
-		const newValidation = resolver(newValues);
-		const error = _getNested(fullPath, newValidation);
-		const newErrors = { ...newValidation };
-		_deleteNestedToRoot(fullPath, newErrors);
-		if (error !== undefined) {
-			_setNested(fullPath, newErrors, error);
+	const setCustomErrors = useEvent(customErrors => {
+		const newErrors = { ...errors };
+		// eslint-disable-next-line no-restricted-syntax
+		for (const fullPath of objectKeys(customErrors)) {
+			if (hasError(fullPath)) {
+				_deleteNestedToRoot(fullPath, newErrors);
+			}
+			_setNested(fullPath, newErrors, customErrors[fullPath]);
 		}
 		setErrors(newErrors);
 		return newErrors;
 	});
 
-	const getValue = (fullPath = '') => {
-		return _getNested(fullPath, values);
-	};
+	const trigger = useEvent((fullPath = '', newValues = values) => {
+		const newErrors = resolver(newValues);
+		const paths = isArray(fullPath) ? fullPath : [fullPath];
+		const updatedErrors = { ...errors };
+		paths.forEach(fullPath => {
+			const error = _getNested(fullPath, newErrors);
+			_deleteNestedToRoot(fullPath, updatedErrors);
+			if (error !== undefined) {
+				_setNested(fullPath, updatedErrors, error);
+			}
+		});
+		setErrors(updatedErrors);
+		return updatedErrors;
+	});
+
+	const getValue = (fullPath = '') => _getNested(fullPath, values);
 
 	const setValue = useEvent((fullPath, value, validate = true) => {
 		setValues(values => {
@@ -403,30 +397,19 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return newArr;
 	});
 
-	const ref = useCallback(
-		element => {
-			if (element) {
-				refsMap.current.set(element.name, element);
-			}
-		},
-		[refsMap.current],
-	);
+	const ref = useCallback(element => {
+		if (element) {
+			refsMap.current.set(element.name, element);
+		}
+	}, []);
 
-	const getRef = useCallback(
-		fullPath => {
-			return refsMap.current.get(fullPath);
-		},
-		[refsMap.current],
-	);
+	const getRef = useCallback(fullPath => refsMap.current.get(fullPath), []);
 
-	const setRef = useCallback(
-		(fullPath, element) => {
-			if (element) {
-				refsMap.current.set(fullPath, element);
-			}
-		},
-		[refsMap.current],
-	);
+	const setRef = useCallback((fullPath, element) => {
+		if (element) {
+			refsMap.current.set(fullPath, element);
+		}
+	}, []);
 
 	const onChange = useEvent(e => {
 		setValue(e.target.name, _getInputValue(e));
@@ -454,7 +437,7 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		// eslint-disable-next-line no-multi-assign
 		registerProps.key = registerProps.name = fullPath;
 		registerProps['aria-invalid'] = hasFieldError;
-		registerProps.className = _errClassName({}, hasFieldError ? classNameError : false, className);
+		registerProps.className = _errClassName(EMPTY, hasFieldError ? classNameError : false, className);
 		registerProps.onChange = onChange;
 		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;
 		registerProps.ref = ref;
@@ -470,8 +453,8 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		return registerProps;
 	};
 
-	const handleSubmit = handler => {
-		return useEvent(e => {
+	const handleSubmit = handler =>
+		useEvent(e => {
 			// eslint-disable-next-line no-unused-expressions
 			e && e.preventDefault && e.preventDefault();
 
@@ -491,7 +474,6 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 			handler(values);
 			return true;
 		});
-	};
 
 	const reset = useEvent((values = defaultValues, validate = true) => {
 		init(values);
@@ -502,15 +484,16 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 		}
 	});
 
-	const Error = useMemo(() => {
-		return ({ for: fullPath, children }) => {
+	const Error = useCallback(
+		({ for: fullPath, children }) => {
 			const error = _getNested(fullPath, errors);
 			if (!error || isArray(error)) {
 				return false;
 			}
 			return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
-		};
-	}, [errors, classNameError]);
+		},
+		[errors, classNameError],
+	);
 
 	const Errors = useCallback(
 		({ children, focusable = false }) => {
@@ -573,23 +556,21 @@ const useForm = ({ defaultValues = {}, mode = 'onSubmit', classNameError = null,
 	};
 };
 
-export const yupResolver = schema => {
-	return fields => {
-		const errors = {};
-		try {
-			schema.validateSync(fields, { abortEarly: false });
-		} catch (validationError) {
-			// eslint-disable-next-line no-restricted-syntax
-			for (const error of validationError.inner) {
-				const err = {
-					message: error.message,
-					type: error.type,
-				};
-				_setNested(error.path, errors, err);
-			}
+export const yupResolver = schema => fields => {
+	const errors = {};
+	try {
+		schema.validateSync(fields, { abortEarly: false });
+	} catch (validationError) {
+		// eslint-disable-next-line no-restricted-syntax
+		for (const error of validationError.inner) {
+			const err = {
+				message: error.message,
+				type: error.type,
+			};
+			_setNested(error.path, errors, err);
 		}
-		return errors;
-	};
+	}
+	return errors;
 };
 
 export default useForm;

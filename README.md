@@ -428,9 +428,16 @@ PRs welcome
 
 ## Changelog
 
+v1.0.12:
+
+- trigger accepts multiple fiullPaths; defaultValues doesn't create new instances when null is passed; setCustomErrors use useEvent
+
 v1.0.10:
+
 - added useEvent for stable handler references; fix yupResolver export
+
 v1.0.8:
+
 - register method does not accept object as second parameter (className), but plain string
 
 

@@ -20,7 +20,7 @@ declare function useForm(options: UseFormOptions): {
     onBlur: (e: any) => void;
     getRef: (fullPath: string) => any;
     setRef: (fullPath: string, element: any) => void;
-    trigger: (fullPath?: string, newValues?: any) => {};
+    trigger: (fullPath?: string | string[], newValues?: any) => {};
     handleSubmit: (handler: any) => (e: any) => boolean;
     hasError: (fullPath?: any, targetErrors?: any) => boolean;
     clearError: (fullPath: string, targetErrors?: any) => any;

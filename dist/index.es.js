@@ -14,7 +14,7 @@ var __spreadValues = (a, b) => {
     }
   return a;
 };
-import require$$0, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
+import require$$0, { useCallback, useRef, useLayoutEffect, useEffect, useState } from "react";
 const throwReferenceError = () => {
   throw new ReferenceError("Callback was called directly while rendering, pass it as a callback prop instead.");
 };
@@ -91,6 +91,7 @@ const {
 } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
+const EMPTY = {};
 const registerProps = {
   key: "",
   name: "",
@@ -216,17 +217,15 @@ const _deleteNestedToRoot = (fullPath, target) => {
     return;
   }
   _deleteNested(fullPath, target);
-  const pathsToRoot = fullPath.map((part, idx) => {
-    return idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx);
-  });
+  const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
   for (const path of pathsToRoot) {
     const value = _getNested(path, target);
     if (value !== void 0) {
       if (isArray(value)) {
-        if (value.length === 0 || value.every((item) => objectKeys(item || {}).length === 0)) {
+        if (value.length === 0 || value.every((item) => objectKeys(item || EMPTY).length === 0)) {
           _deleteNested(path, target);
         }
-      } else if (objectKeys(value || {}).length === 0) {
+      } else if (objectKeys(value || EMPTY).length === 0) {
         _deleteNested(path, target);
       }
     }
@@ -243,8 +242,6 @@ const _getInputValue = (e) => {
     valueAsNumber
   } = e.target;
   switch (type) {
-    default:
-      return value;
     case "checkbox":
       return checked;
     case "range":
@@ -262,6 +259,8 @@ const _getInputValue = (e) => {
       return multiple ? files : files.item(0);
     case "select-multiple":
       return [...options].filter((o) => o.selected).map((o) => o.value);
+    default:
+      return value;
   }
 };
 const _clearObjectError = (fullPath, targetErrors) => {
@@ -303,11 +302,11 @@ const _focus = (element) => {
   return false;
 };
 const useForm = ({
-  defaultValues = {},
+  defaultValues = EMPTY,
   mode = "onSubmit",
   classNameError = null,
   shouldFocusError = false,
-  resolver = () => ({})
+  resolver = () => EMPTY
 }) => {
   const [values, setValues] = useState(defaultValues);
   const [errors, setErrors] = useState({});
@@ -330,44 +329,45 @@ const useForm = ({
   }, [defaultValues, init]);
   const hasError = useCallback((fullPath = null, targetErrors = errors) => {
     if (fullPath === null) {
-      return objectKeys(targetErrors || {}).length > 0;
+      return objectKeys(targetErrors || EMPTY).length > 0;
     }
     return _getNested(fullPath, targetErrors) !== void 0;
   }, [errors]);
-  const clearError = useCallback((fullPath, targetErrors = errors) => {
-    if (hasError(fullPath)) {
+  const clearError = useEvent((fullPath, targetErrors = errors) => {
+    if (hasError(fullPath, targetErrors)) {
       const newErrors = __spreadValues({}, targetErrors);
       _deleteNestedToRoot(fullPath, newErrors);
       setErrors(newErrors);
       return newErrors;
     }
     return targetErrors;
-  }, [errors, hasError]);
-  const setCustomErrors = useCallback((errorsObj) => {
+  });
+  const setCustomErrors = useEvent((customErrors) => {
     const newErrors = __spreadValues({}, errors);
-    for (const fullPath of objectKeys(errorsObj)) {
+    for (const fullPath of objectKeys(customErrors)) {
       if (hasError(fullPath)) {
         _deleteNestedToRoot(fullPath, newErrors);
       }
-      _setNested(fullPath, newErrors, errorsObj[fullPath]);
-    }
-    setErrors(newErrors);
-    return newErrors;
-  }, [errors, hasError]);
-  const trigger = useEvent((fullPath = "", newValues = values) => {
-    const newValidation = resolver(newValues);
-    const error = _getNested(fullPath, newValidation);
-    const newErrors = __spreadValues({}, newValidation);
-    _deleteNestedToRoot(fullPath, newErrors);
-    if (error !== void 0) {
-      _setNested(fullPath, newErrors, error);
+      _setNested(fullPath, newErrors, customErrors[fullPath]);
     }
     setErrors(newErrors);
     return newErrors;
   });
-  const getValue = (fullPath = "") => {
-    return _getNested(fullPath, values);
-  };
+  const trigger = useEvent((fullPath = "", newValues = values) => {
+    const newErrors = resolver(newValues);
+    const paths = isArray(fullPath) ? fullPath : [fullPath];
+    const updatedErrors = __spreadValues({}, errors);
+    paths.forEach((fullPath2) => {
+      const error = _getNested(fullPath2, newErrors);
+      _deleteNestedToRoot(fullPath2, updatedErrors);
+      if (error !== void 0) {
+        _setNested(fullPath2, updatedErrors, error);
+      }
+    });
+    setErrors(updatedErrors);
+    return updatedErrors;
+  });
+  const getValue = (fullPath = "") => _getNested(fullPath, values);
   const setValue = useEvent((fullPath, value, validate = true) => {
     setValues((values2) => {
       const newValues = __spreadValues({}, fullPath === "" ? value : values2);
@@ -425,15 +425,13 @@ const useForm = ({
     if (element) {
       refsMap.current.set(element.name, element);
     }
-  }, [refsMap.current]);
-  const getRef = useCallback((fullPath) => {
-    return refsMap.current.get(fullPath);
-  }, [refsMap.current]);
+  }, []);
+  const getRef = useCallback((fullPath) => refsMap.current.get(fullPath), []);
   const setRef = useCallback((fullPath, element) => {
     if (element) {
       refsMap.current.set(fullPath, element);
     }
-  }, [refsMap.current]);
+  }, []);
   const onChange = useEvent((e) => {
     setValue(e.target.name, _getInputValue(e));
   });
@@ -458,7 +456,7 @@ const useForm = ({
     const hasFieldError = hasError(fullPath);
     registerProps.key = registerProps.name = fullPath;
     registerProps["aria-invalid"] = hasFieldError;
-    registerProps.className = _errClassName({}, hasFieldError ? classNameError : false, className);
+    registerProps.className = _errClassName(EMPTY, hasFieldError ? classNameError : false, className);
     registerProps.onChange = onChange;
     registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
     registerProps.ref = ref;
@@ -471,26 +469,24 @@ const useForm = ({
     }
     return registerProps;
   };
-  const handleSubmit = (handler) => {
-    return useEvent((e) => {
-      e && e.preventDefault && e.preventDefault();
-      const newErrors = resolver(values);
-      setErrors(newErrors);
-      if (hasError(null, newErrors)) {
-        if (shouldFocusError) {
-          let isFocused = false;
-          refsMap.current.forEach((value, key2) => {
-            if (!isFocused && hasError(key2, newErrors)) {
-              isFocused = _focus(value);
-            }
-          });
-        }
-        return false;
+  const handleSubmit = (handler) => useEvent((e) => {
+    e && e.preventDefault && e.preventDefault();
+    const newErrors = resolver(values);
+    setErrors(newErrors);
+    if (hasError(null, newErrors)) {
+      if (shouldFocusError) {
+        let isFocused = false;
+        refsMap.current.forEach((value, key2) => {
+          if (!isFocused && hasError(key2, newErrors)) {
+            isFocused = _focus(value);
+          }
+        });
       }
-      handler(values);
-      return true;
-    });
-  };
+      return false;
+    }
+    handler(values);
+    return true;
+  });
   const reset = useEvent((values2 = defaultValues, validate = true) => {
     init(values2);
     isTouched.current = false;
@@ -499,20 +495,18 @@ const useForm = ({
       setErrors(resolver(values2));
     }
   });
-  const Error2 = useMemo(() => {
-    return ({
-      for: fullPath,
-      children
-    }) => {
-      const error = _getNested(fullPath, errors);
-      if (!error || isArray(error)) {
-        return false;
-      }
-      return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
-        className: _errClassName(error, classNameError),
-        children: error.message
-      });
-    };
+  const Error2 = useCallback(({
+    for: fullPath,
+    children
+  }) => {
+    const error = _getNested(fullPath, errors);
+    if (!error || isArray(error)) {
+      return false;
+    }
+    return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
+      className: _errClassName(error, classNameError),
+      children: error.message
+    });
   }, [errors, classNameError]);
   const Errors = useCallback(({
     children,
@@ -572,23 +566,21 @@ const useForm = ({
     }
   };
 };
-const yupResolver = (schema) => {
-  return (fields) => {
-    const errors = {};
-    try {
-      schema.validateSync(fields, {
-        abortEarly: false
-      });
-    } catch (validationError) {
-      for (const error of validationError.inner) {
-        const err = {
-          message: error.message,
-          type: error.type
-        };
-        _setNested(error.path, errors, err);
-      }
+const yupResolver = (schema) => (fields) => {
+  const errors = {};
+  try {
+    schema.validateSync(fields, {
+      abortEarly: false
+    });
+  } catch (validationError) {
+    for (const error of validationError.inner) {
+      const err = {
+        message: error.message,
+        type: error.type
+      };
+      _setNested(error.path, errors, err);
     }
-    return errors;
-  };
+  }
+  return errors;
 };
 export { useForm as default, yupResolver };
