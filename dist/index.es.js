@@ -23,22 +23,18 @@ const useEvent = (handler) => {
   useLayoutEffect(() => {
     handlerRef.current = handler;
   });
-  return useCallback((...args) => {
-    return handlerRef.current(...args);
-  }, []);
+  return useCallback((...args) => handlerRef.current(...args), []);
 };
 const compatibleKeyTypes = ["object", "function"];
 let now = Date.now();
 const useKey = () => {
   const map = useRef(/* @__PURE__ */ new WeakMap());
-  useEffect(() => {
-    return () => {
-      if (map && map.current) {
-        map.current = /* @__PURE__ */ new WeakMap();
-      }
-    };
+  useEffect(() => () => {
+    if (map == null ? void 0 : map.current) {
+      map.current = /* @__PURE__ */ new WeakMap();
+    }
   }, []);
-  const keyFn = useCallback((object = {}) => {
+  return useCallback((object = {}) => {
     const c = map.current;
     if (c.has(object)) {
       return c.get(object);
@@ -50,7 +46,6 @@ const useKey = () => {
     c.set(object, key);
     return key;
   }, [map]);
-  return keyFn;
 };
 var jsxRuntime = { exports: {} };
 var reactJsxRuntime_production_min = {};

@@ -10,9 +10,7 @@ const useEvent = handler => {
 		handlerRef.current = handler;
 	});
 
-	return useCallback((...args) => {
-		return handlerRef.current(...args);
-	}, []);
+	return useCallback((...args) => handlerRef.current(...args), []);
 };
 
 export default useEvent;
