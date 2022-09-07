@@ -311,6 +311,10 @@ const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = nu
 
 	const trigger = useEvent((fullPath = '', newValues = values) => {
 		const newErrors = resolver(newValues);
+		if (fullPath === '') {
+			setErrors(newErrors);
+			return newErrors;
+		}
 		const paths = isArray(fullPath) ? fullPath : [fullPath];
 		const updatedErrors = { ...errors };
 		paths.forEach(fullPath => {
@@ -327,26 +331,20 @@ const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = nu
 	const getValue = (fullPath = '') => _getNested(fullPath, values);
 
 	const setValue = useEvent((fullPath, value, validate = true) => {
-		setValues(values => {
-			const newValues = { ...(fullPath === '' ? value : values) };
-
-			_setNested(fullPath, newValues, value);
-
-			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-
-			if (validate && (hasError(fullPath) || isOnChangeMode)) {
-				const newErrors = clearError(fullPath);
-				const newError = _getNested(fullPath, resolver(newValues));
-				if (newError) {
-					_setNested(fullPath, newErrors, newError);
-					setErrors(newErrors);
-				}
+		const newValues = { ...(fullPath === '' ? value : values) };
+		_setNested(fullPath, newValues, value);
+		isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+		if (validate && (hasError(fullPath) || isOnChangeMode)) {
+			const newErrors = clearError(fullPath);
+			const newError = _getNested(fullPath, resolver(newValues));
+			if (newError) {
+				_setNested(fullPath, newErrors, newError);
+				setErrors(newErrors);
 			}
-
-			return newValues;
-		});
-
+		}
+		setValues(newValues);
 		isTouched.current = true;
+		return newValues;
 	});
 
 	const append = useEvent((fullPath, object) => {

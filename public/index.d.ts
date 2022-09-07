@@ -14,7 +14,7 @@ export interface UseFormOptions {
 
 declare function useForm(options: UseFormOptions): {
     getValue: (fullPath?: string) => any;
-    setValue: (fullPath: string, value: any, validate?: boolean) => void;
+    setValue: (fullPath: string, value: any, validate?: boolean) => any;
     register: (fullPath: string, className?: string) => any;
     onChange: (e: any) => void;
     onBlur: (e: any) => void;

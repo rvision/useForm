@@ -284,7 +284,7 @@ method to get value of the field, uses ```fullPath``` concept as field identifie
 
 #### setValue(fullPath: string, newValue: any, shouldRevalidate: true)
 
-method to set value of the field, uses ```fullPath``` concept as field identifier. use it for custom components.
+method to set value of the field, uses ```fullPath``` concept as field identifier. returns new values object. use it for custom components.
 ```jsx
 <ReactDatePicker
 	onChange={date => {
@@ -295,7 +295,7 @@ method to set value of the field, uses ```fullPath``` concept as field identifie
 <a onClick={setValue('movies',[])}>Clear movie list</a>
 ```
 
-#### trigger(fullPath: string?, newValues: any) : any
+#### trigger(fullPath: string? | string[], newValues: any) : any
 
 triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors
 ```jsx
@@ -428,9 +428,13 @@ PRs welcome
 
 ## Changelog
 
+v1.0.13:
+
+- setValue returns new values; trigger triggers validation for whole object if fullPath is undefined
+
 v1.0.12:
 
-- trigger accepts multiple fiullPaths; defaultValues doesn't create new instances when null is passed; setCustomErrors use useEvent
+- trigger accepts multiple fullPaths; defaultValues doesn't create new instances when null is passed; setCustomErrors use useEvent
 
 v1.0.10:
 
