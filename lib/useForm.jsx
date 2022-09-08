@@ -17,9 +17,9 @@ const registerProps = {
 	name: '',
 	'aria-invalid': false,
 	className: '',
-	onChange: () => {},
-	onBlur: () => {},
-	ref: () => {},
+	onChange: () => EMPTY,
+	onBlur: () => EMPTY,
+	ref: () => EMPTY,
 	value: '',
 	checked: false,
 };
@@ -76,8 +76,6 @@ const _getNested = (fullPath, source) => {
 	switch (fullPath.length) {
 		case 0:
 			return source;
-		case 1:
-			return source[fullPath[0]];
 		default:
 			return _getNested(fullPath.slice(1), source[fullPath[0]]);
 	}
@@ -252,8 +250,8 @@ const _focus = element => {
 	return false;
 };
 
-const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => EMPTY }) => {
-	const [values, setValues] = useState(defaultValues);
+const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => EMPTY }) => {
+	const [values, setValues] = useState(defaultValues || EMPTY);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
 	const isDirty = useRef(false);
@@ -270,7 +268,7 @@ const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = nu
 	}, []);
 
 	useEffect(() => {
-		init(defaultValues);
+		init(defaultValues || EMPTY);
 		return () => {
 			splitCache = {}; // cleanup, ALWAYS
 		};
@@ -474,7 +472,7 @@ const useForm = ({ defaultValues = EMPTY, mode = 'onSubmit', classNameError = nu
 		});
 
 	const reset = useEvent((values = defaultValues, validate = true) => {
-		init(values);
+		init(values || EMPTY);
 		isTouched.current = false;
 		isDirty.current = false;
 		if (validate) {
