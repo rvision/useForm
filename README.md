@@ -428,6 +428,10 @@ PRs welcome
 
 ## Changelog
 
+v1.0.14:
+
+- fix for null defaultValues, minor improvements
+
 v1.0.13:
 
 - setValue returns new values; trigger triggers validation for whole object if fullPath is undefined
