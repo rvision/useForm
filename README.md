@@ -428,6 +428,10 @@ PRs welcome
 
 ## Changelog
 
+v1.0.15:
+
+- react & react-dom: same versions in dev and peer dependencies
+
 v1.0.14:
 
 - fix for null defaultValues, minor improvements

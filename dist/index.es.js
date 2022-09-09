@@ -87,14 +87,15 @@ const {
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
 const EMPTY = {};
+const noOp = () => EMPTY;
 const registerProps = {
   key: "",
   name: "",
   "aria-invalid": false,
   className: "",
-  onChange: () => EMPTY,
-  onBlur: () => EMPTY,
-  ref: () => EMPTY,
+  onChange: noOp,
+  onBlur: noOp,
+  ref: noOp,
   value: "",
   checked: false
 };
@@ -296,7 +297,7 @@ const useForm = ({
   mode = "onSubmit",
   classNameError = null,
   shouldFocusError = false,
-  resolver = () => EMPTY
+  resolver = noOp
 }) => {
   const [values, setValues] = useState(defaultValues || EMPTY);
   const [errors, setErrors] = useState({});
@@ -485,7 +486,7 @@ const useForm = ({
     isTouched.current = false;
     isDirty.current = false;
     if (validate) {
-      setErrors(resolver(values2));
+      trigger("", values2);
     }
   });
   const Error2 = useCallback(({

@@ -11,15 +11,16 @@ const { isArray } = Array;
 const toJSON = JSON.stringify;
 const objectKeys = Object.keys;
 const EMPTY = {};
+const noOp = () => EMPTY;
 
 const registerProps = {
 	key: '',
 	name: '',
 	'aria-invalid': false,
 	className: '',
-	onChange: () => EMPTY,
-	onBlur: () => EMPTY,
-	ref: () => EMPTY,
+	onChange: noOp,
+	onBlur: noOp,
+	ref: noOp,
 	value: '',
 	checked: false,
 };
@@ -250,7 +251,7 @@ const _focus = element => {
 	return false;
 };
 
-const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = () => EMPTY }) => {
+const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = noOp }) => {
 	const [values, setValues] = useState(defaultValues || EMPTY);
 	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
@@ -476,7 +477,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		isTouched.current = false;
 		isDirty.current = false;
 		if (validate) {
-			setErrors(resolver(values));
+			trigger('', values);
 		}
 	});
 
