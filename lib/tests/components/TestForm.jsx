@@ -37,7 +37,7 @@ function TestForm({ onFormSubmit }) {
 	});
 
 	const onSubmit = vals => {
-		onFormSubmit(vals);
+		if (onFormSubmit) onFormSubmit(vals);
 	};
 
 	const onReset = e => {
@@ -45,7 +45,9 @@ function TestForm({ onFormSubmit }) {
 		reset();
 	};
 
-	const BulmaError = useCallback(({ for: path }) => <Error for={path}>{({ message }) => <p className="help is-danger mb-2">⚠ {message}</p>}</Error>, [errors]);
+	function BulmaError({ for: path }) {
+		return <Error for={path}>{({ message }) => <p className="help is-danger mb-2">⚠ {message}</p>}</Error>;
+	}
 
 	return (
 		<div>
@@ -93,9 +95,9 @@ function TestForm({ onFormSubmit }) {
 						<div className="select is-fullwidth">
 							<label>
 								Title
-								<select {...register('title')}>
+								<select {...register('title')} data-testid="title">
 									{optionsTitle.map(option => (
-										<option key={option.id} value={option.id}>
+										<option key={option.id} value={option.id} data-testid={`title-option-${option.id.toLowerCase()}`}>
 											{option.name}
 										</option>
 									))}
@@ -562,6 +564,7 @@ function TestForm({ onFormSubmit }) {
 									className="radio mr-1"
 									{...register('radio')}
 									checked={String(getValue('radio')) === String(option.id)}
+									data-testid={`radio-${option.id}`}
 									value={option.id}
 								/>
 								{option.name}

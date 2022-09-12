@@ -1,6 +1,7 @@
 // import { within } from '@testing-library/dom';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TestForm from './components/TestForm';
 
@@ -48,21 +49,20 @@ describe('useForm', () => {
 	// 	document.body.innerHTML = '';
 	// 	cleanup();
 	// });
-	// it('select change value', () => {
-	// 	let formData = null;
-	// 	const onSubmit = vi.fn(data => {
-	// 		formData = data;
-	// 	});
-	// 	render(<TestForm onFormSubmit={onSubmit} />);
+	it('select: change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
 
-	// 	const title = screen.getByRole('combobox', {
-	// 		name: /title/i,
-	// 	});
-	// 	fireEvent.click(title);
-	// 	fireEvent.clickSubmit();
-	// 	expect(onSubmit).toBeCalledTimes(1);
-	// 	expect(formData).toHaveProperty('firstName', 'first name test');
-	// });
+		// NOTE: userEvent does not work
+		fireEvent.change(screen.getByTestId('title'), { target: { value: 'Mr' } });
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+
+		expect(formData).toHaveProperty('title', 'Mr');
+	});
 
 	it('type="text" change value', () => {
 		let formData = null;
@@ -113,5 +113,50 @@ describe('useForm', () => {
 		fireEvent.clickSubmit();
 		expect(onSubmit).toBeCalledTimes(1);
 		expect(formData).toHaveProperty('firstName', 'first name test');
+	});
+
+	it('type="checkbox" change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		const input = screen.getByText(/yes i would recommend this artist/i);
+		fireEvent.click(input);
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData).toHaveProperty('checkbox', true);
+	});
+
+	it('type="radio" change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		fireEvent.click(screen.getByTestId('radio-1'));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData).toHaveProperty('radio', '1');
+	});
+
+	it('textarea change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		fireEvent.change(
+			screen.getByRole('textbox', {
+				name: /notes/i,
+			}),
+			targetValue('this is a note'),
+		);
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData).toHaveProperty('notes', 'this is a note');
 	});
 });
