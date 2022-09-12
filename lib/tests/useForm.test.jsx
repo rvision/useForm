@@ -1,8 +1,8 @@
 // import { within } from '@testing-library/dom';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import useEvent from '../useEvent';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import TestForm from './components/TestForm';
 
 // import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 // import Accordion from './Accordion';
@@ -23,78 +23,95 @@ import useEvent from '../useEvent';
 // const mockFn = vi.fn(apples => apples + 1);
 // mockFn.mock.calls[0][0] === 0 // true
 
-/*
-describe('useEvent', () => {
-	// beforeEach(() => {
-	//     render(<Accordion title='Testing'><h4>Content</h4></Accordion>);
-	// });
-	it('returns hook', () => {
-		const { result } = renderHook(() => useEvent());
-		expect(typeof result.current).toBe('function');
-	});
+fireEvent.clickSubmit = () => fireEvent.click(screen.getByRole('button', { name: /submit form/i }));
 
-	it('throws error if not used in event', () => {
-		const { result } = renderHook(() => useEvent(() => null));
-		try {
-			render(<div onLoad={result.current} />);
-		} catch (e) {
-			expect(e.message).toBe('Callback was called directly while rendering, pass it as a callback prop instead.');
-		}
-	});
+const hasErrorSummary = () => screen.getByRole('errors-summary');
+// screen.getByRole('heading', {
+// 	name: /your form has some errors:/i,
+// });
 
-	it('calls handler function', () => {
-		let mutableVariable = 0;
-		const clickHandler = vi.fn(() => mutableVariable++);
-		const { result } = renderHook(() => useEvent(clickHandler));
+const targetValue = value => ({ target: { value } });
 
-		render(
-			<button type="button" name="test" onClick={result.current}>
-				test
-			</button>,
-		);
-		fireEvent.click(screen.getByText(/test/i));
-
-		expect(clickHandler).toBeCalledTimes(1);
-		expect(mutableVariable).toEqual(1);
-	});
-
-	/*
-	it('returns same keys for same object', () => {
-		const { result } = renderHook(() => useEvent());
-		const object = {
-			test: 'test',
-		};
-
-		const key1 = result.current(object);
-		const key2 = result.current(object);
-
-		expect(key1).toBe(key2);
-	});
-
-	it('returns same keys for same function', () => {
-		const { result } = renderHook(() => useEvent());
-		const func = () => {};
-
-		const key1 = result.current(func);
-		const key2 = result.current(func);
-
-		expect(key1).toBe(key2);
-	});
-
-	it('returns different keys for different objects', () => {
-		const { result } = renderHook(() => useEvent());
-		const object1 = {
-			test: 'test1',
-		};
-		const object2 = {
-			test: 'test2',
-		};
-
-		const key1 = result.current(object1);
-		const key2 = result.current(object2);
-
-		expect(key1).not.toBe(key2);
-	});
-
+let formData = null;
+const onSubmit = vi.fn(data => {
+	formData = data;
 });
-*/
+
+describe('useForm', () => {
+	// beforeEach(() => {
+	// 	render(<TestForm onFormSubmit={onSubmit} />);
+	// });
+
+	// afterEach(() => {
+	// 	formData = null;
+	// 	onSubmit.mockReset();
+	// 	document.body.innerHTML = '';
+	// 	cleanup();
+	// });
+	// it('select change value', () => {
+	// 	let formData = null;
+	// 	const onSubmit = vi.fn(data => {
+	// 		formData = data;
+	// 	});
+	// 	render(<TestForm onFormSubmit={onSubmit} />);
+
+	// 	const title = screen.getByRole('combobox', {
+	// 		name: /title/i,
+	// 	});
+	// 	fireEvent.click(title);
+	// 	fireEvent.clickSubmit();
+	// 	expect(onSubmit).toBeCalledTimes(1);
+	// 	expect(formData).toHaveProperty('firstName', 'first name test');
+	// });
+
+	it('type="text" change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		const input = screen.getByRole('textbox', { name: /first name/i });
+		fireEvent.change(input, targetValue('first name test'));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData).toHaveProperty('firstName', 'first name test');
+	});
+
+	it('type="text" validation error', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		const input = screen.getByRole('textbox', { name: /first name/i });
+		fireEvent.change(input, targetValue(''));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(0);
+		expect(screen.getByText(/⚠ please enter first name/i)).toBeTruthy();
+		expect(screen.getByText('Please enter first name')).toBeTruthy();
+		expect(hasErrorSummary()).toBeTruthy();
+	});
+
+	it('type="text" validation error then changed to valid', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		const input = screen.getByRole('textbox', { name: /first name/i });
+		fireEvent.change(input, targetValue(''));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(0);
+		expect(screen.getByText(/⚠ please enter first name/i)).toBeTruthy();
+		expect(screen.getByText('Please enter first name')).toBeTruthy();
+		expect(hasErrorSummary()).toBeTruthy();
+
+		fireEvent.change(input, targetValue('first name test'));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData).toHaveProperty('firstName', 'first name test');
+	});
+});
