@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import defaultValues from './components/defaultValues';
 import TestForm from './components/TestForm';
 
 // import {fireEvent, render, screen, waitFor} from '@testing-library/react';
@@ -64,7 +65,7 @@ describe('useForm', () => {
 		expect(formData).toHaveProperty('title', 'Mr');
 	});
 
-	it('type="text" change value', () => {
+	it('type="text": change value', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -78,7 +79,7 @@ describe('useForm', () => {
 		expect(formData).toHaveProperty('firstName', 'first name test');
 	});
 
-	it('type="text" validation error', () => {
+	it('type="text": validation error', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -94,7 +95,7 @@ describe('useForm', () => {
 		expect(hasErrorSummary()).toBeTruthy();
 	});
 
-	it('type="text" validation error then changed to valid', () => {
+	it('type="text": validation error then changed to valid', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -115,7 +116,7 @@ describe('useForm', () => {
 		expect(formData).toHaveProperty('firstName', 'first name test');
 	});
 
-	it('type="checkbox" change value', () => {
+	it('type="checkbox": change value', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -129,7 +130,7 @@ describe('useForm', () => {
 		expect(formData).toHaveProperty('checkbox', true);
 	});
 
-	it('type="radio" change value', () => {
+	it('type="radio": change value', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -142,7 +143,7 @@ describe('useForm', () => {
 		expect(formData).toHaveProperty('radio', '1');
 	});
 
-	it('textarea change value', () => {
+	it('textarea: change value', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {
 			formData = data;
@@ -158,5 +159,62 @@ describe('useForm', () => {
 		fireEvent.clickSubmit();
 		expect(onSubmit).toBeCalledTimes(1);
 		expect(formData).toHaveProperty('notes', 'this is a note');
+	});
+
+	it('checkboxes array: change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		fireEvent.click(screen.getByTestId('occupation-nutcase'));
+		fireEvent.click(screen.getByTestId('occupation-hedonist'));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+		expect(formData.occupation).toEqual(['actress', 'singer', 'nutcase', 'hedonist']);
+	});
+
+	it('slider: change value', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		fireEvent.change(screen.getByTestId('movies[0].metaCritic'), targetValue(66));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(1);
+
+		const movie = {
+			...defaultValues.movies[0],
+			metaCritic: 66,
+		};
+
+		expect(formData.movies[0]).toEqual(movie);
+	});
+
+	it('form: reset', () => {
+		let formData = null;
+		const onSubmit = vi.fn(data => {
+			formData = data;
+		});
+		render(<TestForm onFormSubmit={onSubmit} />);
+
+		const input = screen.getByRole('textbox', { name: /first name/i });
+		fireEvent.change(input, targetValue(''));
+		fireEvent.clickSubmit();
+		expect(onSubmit).toBeCalledTimes(0);
+		expect(screen.getByText(/⚠ please enter first name/i)).toBeTruthy();
+		expect(screen.getByText('Please enter first name')).toBeTruthy();
+		expect(hasErrorSummary()).toBeTruthy();
+
+		fireEvent.click(
+			screen.getByRole('button', {
+				name: /reset/i,
+			}),
+		);
+		fireEvent.clickSubmit();
+		expect(formData).toHaveProperty('firstName', defaultValues.firstName);
 	});
 });

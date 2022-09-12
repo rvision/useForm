@@ -306,11 +306,18 @@ function TestForm({ onFormSubmit }) {
 								{/* <Range {...register(`movies.${idx}.metaCritic`)} /> */}
 								<div className="field has-text-centered">
 									<label>
-										Metacritic score
-										<input type="range" min="0" max="100" step="1" className="range slider is-fullwidth" {...register(`movies.${idx}.metaCritic`)} />
-										<br />
-										Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
+										<input
+											data-testid={`movies[${idx}].metaCritic`}
+											type="range"
+											min="0"
+											max="100"
+											step="1"
+											className="range slider is-fullwidth"
+											{...register(`movies.${idx}.metaCritic`)}
+										/>
 									</label>
+									<br />
+									Metacritic score: {getValue(`movies[${idx}].metaCritic`)}%
 								</div>
 								<div className="field is-narrow">
 									<button
@@ -501,6 +508,7 @@ function TestForm({ onFormSubmit }) {
 													}
 													setValue('occupation', newArr);
 												}}
+												data-testid={`occupation-${option}`}
 											/>
 											{option}
 										</label>
