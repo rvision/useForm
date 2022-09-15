@@ -14,13 +14,13 @@ export interface UseFormOptions {
 
 declare function useForm(options: UseFormOptions): {
     getValue: (fullPath?: string) => any;
-    setValue: (fullPath: string, value: any, validate?: boolean) => any;
+    setValue: (fullPath: string, value: any, validate?: boolean) => Promise<{values: any, errors: any}>;
     register: (fullPath: string, className?: string) => any;
     onChange: (e: any) => void;
     onBlur: (e: any) => void;
     getRef: (fullPath: string) => any;
     setRef: (fullPath: string, element: any) => void;
-    trigger: (fullPath?: string | string[], newValues?: any) => {};
+    trigger: (fullPath?: string | string[], newValues?: any) => Promise<{errors: any}>;
     handleSubmit: (handler: any) => (e: any) => boolean;
     hasError: (fullPath?: any, targetErrors?: any) => boolean;
     clearError: (fullPath: string, targetErrors?: any) => any;
@@ -29,7 +29,7 @@ declare function useForm(options: UseFormOptions): {
     prepend: (fullPath: string, object: any) => any[];
     remove: (fullPath: string, index: number) => any[];
     swap: (fullPath: string, index1: number, index2: number) => any[];
-    key: (object: any) => string;
+    key: (object?: any) => string;
     reset: (values?: {}, validate?: boolean) => void;
     Error: ({ for: fullPath, children }: {
         for: string;
