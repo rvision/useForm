@@ -181,7 +181,7 @@ if you need debouncing or additional logic when field value is changed, use ```'
 	type="text"
 	{...register('firstName')}
 	onChange={e => {
-		//additional logic
+		// additional logic
 		onChange(e);
 	}}
 />
@@ -282,9 +282,9 @@ method to get value of the field, uses ```fullPath``` concept as field identifie
 <ReactDatePicker selected={getValue('birthDate')} />
 ```
 
-#### setValue(fullPath: string, newValue: any, shouldRevalidate: true)
+#### setValue(fullPath: string, newValue: any, shouldRevalidate: true) : Promise<{values: any, errors: any}>
 
-method to set value of the field, uses ```fullPath``` concept as field identifier. returns new values object. use it for custom components.
+method to set value of the field, uses ```fullPath``` concept as field identifier. promise returns new values/errors object. use it for custom components.
 ```jsx
 <ReactDatePicker
 	onChange={date => {
@@ -295,21 +295,21 @@ method to set value of the field, uses ```fullPath``` concept as field identifie
 <a onClick={setValue('movies',[])}>Clear movie list</a>
 ```
 
-#### trigger(fullPath: string? | string[], newValues: any) : any
+#### trigger(fullPath: string? | string[], newValues: any?) : Promise<errors: any>
 
-triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors
+triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors in promise
 ```jsx
-<a onClick={trigger('firstName')}>Check first name</a>
+<a onClick={trigger('firstName').then(errors => console.log(errors))}>Check first name</a>
 ```
 
-#### hasError(fullPath: string?) : bool
+#### hasError(fullPath: string?, targetErrors: any?) : bool
 
 returns bool if field value has validation errors; if ```fullPath``` is omitted returns if there are any errors for all fields
 ```jsx
-{ hasError('firstName') && <p>This field has errors</p>}
+{hasError('firstName') && <p>This field has errors</p>}
 ```
 
-#### clearError(fullPath: string) : any
+#### clearError(fullPath: string, targetErrors: any?) : any
 
 clears error from the errors object, returns errors
 ```jsx
@@ -427,6 +427,10 @@ PRs welcome
 
 
 ## Changelog
+
+v1.0.16:
+
+- introducing Promises for trigger and setValue
 
 v1.0.15:
 

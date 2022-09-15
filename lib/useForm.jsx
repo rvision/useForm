@@ -276,9 +276,9 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 	}, [defaultValues, init]);
 
 	const hasError = useCallback(
-		(fullPath = null, targetErrors = errors) => {
-			if (fullPath === null) {
-				return objectKeys(targetErrors || EMPTY).length > 0;
+		(fullPath = '', targetErrors = errors) => {
+			if (fullPath === '') {
+				return objectKeys(targetErrors).length > 0;
 			}
 			return _getNested(fullPath, targetErrors) !== undefined;
 		},
@@ -308,43 +308,55 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return newErrors;
 	});
 
-	const trigger = useEvent((fullPath = '', newValues = values) => {
-		const newErrors = resolver(newValues);
-		if (fullPath === '') {
-			setErrors(newErrors);
-			return newErrors;
-		}
-		const paths = isArray(fullPath) ? fullPath : [fullPath];
-		const updatedErrors = { ...errors };
-		paths.forEach(fullPath => {
-			const error = _getNested(fullPath, newErrors);
-			_deleteNestedToRoot(fullPath, updatedErrors);
-			if (error !== undefined) {
-				_setNested(fullPath, updatedErrors, error);
-			}
-		});
-		setErrors(updatedErrors);
-		return updatedErrors;
-	});
+	const trigger = useEvent(
+		(fullPath = '', newValues = values) =>
+			new Promise((resolve = noOp) => {
+				const newErrors = resolver(newValues);
+				if (fullPath === '') {
+					setErrors(newErrors);
+					resolve(newErrors);
+				}
+				const paths = isArray(fullPath) ? fullPath : [fullPath];
+				const updatedErrors = { ...errors };
+				paths.forEach(fullPath => {
+					const error = _getNested(fullPath, newErrors);
+					_deleteNestedToRoot(fullPath, updatedErrors);
+					if (error !== undefined) {
+						_setNested(fullPath, updatedErrors, error);
+					}
+				});
+				setErrors(updatedErrors);
+				resolve(updatedErrors);
+			}),
+	);
 
 	const getValue = (fullPath = '') => _getNested(fullPath, values);
 
-	const setValue = useEvent((fullPath, value, validate = true) => {
-		const newValues = { ...(fullPath === '' ? value : values) };
-		_setNested(fullPath, newValues, value);
-		isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-		if (validate && (hasError(fullPath) || isOnChangeMode)) {
-			const newErrors = clearError(fullPath);
-			const newError = _getNested(fullPath, resolver(newValues));
-			if (newError) {
-				_setNested(fullPath, newErrors, newError);
-				setErrors(newErrors);
-			}
-		}
-		setValues(newValues);
-		isTouched.current = true;
-		return newValues;
-	});
+	const setValue = useEvent(
+		(fullPath, value, validate = true) =>
+			new Promise((resolve = noOp) => {
+				setValues(values => {
+					isTouched.current = true;
+					const newValues = { ...(fullPath === '' ? value : values) };
+					_setNested(fullPath, newValues, value);
+					isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+					let newErrors = errors;
+					if (validate && (hasError(fullPath) || isOnChangeMode)) {
+						newErrors = clearError(fullPath);
+						const newError = _getNested(fullPath, resolver(newValues));
+						if (newError) {
+							_setNested(fullPath, newErrors, newError);
+							setErrors(newErrors);
+						}
+					}
+					resolve({
+						values: newValues,
+						errors: newErrors,
+					});
+					return newValues;
+				});
+			}),
+	);
 
 	const append = useEvent((fullPath, object) => {
 		const newArr = [..._getNested(fullPath, values), object];
@@ -450,27 +462,26 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return registerProps;
 	};
 
-	const handleSubmit = handler =>
-		useEvent(e => {
-			// eslint-disable-next-line no-unused-expressions
-			e && e.preventDefault && e.preventDefault();
+	const handleSubmit = handler => e => {
+		// eslint-disable-next-line no-unused-expressions
+		e && e?.preventDefault();
 
-			const newErrors = resolver(values);
-			setErrors(newErrors);
-			if (hasError(null, newErrors)) {
-				if (shouldFocusError) {
-					let isFocused = false;
-					refsMap.current.forEach((value, key) => {
-						if (!isFocused && hasError(key, newErrors)) {
-							isFocused = _focus(value);
-						}
-					});
-				}
-				return false;
+		const newErrors = resolver(values);
+		setErrors(newErrors);
+		if (hasError('', newErrors)) {
+			if (shouldFocusError) {
+				let isFocused = false;
+				refsMap.current.forEach((value, key) => {
+					if (!isFocused && hasError(key, newErrors)) {
+						isFocused = _focus(value);
+					}
+				});
 			}
-			handler(values);
-			return true;
-		});
+			return false;
+		}
+		handler(values);
+		return true;
+	};
 
 	const reset = useEvent((values = defaultValues, validate = true) => {
 		init(values || EMPTY);
