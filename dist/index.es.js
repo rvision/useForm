@@ -112,27 +112,6 @@ const _extractPath = (string) => {
   splitCache[string] = split;
   return split;
 };
-const _clone = (obj) => {
-  if (typeof obj !== "object" || obj === null) {
-    return obj;
-  }
-  if (obj instanceof Date) {
-    return new Date(obj.getTime());
-  }
-  if (isArray(obj)) {
-    return obj.reduce((arr, item, i) => {
-      arr[i] = _clone(item);
-      return arr;
-    }, []);
-  }
-  if (obj instanceof Object) {
-    return objectKeys(obj).reduce((newObj, key) => {
-      newObj[key] = _clone(obj[key]);
-      return newObj;
-    }, {});
-  }
-  return obj;
-};
 const _getNested = (fullPath, source) => {
   if (!isArray(fullPath)) {
     return _getNested(_extractPath(fullPath), source);
@@ -190,8 +169,7 @@ const _deleteNested = (fullPath, target) => {
   if (target[path] === void 0) {
     return;
   }
-  const next = fullPath[1];
-  const idx = parseI(next);
+  const idx = parseI(fullPath[1]);
   if (isNumber(idx)) {
     if (fullPath.length === 2) {
       delete target[path][idx];
@@ -199,7 +177,7 @@ const _deleteNested = (fullPath, target) => {
       _deleteNested(fullPath.slice(2), target[path][idx]);
     }
   } else {
-    _deleteNested(fullPath.slice(1), target[path][idx]);
+    _deleteNested(fullPath.slice(1), target[path]);
   }
 };
 const _deleteNestedToRoot = (fullPath, target) => {
@@ -310,7 +288,7 @@ const useForm = ({
   const isOnChangeMode = mode === "onChange";
   const init = useCallback((initValues) => {
     defaultValuesJSON.current = toJSON(initValues);
-    setValues(_clone(initValues));
+    setValues(initValues);
   }, []);
   useEffect(() => {
     init(defaultValues || EMPTY);

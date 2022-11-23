@@ -428,32 +428,15 @@ PRs welcome
 
 ## Changelog
 
-v1.0.16:
-
+<= v1.0.17:
+- _deleteNested fix
+- removed cloning of initial values
 - introducing Promises for trigger and setValue
-
-v1.0.15:
-
 - react & react-dom: same versions in dev and peer dependencies
-
-v1.0.14:
-
 - fix for null defaultValues, minor improvements
-
-v1.0.13:
-
 - setValue returns new values; trigger triggers validation for whole object if fullPath is undefined
-
-v1.0.12:
-
 - trigger accepts multiple fullPaths; defaultValues doesn't create new instances when null is passed; setCustomErrors use useEvent
-
-v1.0.10:
-
 - added useEvent for stable handler references; fix yupResolver export
-
-v1.0.8:
-
 - register method does not accept object as second parameter (className), but plain string
 
 
