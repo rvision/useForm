@@ -433,8 +433,6 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return registerProps;
 	};
 
-	const focus = (fullPath = '') => _focus(refsMap.current.get(fullPath));
-
 	const handleSubmit = handler => e => {
 		// eslint-disable-next-line no-unused-expressions
 		e && e?.preventDefault();
@@ -516,7 +514,6 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		getRef,
 		setRef,
 		trigger,
-		focus,
 		handleSubmit,
 		hasError,
 		getError,

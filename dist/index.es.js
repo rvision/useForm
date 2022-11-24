@@ -448,7 +448,6 @@ const useForm = ({
     }
     return registerProps;
   };
-  const focus = (fullPath = "") => _focus(refsMap.current.get(fullPath));
   const handleSubmit = (handler) => (e) => {
     e && (e == null ? void 0 : e.preventDefault());
     const newErrors = resolver(values);
@@ -526,7 +525,6 @@ const useForm = ({
     getRef,
     setRef,
     trigger,
-    focus,
     handleSubmit,
     hasError,
     getError,
