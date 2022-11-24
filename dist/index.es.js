@@ -113,11 +113,11 @@ const _extractPath = (string) => {
   return split;
 };
 const _getNested = (fullPath, source) => {
-  if (!isArray(fullPath)) {
-    return _getNested(_extractPath(fullPath), source);
-  }
   if (source === void 0) {
     return void 0;
+  }
+  if (!isArray(fullPath)) {
+    return _getNested(_extractPath(fullPath), source);
   }
   switch (fullPath.length) {
     case 0:

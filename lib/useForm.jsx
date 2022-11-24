@@ -40,12 +40,12 @@ const _extractPath = string => {
 };
 
 const _getNested = (fullPath, source) => {
-	if (!isArray(fullPath)) {
-		return _getNested(_extractPath(fullPath), source);
-	}
-
 	if (source === undefined) {
 		return undefined;
+	}
+
+	if (!isArray(fullPath)) {
+		return _getNested(_extractPath(fullPath), source);
 	}
 
 	switch (fullPath.length) {
