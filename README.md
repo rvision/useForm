@@ -302,11 +302,34 @@ triggers validation on default form values object or passed newValues; it re-val
 <a onClick={trigger('firstName').then(errors => console.log(errors))}>Check first name</a>
 ```
 
+#### focus(fullPath: string) : bool
+
+focuses on the form element, specified with ```fullPath```; use it to set focus on specific element after triggering validation; works only with registered inputs.
+```jsx
+<button
+	onClick={e => {
+		e.preventDefault();
+		trigger(['firstName', 'lastName']).then(newErrors => {
+			if (hasError('firstName', newErrors)) {
+				focus('firstName');
+			}
+		});
+	}}
+>Validate name</button>
+```
+
 #### hasError(fullPath: string?, targetErrors: any?) : bool
 
 returns bool if field value has validation errors; if ```fullPath``` is omitted returns if there are any errors for all fields
 ```jsx
 {hasError('firstName') && <p>This field has errors</p>}
+```
+
+#### getError(fullPath: string?, targetErrors: any?) : any
+
+returns error object (type/message) if field value has validation errors; if ```fullPath``` is omitted returns errors for all fields
+```jsx
+{getError('firstName') && <p>{getError('firstName').message}</p>}
 ```
 
 #### clearError(fullPath: string, targetErrors: any?) : any
@@ -428,7 +451,8 @@ PRs welcome
 
 ## Changelog
 
-<= v1.0.17:
+<= v1.0.18:
+- added focus and getError
 - _deleteNested fix
 - removed cloning of initial values
 - introducing Promises for trigger and setValue

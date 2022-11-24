@@ -248,15 +248,15 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		};
 	}, [defaultValues, init]);
 
-	const hasError = useCallback(
-		(fullPath = '', targetErrors = errors) => {
-			if (fullPath === '') {
-				return objectKeys(targetErrors).length > 0;
-			}
-			return _getNested(fullPath, targetErrors) !== undefined;
-		},
-		[errors],
-	);
+	const getValue = (fullPath = '') => _getNested(fullPath, values);
+	const getError = (fullPath = '', targetErrors = errors) => _getNested(fullPath, targetErrors);
+
+	const hasError = (fullPath = '', targetErrors = errors) => {
+		if (fullPath === '') {
+			return objectKeys(targetErrors).length > 0;
+		}
+		return _getNested(fullPath, targetErrors) !== undefined;
+	};
 
 	const clearError = useEvent((fullPath, targetErrors = errors) => {
 		if (hasError(fullPath, targetErrors)) {
@@ -302,8 +302,6 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 				resolve(updatedErrors);
 			}),
 	);
-
-	const getValue = (fullPath = '') => _getNested(fullPath, values);
 
 	const setValue = useEvent(
 		(fullPath, value, validate = true) =>
@@ -435,6 +433,8 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return registerProps;
 	};
 
+	const focus = (fullPath = '') => _focus(refsMap.current.get(fullPath));
+
 	const handleSubmit = handler => e => {
 		// eslint-disable-next-line no-unused-expressions
 		e && e?.preventDefault();
@@ -444,9 +444,9 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		if (hasError('', newErrors)) {
 			if (shouldFocusError) {
 				let isFocused = false;
-				refsMap.current.forEach((value, key) => {
-					if (!isFocused && hasError(key, newErrors)) {
-						isFocused = _focus(value);
+				refsMap.current.forEach((element, fullPath) => {
+					if (!isFocused && hasError(fullPath, newErrors)) {
+						isFocused = _focus(element);
 					}
 				});
 			}
@@ -478,7 +478,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 
 	const Errors = useCallback(
 		({ children, focusable = false }) => {
-			if (!hasError()) {
+			if (!hasError('', errors)) {
 				return false;
 			}
 
@@ -504,7 +504,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 
 			return isFunction(children) ? children(result) : result;
 		},
-		[errors, hasError, classNameError, key],
+		[errors, classNameError, key],
 	);
 
 	return {
@@ -516,8 +516,10 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		getRef,
 		setRef,
 		trigger,
+		focus,
 		handleSubmit,
 		hasError,
+		getError,
 		clearError,
 		setErrors: setCustomErrors,
 		append,
@@ -544,11 +546,10 @@ export const yupResolver = schema => fields => {
 	} catch (validationError) {
 		// eslint-disable-next-line no-restricted-syntax
 		for (const error of validationError.inner) {
-			const err = {
+			_setNested(error.path, errors, {
 				message: error.message,
 				type: error.type,
-			};
-			_setNested(error.path, errors, err);
+			});
 		}
 	}
 	return errors;

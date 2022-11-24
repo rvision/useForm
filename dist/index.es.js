@@ -296,12 +296,14 @@ const useForm = ({
       splitCache = {};
     };
   }, [defaultValues, init]);
-  const hasError = useCallback((fullPath = "", targetErrors = errors) => {
+  const getValue = (fullPath = "") => _getNested(fullPath, values);
+  const getError = (fullPath = "", targetErrors = errors) => _getNested(fullPath, targetErrors);
+  const hasError = (fullPath = "", targetErrors = errors) => {
     if (fullPath === "") {
       return objectKeys(targetErrors).length > 0;
     }
     return _getNested(fullPath, targetErrors) !== void 0;
-  }, [errors]);
+  };
   const clearError = useEvent((fullPath, targetErrors = errors) => {
     if (hasError(fullPath, targetErrors)) {
       const newErrors = __spreadValues({}, targetErrors);
@@ -340,7 +342,6 @@ const useForm = ({
     setErrors(updatedErrors);
     resolve(updatedErrors);
   }));
-  const getValue = (fullPath = "") => _getNested(fullPath, values);
   const setValue = useEvent((fullPath, value, validate = true) => new Promise((resolve = noOp) => {
     setValues((values2) => {
       isTouched.current = true;
@@ -447,6 +448,7 @@ const useForm = ({
     }
     return registerProps;
   };
+  const focus = (fullPath = "") => _focus(refsMap.current.get(fullPath));
   const handleSubmit = (handler) => (e) => {
     e && (e == null ? void 0 : e.preventDefault());
     const newErrors = resolver(values);
@@ -454,9 +456,9 @@ const useForm = ({
     if (hasError("", newErrors)) {
       if (shouldFocusError) {
         let isFocused = false;
-        refsMap.current.forEach((value, key2) => {
-          if (!isFocused && hasError(key2, newErrors)) {
-            isFocused = _focus(value);
+        refsMap.current.forEach((element, fullPath) => {
+          if (!isFocused && hasError(fullPath, newErrors)) {
+            isFocused = _focus(element);
           }
         });
       }
@@ -490,7 +492,7 @@ const useForm = ({
     children,
     focusable = false
   }) => {
-    if (!hasError()) {
+    if (!hasError("", errors)) {
       return false;
     }
     const errorElements = Array.from(refsMap.current).filter((entry) => hasError(entry[0])).map((entry) => {
@@ -514,7 +516,7 @@ const useForm = ({
       }) : error.message
     }, key(error)));
     return isFunction(children) ? children(result) : result;
-  }, [errors, hasError, classNameError, key]);
+  }, [errors, classNameError, key]);
   return {
     getValue,
     setValue,
@@ -524,8 +526,10 @@ const useForm = ({
     getRef,
     setRef,
     trigger,
+    focus,
     handleSubmit,
     hasError,
+    getError,
     clearError,
     setErrors: setCustomErrors,
     append,
@@ -552,11 +556,10 @@ const yupResolver = (schema) => (fields) => {
     });
   } catch (validationError) {
     for (const error of validationError.inner) {
-      const err = {
+      _setNested(error.path, errors, {
         message: error.message,
         type: error.type
-      };
-      _setNested(error.path, errors, err);
+      });
     }
   }
   return errors;
