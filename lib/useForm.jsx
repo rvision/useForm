@@ -39,6 +39,32 @@ const _extractPath = string => {
 	return split;
 };
 
+const _clone = obj => {
+	if (typeof obj !== 'object' || obj === null) {
+		return obj;
+	}
+
+	if (obj instanceof Date) {
+		return new Date(obj.getTime());
+	}
+
+	if (isArray(obj)) {
+		return obj.reduce((arr, item, i) => {
+			arr[i] = _clone(item);
+			return arr;
+		}, []);
+	}
+
+	if (obj instanceof Object) {
+		return objectKeys(obj).reduce((newObj, key) => {
+			newObj[key] = _clone(obj[key]);
+			return newObj;
+		}, {});
+	}
+
+	return obj;
+};
+
 const _getNested = (fullPath, source) => {
 	if (source === undefined) {
 		return undefined;
@@ -237,12 +263,13 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 	const isOnChangeMode = mode === 'onChange';
 
 	const init = useCallback(initValues => {
-		defaultValuesJSON.current = toJSON(initValues);
-		setValues(initValues);
+		const vals = initValues || EMPTY;
+		defaultValuesJSON.current = toJSON(vals);
+		setValues(_clone(vals));
 	}, []);
 
 	useEffect(() => {
-		init(defaultValues || EMPTY);
+		init(defaultValues);
 		return () => {
 			splitCache = {}; // cleanup, ALWAYS
 		};
@@ -377,12 +404,6 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return newArr;
 	});
 
-	const ref = useCallback(element => {
-		if (element) {
-			refsMap.current.set(element.name, element);
-		}
-	}, []);
-
 	const getRef = useCallback(fullPath => refsMap.current.get(fullPath), []);
 
 	const setRef = useCallback((fullPath, element) => {
@@ -390,6 +411,8 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 			refsMap.current.set(fullPath, element);
 		}
 	}, []);
+
+	const ref = useCallback(element => element && setRef(element.name, element), []);
 
 	const onChange = useEvent(e => {
 		setValue(e.target.name, _getInputValue(e));
@@ -455,12 +478,10 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 	};
 
 	const reset = useEvent((values = defaultValues, validate = true) => {
-		init(values || EMPTY);
+		init(values);
 		isTouched.current = false;
 		isDirty.current = false;
-		if (validate) {
-			trigger('', values);
-		}
+		validate && trigger('', values);
 	});
 
 	const Error = useCallback(

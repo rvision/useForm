@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 
 const throwReferenceError = () => {
-	throw new ReferenceError('Callback was called directly while rendering, pass it as a callback prop instead.');
+	throw new ReferenceError('useEvent called while rendering.');
 };
 
 const useEvent = handler => {

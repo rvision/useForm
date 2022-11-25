@@ -314,7 +314,7 @@ returns bool if field value has validation errors; if ```fullPath``` is omitted 
 
 returns error object (type/message) if field value has validation errors; if ```fullPath``` is omitted returns errors for all fields
 ```jsx
-{getError('firstName') && <p>{getError('firstName').message}</p>}
+{hasError('firstName') && <p>{getError('firstName').message}</p>}
 ```
 
 #### clearError(fullPath: string, targetErrors: any?) : any

@@ -201,13 +201,13 @@ describe('useForm', () => {
 		});
 		render(<TestForm onFormSubmit={onSubmit} />);
 
+		const { firstName } = defaultValues;
+
 		const input = screen.getByRole('textbox', { name: /first name/i });
-		fireEvent.change(input, targetValue(''));
+		fireEvent.change(input, targetValue('other name'));
 		fireEvent.clickSubmit();
-		expect(onSubmit).toBeCalledTimes(0);
-		expect(screen.getByText(/⚠ please enter first name/i)).toBeTruthy();
-		expect(screen.getByText('Please enter first name')).toBeTruthy();
-		expect(hasErrorSummary()).toBeTruthy();
+
+		expect(defaultValues.firstName).toEqual(firstName);
 
 		fireEvent.click(
 			screen.getByRole('button', {
@@ -215,6 +215,6 @@ describe('useForm', () => {
 			}),
 		);
 		fireEvent.clickSubmit();
-		expect(formData).toHaveProperty('firstName', defaultValues.firstName);
+		expect(formData).toHaveProperty('firstName', firstName);
 	});
 });
