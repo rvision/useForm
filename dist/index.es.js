@@ -314,14 +314,14 @@ const useForm = ({
       splitCache = {};
     };
   }, [defaultValues, init]);
-  const focus = (fullPath) => {
+  const focus = useCallback((fullPath) => {
     const element = refsMap.current.get(fullPath);
     if (element && element.focus) {
       element.focus();
       return true;
     }
     return false;
-  };
+  }, []);
   const getValue = (fullPath = "") => _getNested(fullPath, values);
   const getError = (fullPath = "", targetErrors = errors) => _getNested(fullPath, targetErrors);
   const hasError = (fullPath = "", targetErrors = errors) => {
@@ -390,42 +390,35 @@ const useForm = ({
       return newValues;
     });
   }));
-  const append = useEvent((fullPath, object) => {
-    const newArr = [..._getNested(fullPath, values), object];
-    setValue(fullPath, newArr, false);
-    const newErrors = _clearObjectError(fullPath, errors);
-    setErrors(newErrors);
-    return newArr;
-  });
-  const prepend = useEvent((fullPath, object) => {
-    const newArr = [object, ..._getNested(fullPath, values)];
-    setValue(fullPath, newArr, false);
-    let newErrors = _clearObjectError(fullPath, errors);
-    newErrors = _shiftErrors(fullPath, newErrors, (arrErrors) => [void 0, ...arrErrors]);
-    setErrors(newErrors);
-    return newArr;
-  });
-  const remove = useEvent((fullPath, idx) => {
-    const newArr = _getNested(fullPath, values).filter((item, i) => idx !== i);
-    setValue(fullPath, newArr, false);
-    let newErrors = _clearObjectError(fullPath, errors);
+  const _updateArray = (fullPath, newArr, transformErrorsCallback) => {
+    return new Promise((resolve = noOp) => {
+      Promise.resolve(setValue(fullPath, newArr, false)).then(({
+        values: values2
+      }) => {
+        const newErrors = transformErrorsCallback(_clearObjectError(fullPath, errors));
+        setErrors(newErrors);
+        resolve({
+          values: values2,
+          errors: newErrors
+        });
+      });
+    });
+  };
+  const append = useEvent((fullPath, object) => _updateArray(fullPath, [..._getNested(fullPath, values), object], (newErrors) => newErrors));
+  const prepend = useEvent((fullPath, object) => _updateArray(fullPath, [object, ..._getNested(fullPath, values)], (newErrors) => _shiftErrors(fullPath, newErrors, (arrErrors) => [void 0, ...arrErrors])));
+  const remove = useEvent((fullPath, idx) => _updateArray(fullPath, _getNested(fullPath, values).filter((item, i) => idx !== i), (newErrors) => {
     newErrors = clearError(`${fullPath}.${idx}`, newErrors);
-    newErrors = _shiftErrors(fullPath, newErrors, (arrErrors) => {
+    return _shiftErrors(fullPath, newErrors, (arrErrors) => {
       arrErrors.splice(idx, 1);
       return arrErrors;
     });
-    setErrors(newErrors);
-    return newArr;
-  });
-  const swap = useEvent((fullPath, index1, index2) => {
-    const newArr = _swap(values, fullPath, index1, index2);
-    setValue(fullPath, newArr);
-    const newErr = _swap(errors, fullPath, index1, index2);
-    const newErrors = __spreadValues({}, errors);
-    _setNested(fullPath, newErrors, newErr);
-    setErrors(newErrors);
-    return newArr;
-  });
+  }));
+  const swap = useEvent((fullPath, index1, index2) => _updateArray(fullPath, _swap(values, fullPath, index1, index2), (newErrors) => {
+    const newErr = _swap(newErrors, fullPath, index1, index2);
+    const swappedErrors = __spreadValues({}, errors);
+    _setNested(fullPath, swappedErrors, newErr);
+    return swappedErrors;
+  }));
   const getRef = useCallback((fullPath) => refsMap.current.get(fullPath), []);
   const setRef = useCallback((fullPath, element) => {
     if (element) {

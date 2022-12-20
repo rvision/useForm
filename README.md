@@ -67,7 +67,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~3.2kb minified & gzipped
+- **lightweight**: ~3.45kb minified & gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
@@ -360,9 +360,9 @@ resets the form to newValues or default ones; triggers revalidation based on sec
 
 ### Methods to work with arrays
 
-#### append(fullPath: string, newValue: any) : any[]
+#### append(fullPath: string, newValue: any) : Promise<{values: any, errors: any}>
 
-appends new object to the existing array of objects; returns resulting array
+appends new object to the existing array of objects; returns Promise with resulting values and errors
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -370,9 +370,9 @@ appends new object to the existing array of objects; returns resulting array
 }}>Add new album</button>
 ```
 
-#### prepend(fullPath: string, newValue: any) : any[]
+#### prepend(fullPath: string, newValue: any) : Promise<{values: any, errors: any}>
 
-prepends new object to the existing array of objects; returns resulting array
+prepends new object to the existing array of objects; returns Promise with resulting values and errors
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -380,9 +380,9 @@ prepends new object to the existing array of objects; returns resulting array
 }}>Add new actor</button>
 ```
 
-#### remove(fullPath: string, index: int) : any[]
+#### remove(fullPath: string, index: int) : Promise<{values: any, errors: any}>
 
-removes array item from the existing array; returns resulting array
+removes array item from the existing array; returns Promise with resulting values and errors
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -390,9 +390,9 @@ removes array item from the existing array; returns resulting array
 }}>Remove this actor</button>
 ```
 
-#### swap(fullPath: string, index1: int, index2: int) : any[]
+#### swap(fullPath: string, index1: int, index2: int) : Promise<{values: any, errors: any}>
 
-swaps item positions in the existing array, useful for drag'n'drop operations; returns resulting array
+swaps item positions in the existing array, useful for drag'n'drop operations; returns Promise with resulting values and errors
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -439,6 +439,7 @@ PRs welcome
 ## Changelog
 
 <= v1.0.18:
+- all array operations return Promise<{values: any, errors: any}>
 - reset form fix
 - exports getError
 - _deleteNested fix
