@@ -40,7 +40,7 @@ const _extractPath = string => {
 };
 
 const _clone = obj => {
-	if (typeof obj !== 'object' || obj === null) {
+	if (!obj || typeof obj !== 'object') {
 		return obj;
 	}
 
@@ -60,6 +60,10 @@ const _clone = obj => {
 			newObj[key] = _clone(obj[key]);
 			return newObj;
 		}, {});
+	}
+
+	if (obj instanceof Set) {
+		return new Set(_clone([...obj]));
 	}
 
 	return obj;
@@ -242,14 +246,6 @@ const _swap = (target, fullPath, idx1, idx2) => {
 
 const _errClassName = (error, classNameError, className) => `${className || ''} ${classNameError || ''} ${error.type ? `error-${error.type}` : ''}`.trim();
 
-const _focus = element => {
-	if (element && element.focus) {
-		element.focus();
-		return true;
-	}
-	return false;
-};
-
 const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = noOp }) => {
 	const [values, setValues] = useState(defaultValues || EMPTY);
 	const [errors, setErrors] = useState({});
@@ -274,6 +270,15 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 			splitCache = {}; // cleanup, ALWAYS
 		};
 	}, [defaultValues, init]);
+
+	const focus = fullPath => {
+		const element = refsMap.current.get(fullPath);
+		if (element && element.focus) {
+			element.focus();
+			return true;
+		}
+		return false;
+	};
 
 	const getValue = (fullPath = '') => _getNested(fullPath, values);
 	const getError = (fullPath = '', targetErrors = errors) => _getNested(fullPath, targetErrors);
@@ -426,7 +431,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 			_setNested(name, newErrors, newError);
 			setErrors(newErrors);
 			if (shouldFocusError) {
-				_focus(refsMap.current.get(name));
+				focus(name);
 			}
 		} else {
 			clearError(name);
@@ -467,7 +472,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 				let isFocused = false;
 				refsMap.current.forEach((element, fullPath) => {
 					if (!isFocused && hasError(fullPath, newErrors)) {
-						isFocused = _focus(element);
+						isFocused = focus(fullPath);
 					}
 				});
 			}
@@ -484,47 +489,36 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		validate && trigger('', values);
 	});
 
-	const Error = useCallback(
-		({ for: fullPath, children }) => {
+	const Error = ({ for: fullPath, children }) => {
+		const error = _getNested(fullPath, errors);
+		if (!error || isArray(error)) {
+			return false;
+		}
+		return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
+	};
+
+	const Errors = ({ children, focusable = false }) => {
+		if (!hasError()) {
+			return false;
+		}
+
+		// entry[0] = fullPath, entry[1] = element
+		const errorPaths = Array.from(refsMap.current)
+			.map(entry => entry[0])
+			.filter(entry => hasError(entry))
+			.sort();
+
+		const result = errorPaths.map(fullPath => {
 			const error = _getNested(fullPath, errors);
-			if (!error || isArray(error)) {
-				return false;
-			}
-			return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
-		},
-		[errors, classNameError],
-	);
-
-	const Errors = useCallback(
-		({ children, focusable = false }) => {
-			if (!hasError('', errors)) {
-				return false;
-			}
-
-			const errorElements = Array.from(refsMap.current)
-				.filter(entry => hasError(entry[0]))
-				.map(entry => {
-					const [fullPath, element] = entry;
-					return {
-						error: _getNested(fullPath, errors),
-						element,
-					};
-				});
-
-			if (errorElements.length === 0) {
-				return false;
-			}
-
-			const result = errorElements.map(({ error, element }) => (
+			return (
 				<li key={key(error)} className={_errClassName(error, classNameError)}>
-					{focusable ? <a onClick={() => _focus(element)}>{error.message}</a> : error.message}
+					{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}
 				</li>
-			));
+			);
+		});
 
-			return isFunction(children) ? children(result) : result;
-		},
-		[errors, classNameError, key],
-	);
+		return isFunction(children) ? children(result) : result;
+	};
 
 	return {
 		getValue,

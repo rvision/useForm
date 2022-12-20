@@ -113,7 +113,7 @@ const _extractPath = (string) => {
   return split;
 };
 const _clone = (obj) => {
-  if (typeof obj !== "object" || obj === null) {
+  if (!obj || typeof obj !== "object") {
     return obj;
   }
   if (obj instanceof Date) {
@@ -130,6 +130,9 @@ const _clone = (obj) => {
       newObj[key] = _clone(obj[key]);
       return newObj;
     }, {});
+  }
+  if (obj instanceof Set) {
+    return new Set(_clone([...obj]));
   }
   return obj;
 };
@@ -284,13 +287,6 @@ const _swap = (target, fullPath, idx1, idx2) => {
   return arr;
 };
 const _errClassName = (error, classNameError, className) => `${className || ""} ${classNameError || ""} ${error.type ? `error-${error.type}` : ""}`.trim();
-const _focus = (element) => {
-  if (element && element.focus) {
-    element.focus();
-    return true;
-  }
-  return false;
-};
 const useForm = ({
   defaultValues,
   mode = "onSubmit",
@@ -318,6 +314,14 @@ const useForm = ({
       splitCache = {};
     };
   }, [defaultValues, init]);
+  const focus = (fullPath) => {
+    const element = refsMap.current.get(fullPath);
+    if (element && element.focus) {
+      element.focus();
+      return true;
+    }
+    return false;
+  };
   const getValue = (fullPath = "") => _getNested(fullPath, values);
   const getError = (fullPath = "", targetErrors = errors) => _getNested(fullPath, targetErrors);
   const hasError = (fullPath = "", targetErrors = errors) => {
@@ -442,7 +446,7 @@ const useForm = ({
       _setNested(name, newErrors, newError);
       setErrors(newErrors);
       if (shouldFocusError) {
-        _focus(refsMap.current.get(name));
+        focus(name);
       }
     } else {
       clearError(name);
@@ -475,7 +479,7 @@ const useForm = ({
         let isFocused = false;
         refsMap.current.forEach((element, fullPath) => {
           if (!isFocused && hasError(fullPath, newErrors)) {
-            isFocused = _focus(element);
+            isFocused = focus(fullPath);
           }
         });
       }
@@ -490,7 +494,7 @@ const useForm = ({
     isDirty.current = false;
     validate && trigger("", values2);
   });
-  const Error2 = useCallback(({
+  const Error2 = ({
     for: fullPath,
     children
   }) => {
@@ -502,36 +506,27 @@ const useForm = ({
       className: _errClassName(error, classNameError),
       children: error.message
     });
-  }, [errors, classNameError]);
-  const Errors = useCallback(({
+  };
+  const Errors = ({
     children,
     focusable = false
   }) => {
-    if (!hasError("", errors)) {
+    if (!hasError()) {
       return false;
     }
-    const errorElements = Array.from(refsMap.current).filter((entry) => hasError(entry[0])).map((entry) => {
-      const [fullPath, element] = entry;
-      return {
-        error: _getNested(fullPath, errors),
-        element
-      };
+    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((entry) => hasError(entry)).sort();
+    const result = errorPaths.map((fullPath) => {
+      const error = _getNested(fullPath, errors);
+      return /* @__PURE__ */ jsx("li", {
+        className: _errClassName(error, classNameError),
+        children: focusable ? /* @__PURE__ */ jsx("a", {
+          onClick: () => focus(fullPath),
+          children: error.message
+        }) : error.message
+      }, key(error));
     });
-    if (errorElements.length === 0) {
-      return false;
-    }
-    const result = errorElements.map(({
-      error,
-      element
-    }) => /* @__PURE__ */ jsx("li", {
-      className: _errClassName(error, classNameError),
-      children: focusable ? /* @__PURE__ */ jsx("a", {
-        onClick: () => _focus(element),
-        children: error.message
-      }) : error.message
-    }, key(error)));
     return isFunction(children) ? children(result) : result;
-  }, [errors, classNameError, key]);
+  };
   return {
     getValue,
     setValue,

@@ -67,7 +67,7 @@ This library works with **controlled components only**. Performance and number o
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~3.1kb minified & gzipped
+- **lightweight**: ~3.2kb minified & gzipped
 - **simplicity: low learning curve**
 - **nested arrays** support without hassle
 - **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
@@ -430,14 +430,17 @@ true if any of form values is different than default ones provided
 #### Contributions
 PRs welcome
 
-#### Roadmap
+#### Roadmap/plan
+- target size: below 4kb
+- no async validation currently
 - no fields validation code will be introduced; it's pointless since there are alredy a bunch of libraries that do that
 
 
 ## Changelog
 
 <= v1.0.18:
-- getError
+- reset form fix
+- exports getError
 - _deleteNested fix
 - removed cloning of initial values
 - introducing Promises for trigger and setValue
