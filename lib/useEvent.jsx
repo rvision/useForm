@@ -1,3 +1,5 @@
+// NOTE: not used anymore
+
 import { useCallback, useLayoutEffect, useRef } from 'react';
 
 const throwReferenceError = () => {

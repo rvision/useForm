@@ -1,7 +1,14 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import useEvent from './useEvent';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useKey from './useKey';
+
+// NOTE: inline useStableRef for better minification
+const useStableRef = callback => {
+	const handlerRef = useRef(callback);
+	handlerRef.current = callback;
+	return useCallback((...args) => handlerRef.current(...args), []);
+	// return useRef((...args) => handlerRef.current(...args)).current;
+};
 
 // NOTE: make aliases for better minification
 const isNumber = num => !Number.isNaN(num);
@@ -193,7 +200,6 @@ const _getInputValue = e => {
 			if (value === '') {
 				return null;
 			}
-			// eslint-disable-next-line no-case-declarations
 			const parsed = Number.parseFloat(value);
 			if (!isNumber(parsed)) {
 				return undefined;
@@ -258,11 +264,11 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 	const isOnBlurMode = mode === 'onBlur';
 	const isOnChangeMode = mode === 'onChange';
 
-	const init = useCallback(initValues => {
+	const init = useStableRef(initValues => {
 		const vals = initValues || EMPTY;
 		defaultValuesJSON.current = toJSON(vals);
 		setValues(_clone(vals));
-	}, []);
+	});
 
 	useEffect(() => {
 		init(defaultValues);
@@ -271,26 +277,26 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		};
 	}, [defaultValues, init]);
 
-	const focus = useCallback(fullPath => {
+	const focus = useStableRef(fullPath => {
 		const element = refsMap.current.get(fullPath);
 		if (element && element.focus) {
 			element.focus();
 			return true;
 		}
 		return false;
-	}, []);
+	});
 
-	const getValue = (fullPath = '') => _getNested(fullPath, values);
-	const getError = (fullPath = '', targetErrors = errors) => _getNested(fullPath, targetErrors);
+	const getValue = useStableRef((fullPath = '') => _getNested(fullPath, values));
+	const getError = useStableRef((fullPath = '', targetErrors = errors) => _getNested(fullPath, targetErrors));
 
-	const hasError = (fullPath = '', targetErrors = errors) => {
+	const hasError = useStableRef((fullPath = '', targetErrors = errors) => {
 		if (fullPath === '') {
 			return objectKeys(targetErrors).length > 0;
 		}
 		return _getNested(fullPath, targetErrors) !== undefined;
-	};
+	});
 
-	const clearError = useEvent((fullPath, targetErrors = errors) => {
+	const clearError = useStableRef((fullPath, targetErrors = errors) => {
 		if (hasError(fullPath, targetErrors)) {
 			const newErrors = { ...targetErrors };
 			_deleteNestedToRoot(fullPath, newErrors);
@@ -300,7 +306,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return targetErrors;
 	});
 
-	const setCustomErrors = useEvent(customErrors => {
+	const setCustomErrors = useStableRef(customErrors => {
 		const newErrors = { ...errors };
 		// eslint-disable-next-line no-restricted-syntax
 		for (const fullPath of objectKeys(customErrors)) {
@@ -313,7 +319,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return newErrors;
 	});
 
-	const trigger = useEvent(
+	const trigger = useStableRef(
 		(fullPath = '', newValues = values) =>
 			new Promise((resolve = noOp) => {
 				const newErrors = resolver(newValues);
@@ -335,7 +341,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 			}),
 	);
 
-	const setValue = useEvent(
+	const setValue = useStableRef(
 		(fullPath, value, validate = true) =>
 			new Promise((resolve = noOp) => {
 				setValues(values => {
@@ -374,13 +380,13 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		});
 	};
 
-	const append = useEvent((fullPath, object) => _updateArray(fullPath, [..._getNested(fullPath, values), object], newErrors => newErrors));
+	const append = useStableRef((fullPath, object) => _updateArray(fullPath, [..._getNested(fullPath, values), object], newErrors => newErrors));
 
-	const prepend = useEvent((fullPath, object) =>
+	const prepend = useStableRef((fullPath, object) =>
 		_updateArray(fullPath, [object, ..._getNested(fullPath, values)], newErrors => _shiftErrors(fullPath, newErrors, arrErrors => [undefined, ...arrErrors])),
 	);
 
-	const remove = useEvent((fullPath, idx) =>
+	const remove = useStableRef((fullPath, idx) =>
 		_updateArray(
 			fullPath,
 			_getNested(fullPath, values).filter((item, i) => idx !== i),
@@ -394,7 +400,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		),
 	);
 
-	const swap = useEvent((fullPath, index1, index2) =>
+	const swap = useStableRef((fullPath, index1, index2) =>
 		_updateArray(fullPath, _swap(values, fullPath, index1, index2), newErrors => {
 			const newErr = _swap(newErrors, fullPath, index1, index2);
 			const swappedErrors = { ...errors };
@@ -403,21 +409,21 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		}),
 	);
 
-	const getRef = useCallback(fullPath => refsMap.current.get(fullPath), []);
+	const getRef = useStableRef(fullPath => refsMap.current.get(fullPath));
 
-	const setRef = useCallback((fullPath, element) => {
+	const setRef = useStableRef((fullPath, element) => {
 		if (element) {
 			refsMap.current.set(fullPath, element);
 		}
-	}, []);
+	});
 
-	const ref = useCallback(element => element && setRef(element.name, element), []);
+	const ref = useStableRef(element => element && setRef(element.name, element));
 
-	const onChange = useEvent(e => {
+	const onChange = useStableRef(e => {
 		setValue(e.target.name, _getInputValue(e));
 	});
 
-	const onBlur = useEvent(e => {
+	const onBlur = useStableRef(e => {
 		const { name } = e.target;
 		const newError = _getNested(name, resolver(values));
 		if (newError) {
@@ -476,23 +482,24 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		return true;
 	};
 
-	const reset = useEvent((values = defaultValues, validate = true) => {
+	const reset = useStableRef((values = defaultValues, validate = true) => {
 		init(values);
 		isTouched.current = false;
 		isDirty.current = false;
 		validate && trigger('', values);
 	});
 
-	const Error = ({ for: fullPath, children }) => {
+	const Error = useStableRef(({ for: fullPath, children }) => {
 		const error = _getNested(fullPath, errors);
 		if (!error || isArray(error)) {
 			return false;
 		}
 		return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
-	};
+	});
 
-	const Errors = ({ children, focusable = false }) => {
-		if (!hasError()) {
+	const isValid = !hasError();
+	const Errors = useStableRef(({ children, focusable = false }) => {
+		if (isValid) {
 			return false;
 		}
 
@@ -512,7 +519,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		});
 
 		return isFunction(children) ? children(result) : result;
-	};
+	});
 
 	return {
 		getValue,
@@ -538,7 +545,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		Errors,
 		formState: {
 			errors,
-			isValid: !hasError(),
+			isValid,
 			isTouched: isTouched.current,
 			isDirty: isDirty.current,
 		},
