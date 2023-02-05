@@ -1,18 +1,35 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import useEvent from './useEvent';
-import useKey from './useKey';
 
-// NOTE: make aliases for better minification
-const isNumber = num => !Number.isNaN(num);
-const parseI = num => parseInt(num, 10);
-const isFunction = obj => typeof obj === 'function';
-const { isArray } = Array;
-const toJSON = JSON.stringify;
-const objectKeys = Object.keys;
-const EMPTY = {};
-const noOp = () => EMPTY;
+import {
+	backTrackKey,
+	deleteNestedToRoot,
+	EMPTY_OBJECT,
+	extractPath,
+	getErrorClassName,
+	getInputValue,
+	getNested,
+	isFunction,
+	key,
+	noOp,
+	objectKeys,
+	resetSplitCache,
+	setNested,
+	shiftErrors,
+	swap,
+	toJSON,
+} from './core';
 
+// inline useStableRef for better minification
+////----------------------------------------------------------------------------------------
+const useStableRef = callback => {
+	const handlerRef = useRef(callback);
+	handlerRef.current = callback;
+	return useCallback((...args) => handlerRef.current(...args), []);
+	// return useRef((...args) => handlerRef.current(...args)).current;
+};
+// reuse single object for register props
+////----------------------------------------------------------------------------------------
 const registerProps = {
 	key: '',
 	name: '',
@@ -25,309 +42,98 @@ const registerProps = {
 	checked: false,
 };
 
-const splitRegEx = /\[([^\]]+)\]/g;
-let splitCache = {};
-const _extractPath = string => {
-	if (!string) {
-		return [];
-	}
-	if (splitCache[string]) {
-		return splitCache[string];
-	}
-	const split = string.replace(splitRegEx, '.$1').split('.');
-	splitCache[string] = split;
-	return split;
-};
+const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false, resolver = noOp }) => {
+	const [state, setState] = useState({
+		values: defaultValues || EMPTY_OBJECT,
+		errors: {},
+	});
 
-const _clone = obj => {
-	if (!obj || typeof obj !== 'object') {
-		return obj;
-	}
+	const { values, errors } = state;
 
-	if (obj instanceof Date) {
-		return new Date(obj.getTime());
-	}
-
-	if (isArray(obj)) {
-		return obj.reduce((arr, item, i) => {
-			arr[i] = _clone(item);
-			return arr;
-		}, []);
-	}
-
-	if (obj instanceof Object) {
-		return objectKeys(obj).reduce((newObj, key) => {
-			newObj[key] = _clone(obj[key]);
-			return newObj;
-		}, {});
-	}
-
-	if (obj instanceof Set) {
-		return new Set(_clone([...obj]));
-	}
-
-	return obj;
-};
-
-const _getNested = (fullPath, source) => {
-	if (source === undefined) {
-		return undefined;
-	}
-
-	if (!isArray(fullPath)) {
-		return _getNested(_extractPath(fullPath), source);
-	}
-
-	switch (fullPath.length) {
-		case 0:
-			return source;
-		default:
-			return _getNested(fullPath.slice(1), source[fullPath[0]]);
-	}
-};
-
-const _setNested = (fullPath, target, value) => {
-	if (!isArray(fullPath)) {
-		_setNested(_extractPath(fullPath), target, value);
-		return;
-	}
-
-	if (fullPath.length === 0) {
-		return;
-	}
-
-	const path = fullPath[0];
-	if (fullPath.length === 1) {
-		target[path] = value;
-		return;
-	}
-	const idx = parseI(fullPath[1]);
-	if (isNumber(idx)) {
-		// NOTE: this makes entries undefined instead of empty
-		// target[path] = target[path] === undefined ? [] : [...target[path]];
-		target[path] = target[path] === undefined ? [] : target[path];
-		// NOTE: this line causes inputs to loose focus in .map, because key is recreated each time, it will work with stable key
-		// target[path][idx] = target[path][idx] === undefined ? {} : { ...target[path][idx] };
-		target[path][idx] = target[path][idx] === undefined ? {} : target[path][idx];
-		if (fullPath.length === 2) {
-			target[path][idx] = value;
-		} else {
-			_setNested(fullPath.slice(2), target[path][idx], value);
-		}
-	} else {
-		target[path] = target[path] === undefined ? {} : { ...target[path] };
-		_setNested(fullPath.slice(1), target[path], value);
-	}
-};
-
-const _deleteNested = (fullPath, target) => {
-	if (!isArray(fullPath)) {
-		_deleteNested(_extractPath(fullPath), target);
-		return;
-	}
-
-	if (fullPath.length === 0 || target === undefined) {
-		return;
-	}
-
-	const path = fullPath[0];
-	if (fullPath.length === 1) {
-		delete target[path];
-		return;
-	}
-
-	if (target[path] === undefined) {
-		return;
-	}
-
-	const idx = parseI(fullPath[1]);
-	if (isNumber(idx)) {
-		if (fullPath.length === 2) {
-			delete target[path][idx];
-		} else {
-			_deleteNested(fullPath.slice(2), target[path][idx]);
-		}
-	} else {
-		_deleteNested(fullPath.slice(1), target[path]);
-	}
-};
-
-// removes all entries to the root of the object
-const _deleteNestedToRoot = (fullPath, target) => {
-	if (!isArray(fullPath)) {
-		_deleteNestedToRoot(_extractPath(fullPath), target);
-		return;
-	}
-
-	_deleteNested(fullPath, target);
-
-	// make array of paths to the root of the object, starting from deepest one
-	const pathsToRoot = fullPath.map((part, idx) => (idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx)));
-
-	// delete paths from deepest to shallowest
-	// eslint-disable-next-line no-restricted-syntax
-	for (const path of pathsToRoot) {
-		const value = _getNested(path, target);
-		if (value !== undefined) {
-			if (isArray(value)) {
-				// check if array is empty (no items) or each of them is undefined/empty
-				if (value.length === 0 || value.every(item => objectKeys(item || EMPTY).length === 0)) {
-					_deleteNested(path, target);
-				}
-			} // check if object is empty
-			else if (objectKeys(value || EMPTY).length === 0) {
-				_deleteNested(path, target);
-			}
-		}
-	}
-};
-
-const _getInputValue = e => {
-	const { value, type, checked, options, files, multiple, valueAsNumber } = e.target;
-	switch (type) {
-		case 'checkbox':
-			return checked;
-		case 'range':
-			return valueAsNumber;
-		case 'number':
-			if (value === '') {
-				return null;
-			}
-			// eslint-disable-next-line no-case-declarations
-			const parsed = Number.parseFloat(value);
-			if (!isNumber(parsed)) {
-				return undefined;
-			}
-			return parsed;
-		case 'file':
-			return multiple ? files : files.item(0);
-		case 'select-multiple':
-			return [...options].filter(o => o.selected).map(o => o.value);
-		default:
-			return value;
-	}
-};
-
-// clears error if exists and not array of errors (root array arror, e.g. min items)
-const _clearObjectError = (fullPath, targetErrors) => {
-	const arrError = _getNested(fullPath, targetErrors);
-	if (arrError && !isArray(arrError)) {
-		const newErrors = { ...targetErrors };
-		_deleteNestedToRoot(fullPath, newErrors);
-		return newErrors;
-	}
-	return targetErrors;
-};
-
-// shifts errors in array for prepend/remove operations
-const _shiftErrors = (fullPath, targetErrors, callback) => {
-	const arrError = _getNested(fullPath, targetErrors);
-	if (arrError && isArray(arrError)) {
-		const newErrors = { ...targetErrors };
-		const newArrErrrors = callback([...arrError]);
-		_setNested(fullPath, newErrors, newArrErrrors);
-		return newErrors;
-	}
-	return targetErrors;
-};
-
-// swaps 2 elements in array and returns new awway
-const _swap = (target, fullPath, idx1, idx2) => {
-	const arr = _getNested(fullPath, target);
-	if (isArray(arr)) {
-		const newArr = [...arr];
-		const el = newArr[idx1];
-		newArr[idx1] = newArr[idx2];
-		newArr[idx2] = el;
-		return newArr;
-	}
-	return arr;
-};
-
-const _errClassName = (error, classNameError, className) => `${className || ''} ${classNameError || ''} ${error.type ? `error-${error.type}` : ''}`.trim();
-
-const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shouldFocusError = false, resolver = noOp }) => {
-	const [values, setValues] = useState(defaultValues || EMPTY);
-	const [errors, setErrors] = useState({});
 	const isTouched = useRef(false);
 	const isDirty = useRef(false);
+	const formHadError = useRef(false);
 	const refsMap = useRef(new Map());
-	const defaultValuesJSON = useRef('');
-	const key = useKey();
+	const defaultValuesJSON = useRef();
 
+	// validates when submitting; any change in error field will remove error for that field (no matter if field is valid or not)
+	const isOnSubmitMode = mode === 'onSubmit';
+	// validates when field is blurred; be careful with shouldFocusError, it will trap the user to field
 	const isOnBlurMode = mode === 'onBlur';
+	// validates on any change
 	const isOnChangeMode = mode === 'onChange';
 
+	// default mode: no validations until submit, if any errors - validate onChange
+	const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
+
+	const setErrors = newErrors =>
+		setState(prev => ({
+			...prev,
+			errors: newErrors,
+		}));
+
 	const init = useCallback(initValues => {
-		const vals = initValues || EMPTY;
+		const vals = initValues || EMPTY_OBJECT;
 		defaultValuesJSON.current = toJSON(vals);
-		setValues(_clone(vals));
+		setState(prev => ({
+			...prev,
+			values: { ...vals },
+		}));
 	}, []);
 
 	useEffect(() => {
 		init(defaultValues);
-		return () => {
-			splitCache = {}; // cleanup, ALWAYS
-		};
+		// cleanup, ALWAYS
+		return resetSplitCache;
 	}, [defaultValues, init]);
 
-	const focus = useCallback(fullPath => {
+	const focus = fullPath => {
 		const element = refsMap.current.get(fullPath);
 		if (element && element.focus) {
 			element.focus();
 			return true;
 		}
 		return false;
-	}, []);
-
-	const getValue = (fullPath = '') => _getNested(fullPath, values);
-	const getError = (fullPath = '', targetErrors = errors) => _getNested(fullPath, targetErrors);
-
-	const hasError = (fullPath = '', targetErrors = errors) => {
-		if (fullPath === '') {
-			return objectKeys(targetErrors).length > 0;
-		}
-		return _getNested(fullPath, targetErrors) !== undefined;
 	};
 
-	const clearError = useEvent((fullPath, targetErrors = errors) => {
-		if (hasError(fullPath, targetErrors)) {
-			const newErrors = { ...targetErrors };
-			_deleteNestedToRoot(fullPath, newErrors);
-			setErrors(newErrors);
-			return newErrors;
+	const getValue = useStableRef((fullPath = '') => {
+		// NOTE: for <Errors /> to work properly
+		if (!refsMap.current.has(fullPath)) {
+			refsMap.current.set(fullPath, null);
 		}
-		return targetErrors;
+		return getNested(fullPath, values);
 	});
 
-	const setCustomErrors = useEvent(customErrors => {
-		const newErrors = { ...errors };
-		// eslint-disable-next-line no-restricted-syntax
-		for (const fullPath of objectKeys(customErrors)) {
-			if (hasError(fullPath)) {
-				_deleteNestedToRoot(fullPath, newErrors);
-			}
-			_setNested(fullPath, newErrors, customErrors[fullPath]);
+	const getError = useStableRef((fullPath = '', targetErrors = errors) => getNested(fullPath, targetErrors));
+
+	const hasError = useStableRef((fullPath = '', targetErrors = errors) => {
+		return fullPath === '' ? objectKeys(targetErrors).length > 0 : getNested(fullPath, targetErrors) !== undefined;
+	});
+
+	const clearError = useStableRef((fullPath, targetErrors = errors) => {
+		let newErrors = targetErrors;
+		if (hasError(fullPath, targetErrors)) {
+			newErrors = deleteNestedToRoot(fullPath, targetErrors);
 		}
-		setErrors(newErrors);
 		return newErrors;
 	});
 
-	const trigger = useEvent(
+	const trigger = useStableRef(
 		(fullPath = '', newValues = values) =>
 			new Promise((resolve = noOp) => {
 				const newErrors = resolver(newValues);
 				if (fullPath === '') {
 					setErrors(newErrors);
 					resolve(newErrors);
+					return;
 				}
 				const paths = isArray(fullPath) ? fullPath : [fullPath];
-				const updatedErrors = { ...errors };
+				let updatedErrors = { ...errors };
 				paths.forEach(fullPath => {
-					const error = _getNested(fullPath, newErrors);
-					_deleteNestedToRoot(fullPath, updatedErrors);
+					const error = getNested(fullPath, newErrors);
+					updatedErrors = deleteNestedToRoot(fullPath, updatedErrors);
 					if (error !== undefined) {
-						_setNested(fullPath, updatedErrors, error);
+						updatedErrors = setNested(fullPath, updatedErrors, error);
 					}
 				});
 				setErrors(updatedErrors);
@@ -335,114 +141,147 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 			}),
 	);
 
-	const setValue = useEvent(
-		(fullPath, value, validate = true) =>
+	// used in setValue
+	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
+	const shouldRevalidateArray = shouldRevalidate && !isOnSubmitMode;
+
+	const _resolveErrors = useStableRef((fullPath, newValues) => {
+		let newErrors = errors;
+		if (shouldRevalidate || hasError(fullPath)) {
+			// clear existing error
+			newErrors = deleteNestedToRoot(fullPath, newErrors);
+			// revalidate only if it isn't onSubmit mode
+			if (!isOnSubmitMode) {
+				const newError = getNested(fullPath, resolver(newValues));
+				if (newError) {
+					newErrors = setNested(fullPath, newErrors, newError);
+				}
+			}
+		}
+		return newErrors;
+	});
+
+	const _remapArrayErrors = useStableRef((fullPath, newErrors, newValues) => {
+		const newError = getNested(fullPath, resolver(newValues));
+		const existing = getNested(fullPath, newErrors);
+		if (existing) {
+			delete existing.message;
+			delete existing.type;
+			if (newError?.message) {
+				existing.message = newError.message;
+				existing.type = newError.type;
+			}
+		}
+		return newErrors;
+	});
+
+	const setValue = useStableRef(
+		(fullPath, value, resolveErrors = _resolveErrors) =>
 			new Promise((resolve = noOp) => {
-				setValues(values => {
+				setState(prevState => {
+					const newValues = setNested(fullPath, { ...(fullPath === '' ? value : values) }, value);
+
 					isTouched.current = true;
-					const newValues = { ...(fullPath === '' ? value : values) };
-					_setNested(fullPath, newValues, value);
 					isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-					let newErrors = errors;
-					if (validate && (hasError(fullPath) || isOnChangeMode)) {
-						newErrors = clearError(fullPath);
-						const newError = _getNested(fullPath, resolver(newValues));
-						if (newError) {
-							_setNested(fullPath, newErrors, newError);
-							setErrors(newErrors);
-						}
-					}
-					resolve({
+
+					// resolve errors elsewhere
+					const newErrors = resolveErrors(fullPath, newValues);
+
+					const newState = {
 						values: newValues,
 						errors: newErrors,
-					});
-					return newValues;
+					};
+
+					// console.log(`newErrors`);
+					// console.log(newState.errors);
+
+					resolve(newState);
+					return newState;
 				});
 			}),
 	);
 
-	const _updateArray = (fullPath, newArr, transformErrorsCallback) => {
-		return new Promise((resolve = noOp) => {
-			Promise.resolve(setValue(fullPath, newArr, false)).then(({ values }) => {
-				const newErrors = transformErrorsCallback(_clearObjectError(fullPath, errors));
-				setErrors(newErrors);
-				resolve({
-					values,
-					errors: newErrors,
-				});
-			});
-		});
-	};
+	const clear = useStableRef(fullPath => setValue(fullPath, [], shouldRevalidateArray ? _resolveErrors : () => []));
 
-	const append = useEvent((fullPath, object) => _updateArray(fullPath, [..._getNested(fullPath, values), object], newErrors => newErrors));
+	const append = useStableRef((fullPath, object) => {
+		const resolve = shouldRevalidateArray ? _resolveErrors : () => errors;
+		return setValue(fullPath, [...getNested(fullPath, values), object], resolve);
+	});
 
-	const prepend = useEvent((fullPath, object) =>
-		_updateArray(fullPath, [object, ..._getNested(fullPath, values)], newErrors => _shiftErrors(fullPath, newErrors, arrErrors => [undefined, ...arrErrors])),
-	);
+	const prepend = useStableRef((fullPath, object) => {
+		const resolve = shouldRevalidateArray
+			? _resolveErrors
+			: (_, newValues) => {
+					let newErrors = shiftErrors(fullPath, errors, arrErrors => [undefined, ...arrErrors]);
+					return _remapArrayErrors(fullPath, newErrors, newValues);
+			  };
+		return setValue(fullPath, [object, ...getNested(fullPath, values)], resolve);
+	});
 
-	const remove = useEvent((fullPath, idx) =>
-		_updateArray(
+	const remove = useStableRef((fullPath, idx) => {
+		const resolve = shouldRevalidateArray // && !isArray(getError(fullPath))
+			? _resolveErrors
+			: (_, newValues) => {
+					let newErrors = clearError(`${fullPath}.${idx}`, { ...errors });
+					newErrors = shiftErrors(fullPath, newErrors, arrErrors => {
+						arrErrors.splice(idx, 1);
+						return arrErrors;
+					});
+					return _remapArrayErrors(fullPath, newErrors, newValues);
+			  };
+		return setValue(
 			fullPath,
-			_getNested(fullPath, values).filter((item, i) => idx !== i),
-			newErrors => {
-				newErrors = clearError(`${fullPath}.${idx}`, newErrors);
-				return _shiftErrors(fullPath, newErrors, arrErrors => {
-					arrErrors.splice(idx, 1);
-					return arrErrors;
-				});
-			},
-		),
-	);
+			getNested(fullPath, values).filter((item, i) => i !== idx),
+			resolve,
+		);
+	});
 
-	const swap = useEvent((fullPath, index1, index2) =>
-		_updateArray(fullPath, _swap(values, fullPath, index1, index2), newErrors => {
-			const newErr = _swap(newErrors, fullPath, index1, index2);
-			const swappedErrors = { ...errors };
-			_setNested(fullPath, swappedErrors, newErr);
-			return swappedErrors;
-		}),
-	);
+	const _swap = useStableRef((fullPath, index1, index2) => {
+		const resolve = shouldRevalidateArray // && !isArray(getError(fullPath))
+			? _resolveErrors
+			: (_, newValues) => {
+					let newErrors = swap(getNested(fullPath, errors), index1, index2);
+					newErrors = newErrors ? setNested(fullPath, errors, newErrors) : errors;
+					return _remapArrayErrors(fullPath, newErrors, newValues);
+			  };
+		return setValue(fullPath, swap(getValue(fullPath), index1, index2), resolve);
+	});
 
-	const getRef = useCallback(fullPath => refsMap.current.get(fullPath), []);
+	const getRef = useStableRef(fullPath => refsMap.current.get(fullPath));
 
-	const setRef = useCallback((fullPath, element) => {
+	const setRef = useStableRef((fullPath, element) => {
 		if (element) {
 			refsMap.current.set(fullPath, element);
 		}
-	}, []);
-
-	const ref = useCallback(element => element && setRef(element.name, element), []);
-
-	const onChange = useEvent(e => {
-		setValue(e.target.name, _getInputValue(e));
 	});
 
-	const onBlur = useEvent(e => {
+	const ref = useStableRef(element => element && setRef(element.name, element));
+
+	const onChange = useStableRef(e => setValue(e.target.name, getInputValue(e)));
+
+	const onBlur = useStableRef(e => {
 		const { name } = e.target;
-		const newError = _getNested(name, resolver(values));
+		const newError = getNested(name, resolver(values));
 		if (newError) {
-			const newErrors = { ...errors };
-			_setNested(name, newErrors, newError);
-			setErrors(newErrors);
+			setErrors(setNested(name, errors, newError));
 			if (shouldFocusError) {
 				focus(name);
 			}
 		} else {
-			clearError(name);
+			setErrors(clearError(name));
 		}
 	});
 
-	const register = (fullPath, className = '') => {
+	const register = useStableRef((fullPath, className = '') => {
 		const value = getValue(fullPath);
 		const hasFieldError = hasError(fullPath);
 
-		// eslint-disable-next-line no-multi-assign
-		registerProps.key = registerProps.name = fullPath;
+		registerProps.name = fullPath;
 		registerProps['aria-invalid'] = hasFieldError;
-		registerProps.className = _errClassName(EMPTY, hasFieldError ? classNameError : false, className);
+		registerProps.className = getErrorClassName(EMPTY_OBJECT, hasFieldError ? classNameError : '', className);
 		registerProps.onChange = onChange;
-		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;
 		registerProps.ref = ref;
+		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;
 
 		if (value === true || value === false) {
 			registerProps.checked = value;
@@ -453,7 +292,7 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		}
 
 		return registerProps;
-	};
+	});
 
 	const handleSubmit = handler => e => {
 		// eslint-disable-next-line no-unused-expressions
@@ -470,49 +309,55 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 					}
 				});
 			}
+			formHadError.current = true;
 			return false;
 		}
 		handler(values);
 		return true;
 	};
 
-	const reset = useEvent((values = defaultValues, validate = true) => {
+	const reset = useStableRef((values = defaultValues, validate = true) => {
 		init(values);
 		isTouched.current = false;
 		isDirty.current = false;
 		validate && trigger('', values);
 	});
 
-	const Error = ({ for: fullPath, children }) => {
-		const error = _getNested(fullPath, errors);
-		if (!error || isArray(error)) {
+	const Error = useStableRef(({ for: fullPath, children }) => {
+		const error = getError(fullPath, errors);
+
+		if (!error?.message) {
 			return false;
 		}
-		return isFunction(children) ? children(error) : <span className={_errClassName(error, classNameError)}>{error.message}</span>;
-	};
 
-	const Errors = ({ children, focusable = false }) => {
-		if (!hasError()) {
+		return isFunction(children) ? children(error) : <span className={getErrorClassName(error, classNameError)}>{error.message}</span>;
+	});
+
+	const isValid = !hasError();
+
+	const Errors = useStableRef(({ children, focusable = false }) => {
+		if (isValid) {
 			return false;
 		}
 
 		// entry[0] = fullPath, entry[1] = element
 		const errorPaths = Array.from(refsMap.current)
+			.filter(entry => !!entry[1])
 			.map(entry => entry[0])
-			.filter(entry => hasError(entry))
+			.filter(entry => hasError(entry, errors))
 			.sort();
 
 		const result = errorPaths.map(fullPath => {
-			const error = _getNested(fullPath, errors);
+			const error = getNested(fullPath, errors);
 			return (
-				<li key={key(error)} className={_errClassName(error, classNameError)}>
+				<li key={fullPath} className={getErrorClassName(error, classNameError)}>
 					{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}
 				</li>
 			);
 		});
 
 		return isFunction(children) ? children(result) : result;
-	};
+	});
 
 	return {
 		getValue,
@@ -526,37 +371,58 @@ const useForm = ({ defaultValues, mode = 'onSubmit', classNameError = null, shou
 		handleSubmit,
 		hasError,
 		getError,
-		clearError,
-		setErrors: setCustomErrors,
-		append,
-		prepend,
-		remove,
-		swap,
+		clearError: fullPath => setErrors(clearError(fullPath)),
+		setErrors: newErrors => {
+			formHadError.current = true;
+			setErrors(newErrors);
+		},
+		array: {
+			append,
+			prepend,
+			remove,
+			swap: _swap,
+			clear,
+		},
 		key,
 		reset,
 		Error,
 		Errors,
 		formState: {
 			errors,
-			isValid: !hasError(),
+			isValid,
 			isTouched: isTouched.current,
 			isDirty: isDirty.current,
 		},
 	};
 };
 
-export const yupResolver = schema => fields => {
-	const errors = {};
+export const yupResolver = schema => formValues => {
+	let errors = {};
 	try {
-		schema.validateSync(fields, { abortEarly: false });
+		schema.validateSync(formValues, { abortEarly: false });
 	} catch (validationError) {
 		// eslint-disable-next-line no-restricted-syntax
 		for (const error of validationError.inner) {
-			_setNested(error.path, errors, {
-				message: error.message,
-				type: error.type,
-			});
+			const errorToEdit = getNested(error.path, errors) || {};
+			errorToEdit.message = error.message;
+			errorToEdit.type = error.type;
+			errors = setNested(error.path, errors, errorToEdit);
 		}
+	}
+	return errors;
+};
+
+export const zodResolver = schema => formValues => {
+	let errors = {};
+	const parsed = schema.safeParse(formValues);
+	if (!parsed.success) {
+		parsed.error.errors.forEach(error => {
+			const path = error.path.join('.');
+			const errorToEdit = getNested(path, errors) || {};
+			errorToEdit.message = error.message;
+			errorToEdit.type = error.type;
+			errors = setNested(error.path, errors, errorToEdit);
+		});
 	}
 	return errors;
 };

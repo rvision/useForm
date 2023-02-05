@@ -1,8 +1,10 @@
 var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __defNormalProp = (obj, key2, value) => key2 in obj ? __defProp(obj, key2, { enumerable: true, configurable: true, writable: true, value }) : obj[key2] = value;
 var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp.call(b, prop))
@@ -14,39 +16,169 @@ var __spreadValues = (a, b) => {
     }
   return a;
 };
-import require$$0, { useCallback, useRef, useLayoutEffect, useEffect, useState } from "react";
-const throwReferenceError = () => {
-  throw new ReferenceError("useEvent called while rendering.");
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+import require$$0, { useState, useRef, useCallback, useEffect } from "react";
+const isNumber = (num) => !Number.isNaN(num);
+const parseI = (num) => parseInt(num, 10);
+const isFunction = (obj) => typeof obj === "function";
+const { isArray: isArray$1 } = Array;
+const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value] : value);
+const objectKeys = Object.keys;
+const EMPTY_OBJECT = {};
+const noOp = () => EMPTY_OBJECT;
+let keySeed = 9999;
+const keysMap = /* @__PURE__ */ new WeakMap();
+const key = (object) => {
+  let result = keysMap.get(object);
+  if (!result) {
+    result = (++keySeed).toString(36).split("").reduce((reversed, character) => character + reversed, "");
+    keysMap.set(object, result);
+  }
+  return result;
 };
-const useEvent = (handler) => {
-  const handlerRef = useRef(throwReferenceError);
-  useLayoutEffect(() => {
-    handlerRef.current = handler;
+const backTrackKey = (object) => {
+  let clone;
+  if (object instanceof Set) {
+    clone = /* @__PURE__ */ new Set([...object]);
+  } else {
+    clone = isArray$1(object) ? [...object] : __spreadValues({}, object);
+  }
+  if (keysMap.has(object)) {
+    keysMap.set(clone, keysMap.get(object));
+    keysMap.delete(object);
+  }
+  return clone;
+};
+const _splitRegEx = /\[([^\]]+)\]/g;
+let _splitCache = /* @__PURE__ */ new Map();
+const extractPath = (string) => {
+  if (!string) {
+    return [];
+  }
+  let cached = _splitCache.get(string);
+  if (cached) {
+    return cached;
+  }
+  cached = string.replace(_splitRegEx, ".$1").split(".");
+  _splitCache.set(string, cached);
+  return cached;
+};
+const resetSplitCache = () => {
+  _splitCache = /* @__PURE__ */ new Map();
+};
+const __getNested = (fullPath, source) => {
+  if (source === void 0) {
+    return void 0;
+  }
+  if (fullPath.length === 0) {
+    return source;
+  }
+  return __getNested(fullPath.slice(1), source[fullPath[0]]);
+};
+const getNested = (fullPath, source) => __getNested(extractPath(fullPath), source);
+const __setNested = (fullPath, target, value) => {
+  const { length } = fullPath;
+  if (length > 0) {
+    const path = fullPath[0];
+    if (length === 1) {
+      target[path] = value;
+      return;
+    }
+    const hasTargetProperty = target[path] === void 0;
+    const idx = parseI(fullPath[1]);
+    if (isNumber(idx)) {
+      target[path] = hasTargetProperty ? [] : backTrackKey(target[path]);
+      target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
+      return __setNested(fullPath.slice(2), target[path][idx], value);
+    }
+    target[path] = hasTargetProperty ? {} : backTrackKey(target[path]);
+    __setNested(fullPath.slice(1), target[path], value);
+  }
+};
+const setNested = (fullPath, target, value) => {
+  const clonedTarget = __spreadValues({}, target);
+  __setNested(extractPath(fullPath), clonedTarget, value);
+  return clonedTarget;
+};
+const __deleteNested = (fullPath, target) => {
+  const { length } = fullPath;
+  if (length === 0 || target === void 0) {
+    return;
+  }
+  const path = fullPath[0];
+  if (length === 1) {
+    delete target[path];
+    return;
+  }
+  __deleteNested(fullPath.slice(1), target[path]);
+};
+const _isEmptyObjectOrFalsy = (item) => objectKeys(item || EMPTY_OBJECT).length === 0;
+const __deleteNestedToRoot = (fullPath, target) => {
+  __deleteNested(fullPath, target);
+  const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
+  pathsToRoot.forEach((path) => {
+    const value = __getNested(path, target);
+    if (value !== void 0) {
+      if (isArray$1(value)) {
+        if (value.length === 0 || value.every(_isEmptyObjectOrFalsy)) {
+          if (!value.message) {
+            __deleteNested(path, target);
+          }
+        }
+      } else if (_isEmptyObjectOrFalsy(value)) {
+        __deleteNested(path, target);
+      }
+    }
   });
-  return useCallback((...args) => handlerRef.current(...args), []);
 };
-const compatibleKeyTypes = ["object", "function"];
-let now = Date.now();
-const useKey = () => {
-  const map = useRef(/* @__PURE__ */ new WeakMap());
-  useEffect(() => () => {
-    if (map == null ? void 0 : map.current) {
-      map.current = /* @__PURE__ */ new WeakMap();
-    }
-  }, []);
-  return useCallback((object = {}) => {
-    const c = map.current;
-    if (c.has(object)) {
-      return c.get(object);
-    }
-    if (!compatibleKeyTypes.includes(typeof object)) {
-      return `key-${object}`;
-    }
-    const key = (++now).toString(36);
-    c.set(object, key);
-    return key;
-  }, [map]);
+const deleteNestedToRoot = (fullPath, target) => {
+  const clonedTarget = __spreadValues({}, target);
+  __deleteNestedToRoot(extractPath(fullPath), clonedTarget);
+  return clonedTarget;
 };
+const getInputValue = (e) => {
+  const { value, type, checked, options, files, multiple, valueAsNumber, valueAsDate } = e.target;
+  switch (type) {
+    case "checkbox":
+      return checked;
+    case "range":
+      return valueAsNumber;
+    case "date":
+      return valueAsDate;
+    case "number": {
+      if (value === "") {
+        return null;
+      }
+      const parsed = Number.parseFloat(value);
+      if (!isNumber(parsed)) {
+        return void 0;
+      }
+      return parsed;
+    }
+    case "file":
+      return multiple ? files : files.item(0);
+    case "select-multiple":
+      return [...options].filter((o) => o.selected).map((o) => o.value);
+    default:
+      return value;
+  }
+};
+const shiftErrors = (fullPath, targetErrors, callback) => {
+  const errorsArray = getNested(fullPath, targetErrors);
+  if (errorsArray && isArray$1(errorsArray)) {
+    return setNested(fullPath, targetErrors, callback(errorsArray));
+  }
+  return targetErrors;
+};
+const swap = (arr, idx1, idx2) => {
+  if (isArray$1(arr)) {
+    const newArr = [...arr];
+    [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
+    return newArr;
+  }
+  return arr;
+};
+const getErrorClassName = (errorObject, classNameError, className = "") => `${className} ${classNameError} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
 var jsxRuntime = { exports: {} };
 var reactJsxRuntime_production_min = {};
 /**
@@ -78,16 +210,11 @@ reactJsxRuntime_production_min.jsxs = q;
   jsxRuntime.exports = reactJsxRuntime_production_min;
 }
 const jsx = jsxRuntime.exports.jsx;
-const isNumber = (num) => !Number.isNaN(num);
-const parseI = (num) => parseInt(num, 10);
-const isFunction = (obj) => typeof obj === "function";
-const {
-  isArray
-} = Array;
-const toJSON = JSON.stringify;
-const objectKeys = Object.keys;
-const EMPTY = {};
-const noOp = () => EMPTY;
+const useStableRef = (callback) => {
+  const handlerRef = useRef(callback);
+  handlerRef.current = callback;
+  return useCallback((...args) => handlerRef.current(...args), []);
+};
 const registerProps = {
   key: "",
   name: "",
@@ -99,361 +226,192 @@ const registerProps = {
   value: "",
   checked: false
 };
-const splitRegEx = /\[([^\]]+)\]/g;
-let splitCache = {};
-const _extractPath = (string) => {
-  if (!string) {
-    return [];
-  }
-  if (splitCache[string]) {
-    return splitCache[string];
-  }
-  const split = string.replace(splitRegEx, ".$1").split(".");
-  splitCache[string] = split;
-  return split;
-};
-const _clone = (obj) => {
-  if (!obj || typeof obj !== "object") {
-    return obj;
-  }
-  if (obj instanceof Date) {
-    return new Date(obj.getTime());
-  }
-  if (isArray(obj)) {
-    return obj.reduce((arr, item, i) => {
-      arr[i] = _clone(item);
-      return arr;
-    }, []);
-  }
-  if (obj instanceof Object) {
-    return objectKeys(obj).reduce((newObj, key) => {
-      newObj[key] = _clone(obj[key]);
-      return newObj;
-    }, {});
-  }
-  if (obj instanceof Set) {
-    return new Set(_clone([...obj]));
-  }
-  return obj;
-};
-const _getNested = (fullPath, source) => {
-  if (source === void 0) {
-    return void 0;
-  }
-  if (!isArray(fullPath)) {
-    return _getNested(_extractPath(fullPath), source);
-  }
-  switch (fullPath.length) {
-    case 0:
-      return source;
-    default:
-      return _getNested(fullPath.slice(1), source[fullPath[0]]);
-  }
-};
-const _setNested = (fullPath, target, value) => {
-  if (!isArray(fullPath)) {
-    _setNested(_extractPath(fullPath), target, value);
-    return;
-  }
-  if (fullPath.length === 0) {
-    return;
-  }
-  const path = fullPath[0];
-  if (fullPath.length === 1) {
-    target[path] = value;
-    return;
-  }
-  const idx = parseI(fullPath[1]);
-  if (isNumber(idx)) {
-    target[path] = target[path] === void 0 ? [] : target[path];
-    target[path][idx] = target[path][idx] === void 0 ? {} : target[path][idx];
-    if (fullPath.length === 2) {
-      target[path][idx] = value;
-    } else {
-      _setNested(fullPath.slice(2), target[path][idx], value);
-    }
-  } else {
-    target[path] = target[path] === void 0 ? {} : __spreadValues({}, target[path]);
-    _setNested(fullPath.slice(1), target[path], value);
-  }
-};
-const _deleteNested = (fullPath, target) => {
-  if (!isArray(fullPath)) {
-    _deleteNested(_extractPath(fullPath), target);
-    return;
-  }
-  if (fullPath.length === 0 || target === void 0) {
-    return;
-  }
-  const path = fullPath[0];
-  if (fullPath.length === 1) {
-    delete target[path];
-    return;
-  }
-  if (target[path] === void 0) {
-    return;
-  }
-  const idx = parseI(fullPath[1]);
-  if (isNumber(idx)) {
-    if (fullPath.length === 2) {
-      delete target[path][idx];
-    } else {
-      _deleteNested(fullPath.slice(2), target[path][idx]);
-    }
-  } else {
-    _deleteNested(fullPath.slice(1), target[path]);
-  }
-};
-const _deleteNestedToRoot = (fullPath, target) => {
-  if (!isArray(fullPath)) {
-    _deleteNestedToRoot(_extractPath(fullPath), target);
-    return;
-  }
-  _deleteNested(fullPath, target);
-  const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
-  for (const path of pathsToRoot) {
-    const value = _getNested(path, target);
-    if (value !== void 0) {
-      if (isArray(value)) {
-        if (value.length === 0 || value.every((item) => objectKeys(item || EMPTY).length === 0)) {
-          _deleteNested(path, target);
-        }
-      } else if (objectKeys(value || EMPTY).length === 0) {
-        _deleteNested(path, target);
-      }
-    }
-  }
-};
-const _getInputValue = (e) => {
-  const {
-    value,
-    type,
-    checked,
-    options,
-    files,
-    multiple,
-    valueAsNumber
-  } = e.target;
-  switch (type) {
-    case "checkbox":
-      return checked;
-    case "range":
-      return valueAsNumber;
-    case "number":
-      if (value === "") {
-        return null;
-      }
-      const parsed = Number.parseFloat(value);
-      if (!isNumber(parsed)) {
-        return void 0;
-      }
-      return parsed;
-    case "file":
-      return multiple ? files : files.item(0);
-    case "select-multiple":
-      return [...options].filter((o) => o.selected).map((o) => o.value);
-    default:
-      return value;
-  }
-};
-const _clearObjectError = (fullPath, targetErrors) => {
-  const arrError = _getNested(fullPath, targetErrors);
-  if (arrError && !isArray(arrError)) {
-    const newErrors = __spreadValues({}, targetErrors);
-    _deleteNestedToRoot(fullPath, newErrors);
-    return newErrors;
-  }
-  return targetErrors;
-};
-const _shiftErrors = (fullPath, targetErrors, callback) => {
-  const arrError = _getNested(fullPath, targetErrors);
-  if (arrError && isArray(arrError)) {
-    const newErrors = __spreadValues({}, targetErrors);
-    const newArrErrrors = callback([...arrError]);
-    _setNested(fullPath, newErrors, newArrErrrors);
-    return newErrors;
-  }
-  return targetErrors;
-};
-const _swap = (target, fullPath, idx1, idx2) => {
-  const arr = _getNested(fullPath, target);
-  if (isArray(arr)) {
-    const newArr = [...arr];
-    const el = newArr[idx1];
-    newArr[idx1] = newArr[idx2];
-    newArr[idx2] = el;
-    return newArr;
-  }
-  return arr;
-};
-const _errClassName = (error, classNameError, className) => `${className || ""} ${classNameError || ""} ${error.type ? `error-${error.type}` : ""}`.trim();
 const useForm = ({
   defaultValues,
-  mode = "onSubmit",
-  classNameError = null,
+  mode,
+  classNameError,
   shouldFocusError = false,
   resolver = noOp
 }) => {
-  const [values, setValues] = useState(defaultValues || EMPTY);
-  const [errors, setErrors] = useState({});
+  const [state, setState] = useState({
+    values: defaultValues || EMPTY_OBJECT,
+    errors: {}
+  });
+  const {
+    values,
+    errors
+  } = state;
   const isTouched = useRef(false);
   const isDirty = useRef(false);
+  const formHadError = useRef(false);
   const refsMap = useRef(/* @__PURE__ */ new Map());
-  const defaultValuesJSON = useRef("");
-  const key = useKey();
+  const defaultValuesJSON = useRef();
+  const isOnSubmitMode = mode === "onSubmit";
   const isOnBlurMode = mode === "onBlur";
   const isOnChangeMode = mode === "onChange";
+  const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
+  const setErrors = (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
+    errors: newErrors
+  }));
   const init = useCallback((initValues) => {
-    const vals = initValues || EMPTY;
+    const vals = initValues || EMPTY_OBJECT;
     defaultValuesJSON.current = toJSON(vals);
-    setValues(_clone(vals));
+    setState((prev) => __spreadProps(__spreadValues({}, prev), {
+      values: __spreadValues({}, vals)
+    }));
   }, []);
   useEffect(() => {
     init(defaultValues);
-    return () => {
-      splitCache = {};
-    };
+    return resetSplitCache;
   }, [defaultValues, init]);
-  const focus = useCallback((fullPath) => {
+  const focus = (fullPath) => {
     const element = refsMap.current.get(fullPath);
     if (element && element.focus) {
       element.focus();
       return true;
     }
     return false;
-  }, []);
-  const getValue = (fullPath = "") => _getNested(fullPath, values);
-  const getError = (fullPath = "", targetErrors = errors) => _getNested(fullPath, targetErrors);
-  const hasError = (fullPath = "", targetErrors = errors) => {
-    if (fullPath === "") {
-      return objectKeys(targetErrors).length > 0;
-    }
-    return _getNested(fullPath, targetErrors) !== void 0;
   };
-  const clearError = useEvent((fullPath, targetErrors = errors) => {
-    if (hasError(fullPath, targetErrors)) {
-      const newErrors = __spreadValues({}, targetErrors);
-      _deleteNestedToRoot(fullPath, newErrors);
-      setErrors(newErrors);
-      return newErrors;
+  const getValue = useStableRef((fullPath = "") => {
+    if (!refsMap.current.has(fullPath)) {
+      refsMap.current.set(fullPath, null);
     }
-    return targetErrors;
+    return getNested(fullPath, values);
   });
-  const setCustomErrors = useEvent((customErrors) => {
-    const newErrors = __spreadValues({}, errors);
-    for (const fullPath of objectKeys(customErrors)) {
-      if (hasError(fullPath)) {
-        _deleteNestedToRoot(fullPath, newErrors);
-      }
-      _setNested(fullPath, newErrors, customErrors[fullPath]);
+  const getError = useStableRef((fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
+  const hasError = useStableRef((fullPath = "", targetErrors = errors) => {
+    return fullPath === "" ? objectKeys(targetErrors).length > 0 : getNested(fullPath, targetErrors) !== void 0;
+  });
+  const clearError = useStableRef((fullPath, targetErrors = errors) => {
+    let newErrors = targetErrors;
+    if (hasError(fullPath, targetErrors)) {
+      newErrors = deleteNestedToRoot(fullPath, targetErrors);
     }
-    setErrors(newErrors);
     return newErrors;
   });
-  const trigger = useEvent((fullPath = "", newValues = values) => new Promise((resolve = noOp) => {
+  const trigger = useStableRef((fullPath = "", newValues = values) => new Promise((resolve = noOp) => {
     const newErrors = resolver(newValues);
     if (fullPath === "") {
       setErrors(newErrors);
       resolve(newErrors);
+      return;
     }
     const paths = isArray(fullPath) ? fullPath : [fullPath];
-    const updatedErrors = __spreadValues({}, errors);
+    let updatedErrors = __spreadValues({}, errors);
     paths.forEach((fullPath2) => {
-      const error = _getNested(fullPath2, newErrors);
-      _deleteNestedToRoot(fullPath2, updatedErrors);
+      const error = getNested(fullPath2, newErrors);
+      updatedErrors = deleteNestedToRoot(fullPath2, updatedErrors);
       if (error !== void 0) {
-        _setNested(fullPath2, updatedErrors, error);
+        updatedErrors = setNested(fullPath2, updatedErrors, error);
       }
     });
     setErrors(updatedErrors);
     resolve(updatedErrors);
   }));
-  const setValue = useEvent((fullPath, value, validate = true) => new Promise((resolve = noOp) => {
-    setValues((values2) => {
-      isTouched.current = true;
-      const newValues = __spreadValues({}, fullPath === "" ? value : values2);
-      _setNested(fullPath, newValues, value);
-      isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-      let newErrors = errors;
-      if (validate && (hasError(fullPath) || isOnChangeMode)) {
-        newErrors = clearError(fullPath);
-        const newError = _getNested(fullPath, resolver(newValues));
+  const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
+  const shouldRevalidateArray = shouldRevalidate && !isOnSubmitMode;
+  const _resolveErrors = useStableRef((fullPath, newValues) => {
+    let newErrors = errors;
+    if (shouldRevalidate || hasError(fullPath)) {
+      newErrors = deleteNestedToRoot(fullPath, newErrors);
+      if (!isOnSubmitMode) {
+        const newError = getNested(fullPath, resolver(newValues));
         if (newError) {
-          _setNested(fullPath, newErrors, newError);
-          setErrors(newErrors);
+          newErrors = setNested(fullPath, newErrors, newError);
         }
       }
-      resolve({
+    }
+    return newErrors;
+  });
+  const _remapArrayErrors = useStableRef((fullPath, newErrors, newValues) => {
+    const newError = getNested(fullPath, resolver(newValues));
+    const existing = getNested(fullPath, newErrors);
+    if (existing) {
+      delete existing.message;
+      delete existing.type;
+      if (newError == null ? void 0 : newError.message) {
+        existing.message = newError.message;
+        existing.type = newError.type;
+      }
+    }
+    return newErrors;
+  });
+  const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) => new Promise((resolve = noOp) => {
+    setState((prevState) => {
+      const newValues = setNested(fullPath, __spreadValues({}, fullPath === "" ? value : values), value);
+      isTouched.current = true;
+      isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+      const newErrors = resolveErrors(fullPath, newValues);
+      const newState = {
         values: newValues,
         errors: newErrors
+      };
+      resolve(newState);
+      return newState;
+    });
+  }));
+  const clear = useStableRef((fullPath) => setValue(fullPath, [], shouldRevalidateArray ? _resolveErrors : () => []));
+  const append = useStableRef((fullPath, object) => {
+    const resolve = shouldRevalidateArray ? _resolveErrors : () => errors;
+    return setValue(fullPath, [...getNested(fullPath, values), object], resolve);
+  });
+  const prepend = useStableRef((fullPath, object) => {
+    const resolve = shouldRevalidateArray ? _resolveErrors : (_, newValues) => {
+      let newErrors = shiftErrors(fullPath, errors, (arrErrors) => [void 0, ...arrErrors]);
+      return _remapArrayErrors(fullPath, newErrors, newValues);
+    };
+    return setValue(fullPath, [object, ...getNested(fullPath, values)], resolve);
+  });
+  const remove = useStableRef((fullPath, idx) => {
+    const resolve = shouldRevalidateArray ? _resolveErrors : (_, newValues) => {
+      let newErrors = clearError(`${fullPath}.${idx}`, __spreadValues({}, errors));
+      newErrors = shiftErrors(fullPath, newErrors, (arrErrors) => {
+        arrErrors.splice(idx, 1);
+        return arrErrors;
       });
-      return newValues;
-    });
-  }));
-  const _updateArray = (fullPath, newArr, transformErrorsCallback) => {
-    return new Promise((resolve = noOp) => {
-      Promise.resolve(setValue(fullPath, newArr, false)).then(({
-        values: values2
-      }) => {
-        const newErrors = transformErrorsCallback(_clearObjectError(fullPath, errors));
-        setErrors(newErrors);
-        resolve({
-          values: values2,
-          errors: newErrors
-        });
-      });
-    });
-  };
-  const append = useEvent((fullPath, object) => _updateArray(fullPath, [..._getNested(fullPath, values), object], (newErrors) => newErrors));
-  const prepend = useEvent((fullPath, object) => _updateArray(fullPath, [object, ..._getNested(fullPath, values)], (newErrors) => _shiftErrors(fullPath, newErrors, (arrErrors) => [void 0, ...arrErrors])));
-  const remove = useEvent((fullPath, idx) => _updateArray(fullPath, _getNested(fullPath, values).filter((item, i) => idx !== i), (newErrors) => {
-    newErrors = clearError(`${fullPath}.${idx}`, newErrors);
-    return _shiftErrors(fullPath, newErrors, (arrErrors) => {
-      arrErrors.splice(idx, 1);
-      return arrErrors;
-    });
-  }));
-  const swap = useEvent((fullPath, index1, index2) => _updateArray(fullPath, _swap(values, fullPath, index1, index2), (newErrors) => {
-    const newErr = _swap(newErrors, fullPath, index1, index2);
-    const swappedErrors = __spreadValues({}, errors);
-    _setNested(fullPath, swappedErrors, newErr);
-    return swappedErrors;
-  }));
-  const getRef = useCallback((fullPath) => refsMap.current.get(fullPath), []);
-  const setRef = useCallback((fullPath, element) => {
+      return _remapArrayErrors(fullPath, newErrors, newValues);
+    };
+    return setValue(fullPath, getNested(fullPath, values).filter((item, i) => i !== idx), resolve);
+  });
+  const _swap = useStableRef((fullPath, index1, index2) => {
+    const resolve = shouldRevalidateArray ? _resolveErrors : (_, newValues) => {
+      let newErrors = swap(getNested(fullPath, errors), index1, index2);
+      newErrors = newErrors ? setNested(fullPath, errors, newErrors) : errors;
+      return _remapArrayErrors(fullPath, newErrors, newValues);
+    };
+    return setValue(fullPath, swap(getValue(fullPath), index1, index2), resolve);
+  });
+  const getRef = useStableRef((fullPath) => refsMap.current.get(fullPath));
+  const setRef = useStableRef((fullPath, element) => {
     if (element) {
       refsMap.current.set(fullPath, element);
     }
-  }, []);
-  const ref = useCallback((element) => element && setRef(element.name, element), []);
-  const onChange = useEvent((e) => {
-    setValue(e.target.name, _getInputValue(e));
   });
-  const onBlur = useEvent((e) => {
+  const ref = useStableRef((element) => element && setRef(element.name, element));
+  const onChange = useStableRef((e) => setValue(e.target.name, getInputValue(e)));
+  const onBlur = useStableRef((e) => {
     const {
       name
     } = e.target;
-    const newError = _getNested(name, resolver(values));
+    const newError = getNested(name, resolver(values));
     if (newError) {
-      const newErrors = __spreadValues({}, errors);
-      _setNested(name, newErrors, newError);
-      setErrors(newErrors);
+      setErrors(setNested(name, errors, newError));
       if (shouldFocusError) {
         focus(name);
       }
     } else {
-      clearError(name);
+      setErrors(clearError(name));
     }
   });
-  const register = (fullPath, className = "") => {
+  const register = useStableRef((fullPath, className = "") => {
     const value = getValue(fullPath);
     const hasFieldError = hasError(fullPath);
-    registerProps.key = registerProps.name = fullPath;
+    registerProps.name = fullPath;
     registerProps["aria-invalid"] = hasFieldError;
-    registerProps.className = _errClassName(EMPTY, hasFieldError ? classNameError : false, className);
+    registerProps.className = getErrorClassName(EMPTY_OBJECT, hasFieldError ? classNameError : "", className);
     registerProps.onChange = onChange;
-    registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
     registerProps.ref = ref;
+    registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
     if (value === true || value === false) {
       registerProps.checked = value;
       registerProps.value = void 0;
@@ -462,7 +420,7 @@ const useForm = ({
       registerProps.checked = void 0;
     }
     return registerProps;
-  };
+  });
   const handleSubmit = (handler) => (e) => {
     e && (e == null ? void 0 : e.preventDefault());
     const newErrors = resolver(values);
@@ -476,50 +434,52 @@ const useForm = ({
           }
         });
       }
+      formHadError.current = true;
       return false;
     }
     handler(values);
     return true;
   };
-  const reset = useEvent((values2 = defaultValues, validate = true) => {
+  const reset = useStableRef((values2 = defaultValues, validate = true) => {
     init(values2);
     isTouched.current = false;
     isDirty.current = false;
     validate && trigger("", values2);
   });
-  const Error2 = ({
+  const Error2 = useStableRef(({
     for: fullPath,
     children
   }) => {
-    const error = _getNested(fullPath, errors);
-    if (!error || isArray(error)) {
+    const error = getError(fullPath, errors);
+    if (!(error == null ? void 0 : error.message)) {
       return false;
     }
     return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
-      className: _errClassName(error, classNameError),
+      className: getErrorClassName(error, classNameError),
       children: error.message
     });
-  };
-  const Errors = ({
+  });
+  const isValid = !hasError();
+  const Errors = useStableRef(({
     children,
     focusable = false
   }) => {
-    if (!hasError()) {
+    if (isValid) {
       return false;
     }
-    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((entry) => hasError(entry)).sort();
+    const errorPaths = Array.from(refsMap.current).filter((entry) => !!entry[1]).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
     const result = errorPaths.map((fullPath) => {
-      const error = _getNested(fullPath, errors);
+      const error = getNested(fullPath, errors);
       return /* @__PURE__ */ jsx("li", {
-        className: _errClassName(error, classNameError),
+        className: getErrorClassName(error, classNameError),
         children: focusable ? /* @__PURE__ */ jsx("a", {
           onClick: () => focus(fullPath),
           children: error.message
         }) : error.message
-      }, key(error));
+      }, fullPath);
     });
     return isFunction(children) ? children(result) : result;
-  };
+  });
   return {
     getValue,
     setValue,
@@ -532,36 +492,42 @@ const useForm = ({
     handleSubmit,
     hasError,
     getError,
-    clearError,
-    setErrors: setCustomErrors,
-    append,
-    prepend,
-    remove,
-    swap,
+    clearError: (fullPath) => setErrors(clearError(fullPath)),
+    setErrors: (newErrors) => {
+      formHadError.current = true;
+      setErrors(newErrors);
+    },
+    array: {
+      append,
+      prepend,
+      remove,
+      swap: _swap,
+      clear
+    },
     key,
     reset,
     Error: Error2,
     Errors,
     formState: {
       errors,
-      isValid: !hasError(),
+      isValid,
       isTouched: isTouched.current,
       isDirty: isDirty.current
     }
   };
 };
-const yupResolver = (schema) => (fields) => {
-  const errors = {};
+const yupResolver = (schema) => (formValues) => {
+  let errors = {};
   try {
-    schema.validateSync(fields, {
+    schema.validateSync(formValues, {
       abortEarly: false
     });
   } catch (validationError) {
     for (const error of validationError.inner) {
-      _setNested(error.path, errors, {
-        message: error.message,
-        type: error.type
-      });
+      const errorToEdit = getNested(error.path, errors) || {};
+      errorToEdit.message = error.message;
+      errorToEdit.type = error.type;
+      errors = setNested(error.path, errors, errorToEdit);
     }
   }
   return errors;
