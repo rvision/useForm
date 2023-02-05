@@ -14,19 +14,21 @@ module.exports = defineConfig({
 	},
 	build: {
 		lib: {
-			entry: path.resolve(__dirname, 'lib/index.js'),
+			entry: path.resolve(__dirname, 'index.js'),
 			name: '@rvision/use-form',
 			fileName: format => `index.${format}.js`,
 		},
 		rollupOptions: {
 			// make sure to externalize deps that shouldn't be bundled
 			// into your library
-			external: ['react'],
+			external: ['react', 'react-dom'],
 			output: {
+				format: 'iife',
 				// Provide global variables to use in the UMD build
 				// for externalized deps
 				globals: {
-					react: 'react',
+					react: 'React',
+					'react-dom': 'ReactDOM',
 				},
 			},
 		},
