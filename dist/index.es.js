@@ -178,7 +178,7 @@ const swap = (arr, idx1, idx2) => {
   }
   return arr;
 };
-const getErrorClassName = (errorObject, classNameError, className = "") => `${className} ${classNameError} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
+const getErrorClassName = (errorObject, classNameError, className) => `${className || ""} ${classNameError || ""} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
 var jsxRuntime = { exports: {} };
 var reactJsxRuntime_production_min = {};
 /**
@@ -532,4 +532,18 @@ const yupResolver = (schema) => (formValues) => {
   }
   return errors;
 };
-export { useForm as default, yupResolver };
+const zodResolver = (schema) => (formValues) => {
+  let errors = {};
+  const parsed = schema.safeParse(formValues);
+  if (!parsed.success) {
+    parsed.error.errors.forEach((error) => {
+      const path = error.path.join(".");
+      const errorToEdit = getNested(path, errors) || {};
+      errorToEdit.message = error.message;
+      errorToEdit.type = error.type;
+      errors = setNested(error.path, errors, errorToEdit);
+    });
+  }
+  return errors;
+};
+export { useForm as default, yupResolver, zodResolver };
