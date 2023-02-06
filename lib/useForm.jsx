@@ -418,10 +418,10 @@ export const zodResolver = schema => formValues => {
 	if (!parsed.success) {
 		parsed.error.errors.forEach(error => {
 			const path = error.path.join('.');
-			const errorToEdit = getNested(path, errors) || {};
-			errorToEdit.message = error.message;
-			errorToEdit.type = error.type;
-			errors = setNested(error.path, errors, errorToEdit);
+			const existingError = getNested(path, errors) || {};
+			existingError.message = error.message;
+			existingError.type = error.type;
+			errors = setNested(path, errors, existingError);
 		});
 	}
 	return errors;
