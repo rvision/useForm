@@ -165,7 +165,7 @@ const getInputValue = (e) => {
 };
 const shiftErrors = (fullPath, targetErrors, callback) => {
   const errorsArray = getNested(fullPath, targetErrors);
-  if (errorsArray && isArray$1(errorsArray)) {
+  if (isArray$1(errorsArray)) {
     return setNested(fullPath, targetErrors, callback(errorsArray));
   }
   return targetErrors;
