@@ -78,21 +78,29 @@ const __getNested = (fullPath, source) => {
 const getNested = (fullPath, source) => __getNested(extractPath(fullPath), source);
 const __setNested = (fullPath, target, value) => {
   const { length } = fullPath;
-  if (length > 0) {
-    const path = fullPath[0];
-    if (length === 1) {
+  const path = fullPath[0];
+  switch (length) {
+    case 0:
+      target = value;
+      return;
+    case 1:
       target[path] = value;
       return;
-    }
-    const hasTargetProperty = target[path] === void 0;
-    const idx = parseI(fullPath[1]);
-    if (isNumber(idx)) {
-      target[path] = hasTargetProperty ? [] : backTrackKey(target[path]);
-      target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
-      return __setNested(fullPath.slice(2), target[path][idx], value);
-    }
-    target[path] = hasTargetProperty ? {} : backTrackKey(target[path]);
-    __setNested(fullPath.slice(1), target[path], value);
+    default:
+      {
+        const hasTargetProperty = target[path] === void 0;
+        const idx = fullPath[1];
+        const isIndexANumber = isNumber(parseI(idx));
+        const newObject = isIndexANumber ? [] : {};
+        target[path] = hasTargetProperty ? newObject : backTrackKey(target[path]);
+        if (isIndexANumber) {
+          target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
+          __setNested(fullPath.slice(2), target[path][idx], value);
+        } else {
+          __setNested(fullPath.slice(1), target[path], value);
+        }
+      }
+      break;
   }
 };
 const setNested = (fullPath, target, value) => {
@@ -338,7 +346,7 @@ const useForm = ({
   });
   const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) => new Promise((resolve = noOp) => {
     setState((prevState) => {
-      const newValues = setNested(fullPath, __spreadValues({}, fullPath === "" ? value : values), value);
+      const newValues = setNested(fullPath, values, value);
       isTouched.current = true;
       isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
       const newErrors = resolveErrors(fullPath, newValues);

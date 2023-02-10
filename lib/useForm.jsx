@@ -179,7 +179,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		(fullPath, value, resolveErrors = _resolveErrors) =>
 			new Promise((resolve = noOp) => {
 				setState(prevState => {
-					const newValues = setNested(fullPath, { ...(fullPath === '' ? value : values) }, value);
+					const newValues = setNested(fullPath, values, value);
 
 					isTouched.current = true;
 					isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
