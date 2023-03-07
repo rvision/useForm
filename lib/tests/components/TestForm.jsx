@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
@@ -20,9 +20,8 @@ function TestForm({ onFormSubmit }) {
 		setRef,
 		register,
 		handleSubmit,
+		array,
 		key,
-		append,
-		remove,
 		hasError,
 		Error,
 		Errors,
@@ -48,6 +47,9 @@ function TestForm({ onFormSubmit }) {
 	function BulmaError({ for: path }) {
 		return <Error for={path}>{({ message }) => <p className="help is-danger mb-2">⚠ {message}</p>}</Error>;
 	}
+
+	const occupation = getValue('occupation');
+	const occupationSet = new Set(occupation);
 
 	return (
 		<div>
@@ -152,7 +154,7 @@ function TestForm({ onFormSubmit }) {
 						className="button is-small is-light is-primary"
 						onClick={e => {
 							e.preventDefault();
-							append('albums', { name: '', releaseDate: null });
+							array.append('albums', { name: '', releaseDate: null });
 						}}
 					>
 						+ Add new album
@@ -216,10 +218,10 @@ function TestForm({ onFormSubmit }) {
 									className="button is-small is-light is-warning"
 									onClick={e => {
 										e.preventDefault();
-										remove('albums', idx);
+										array.remove('albums', idx);
 									}}
 								>
-									remove album
+									array.remove album
 								</button>
 							</div>
 							<div className="break" style={{ width: '100%' }} />
@@ -236,7 +238,7 @@ function TestForm({ onFormSubmit }) {
 						className="button is-small is-light is-primary"
 						onClick={e => {
 							e.preventDefault();
-							append('movies', {
+							array.append('movies', {
 								name: '',
 								year: null,
 								genres: [],
@@ -324,10 +326,10 @@ function TestForm({ onFormSubmit }) {
 										className="button is-small is-light is-warning"
 										onClick={e => {
 											e.preventDefault();
-											remove('movies', idx);
+											array.remove('movies', idx);
 										}}
 									>
-										remove movie
+										array.remove movie
 									</button>
 								</div>
 
@@ -375,7 +377,7 @@ function TestForm({ onFormSubmit }) {
 												className="button is-small is-light is-primary"
 												onClick={e => {
 													e.preventDefault();
-													append(`movies.${idx}.coStars`, {
+													array.append(`movies.${idx}.coStars`, {
 														firstName: '',
 														lastName: '',
 													});
@@ -392,7 +394,7 @@ function TestForm({ onFormSubmit }) {
 													setValue(`movies.${idx}.coStars`, []);
 												}}
 											>
-												x remove all co-stars
+												x array.remove all co-stars
 											</button>
 
 											<p className="help has-text-grey-light">(movies.{idx}.coStars)</p>
@@ -408,7 +410,7 @@ function TestForm({ onFormSubmit }) {
 											<a
 												onClick={e => {
 													e.preventDefault();
-													append(`movies.${idx}.coStars`, {
+													array.append(`movies.${idx}.coStars`, {
 														firstName: '',
 														lastName: '',
 													});
@@ -449,10 +451,10 @@ function TestForm({ onFormSubmit }) {
 													className="button is-small is-light is-warning"
 													onClick={e => {
 														e.preventDefault();
-														remove(`movies[${idx}].coStars`, jdx);
+														array.remove(`movies[${idx}].coStars`, jdx);
 													}}
 												>
-													remove co-star
+													array.remove co-star
 												</button>
 											</div>
 											<div className="break" style={{ width: '100%' }} />
@@ -488,34 +490,28 @@ function TestForm({ onFormSubmit }) {
 					</div>
 					<div className="field is-narrow">
 						<div className="control is-size-7">
-							{optionsOccupation.map(option => {
-								const occupations = getValue('occupation');
-								const checked = (occupations || []).includes(option);
-								return (
-									<React.Fragment key={option}>
-										<label className="checkbox mr-2">
-											<input
-												type="checkbox"
-												key={option}
-												checked={checked}
-												className="mr-1"
-												onChange={e => {
-													let newArr = [...occupations];
-													if (e.target.checked) {
-														newArr.push(option);
-													} else {
-														newArr = newArr.filter(o => o !== option);
-													}
-													setValue('occupation', newArr);
-												}}
-												data-testid={`occupation-${option}`}
-											/>
-											{option}
-										</label>
-										<br />
-									</React.Fragment>
-								);
-							})}
+							{optionsOccupation.map(option => (
+								<React.Fragment key={option}>
+									<label className="checkbox mr-2">
+										<input
+											type="checkbox"
+											key={option}
+											checked={occupationSet.has(option)}
+											className="mr-1"
+											onChange={e => {
+												if (e.target.checked) {
+													array.append('occupation', option);
+												} else {
+													array.remove('occupation', occupation.indexOf(option));
+												}
+											}}
+											data-testid={`occupation-${option}`}
+										/>
+										{option}
+									</label>
+									<br />
+								</React.Fragment>
+							))}
 							<BulmaError for="occupation" />
 						</div>
 					</div>
@@ -620,7 +616,7 @@ function TestForm({ onFormSubmit }) {
 						className="button is-small is-light is-primary"
 						onClick={e => {
 							e.preventDefault();
-							append('files', null);
+							array.append('files', null);
 						}}
 					>
 						+ Add new
@@ -641,7 +637,7 @@ function TestForm({ onFormSubmit }) {
 										className="button is-small is-light is-warning"
 										onClick={e => {
 											e.preventDefault();
-											remove('files', idx);
+											array.remove('files', idx);
 										}}
 									>
 										x
