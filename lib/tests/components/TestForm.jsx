@@ -152,6 +152,7 @@ function TestForm({ onFormSubmit }) {
 						type="button"
 						name="add_new_album"
 						className="button is-small is-light is-primary"
+						data-testid="button-add_new_album"
 						onClick={e => {
 							e.preventDefault();
 							array.append('albums', { name: '', releaseDate: null });
@@ -189,7 +190,7 @@ function TestForm({ onFormSubmit }) {
 							<div className="field">
 								<label>
 									Album name
-									<input type="text" placeholder="Enter album name" {...register(`albums.${idx}.name`, 'input')} />
+									<input type="text" placeholder="Enter album name" data-testid={`albums.${idx}.name`} {...register(`albums.${idx}.name`, 'input')} />
 									<BulmaError for={`albums.${idx}.name`} />
 								</label>
 							</div>
@@ -200,6 +201,7 @@ function TestForm({ onFormSubmit }) {
 										showYearDropdown
 										placeholderText="Enter release date"
 										selected={getValue(`albums.${idx}.releaseDate`)}
+										inputProps={{ 'data-testid': `albums.${idx}.releaseDate` }}
 										className={hasError(`albums.${idx}.releaseDate`) ? 'input is-danger has-text-centered' : 'input has-text-centered'}
 										ref={ref => {
 											if (ref && ref.input) {

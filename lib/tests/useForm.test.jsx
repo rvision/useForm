@@ -175,6 +175,26 @@ describe('useForm', () => {
 		expect(formData.occupation).toEqual(['actress', 'singer', 'nutcase', 'hedonist']);
 	});
 
+	// TODO:
+	// https://www.google.com/search?q=testing-library+set+date+in+%22ReactDatePicker%22&rlz=1C1GCEU_enRS929RS929&ei=ZWkIZOqyEMCkptQPxNGE2AI&ved=0ahUKEwiq-dXRlcz9AhVAkokEHcQoASsQ4dUDCBE&uact=5&oq=testing-library+set+date+in+%22ReactDatePicker%22&gs_lcp=Cgxnd3Mtd2l6LXNlcnAQAzIFCCEQqwI6CggAEEcQ1gQQsANKBAhBGABQ6wlY6wxgyg5oAXABeACAAeYBiAHmAZIBAzItMZgBAKABAcgBCMABAQ&sclient=gws-wiz-serp
+	// https://stackoverflow.com/questions/67659781/react-testing-unable-to-detect-datepicker-field-to-initiate-change
+	// it('array: add new album', () => {
+	// 	let formData = null;
+	// 	const onSubmit = vi.fn(data => {
+	// 		formData = data;
+	// 	});
+	// 	render(<TestForm onFormSubmit={onSubmit} />);
+
+	// 	fireEvent.click(screen.getByTestId('button-add_new_album'));
+
+	// 	fireEvent.change(screen.getByTestId('albums.1.name'), targetValue('new album name'));
+	// 	fireEvent.change(screen.getByTestId('albums.1.releaseDate'), targetValue(new Date('1980-05-09')));
+
+	// 	fireEvent.clickSubmit();
+	// 	expect(onSubmit).toBeCalledTimes(1);
+	// 	expect(formData.albums).toEqual([{ name: 'Warm Leatherette', releaseDate: new Date('1980-05-09') }]);
+	// });
+
 	it('slider: change value', () => {
 		let formData = null;
 		const onSubmit = vi.fn(data => {

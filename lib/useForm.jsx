@@ -2,34 +2,33 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
-	backTrackKey,
 	deleteNestedToRoot,
 	EMPTY_OBJECT,
-	extractPath,
 	getErrorClassName,
 	getInputValue,
 	getNested,
+	isArray,
 	isFunction,
 	key,
 	noOp,
 	objectKeys,
 	resetSplitCache,
 	setNested,
-	shiftErrors,
 	swap,
 	toJSON,
 } from './core';
 
 // inline useStableRef for better minification
-////----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 const useStableRef = callback => {
 	const handlerRef = useRef(callback);
 	handlerRef.current = callback;
 	return useCallback((...args) => handlerRef.current(...args), []);
 	// return useRef((...args) => handlerRef.current(...args)).current;
 };
+
 // reuse single object for register props
-////----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 const registerProps = {
 	key: '',
 	name: '',
@@ -62,7 +61,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	const isOnBlurMode = mode === 'onBlur';
 	// validates on any change
 	const isOnChangeMode = mode === 'onChange';
-
 	// default mode: no validations until submit, if any errors - validate onChange
 	const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
 
@@ -106,9 +104,9 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const getError = useStableRef((fullPath = '', targetErrors = errors) => getNested(fullPath, targetErrors));
 
-	const hasError = useStableRef((fullPath = '', targetErrors = errors) => {
-		return fullPath === '' ? objectKeys(targetErrors).length > 0 : getNested(fullPath, targetErrors) !== undefined;
-	});
+	const hasError = useStableRef((fullPath = '', targetErrors = errors) =>
+		fullPath === '' ? objectKeys(targetErrors).length > 0 : getNested(fullPath, targetErrors) !== undefined,
+	);
 
 	const clearError = useStableRef((fullPath, targetErrors = errors) => {
 		let newErrors = targetErrors;
@@ -141,10 +139,10 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			}),
 	);
 
-	// used in setValue
 	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
 	const shouldRevalidateArray = shouldRevalidate && !isOnSubmitMode;
 
+	// default errors revalidation when changing form values
 	const _resolveErrors = useStableRef((fullPath, newValues) => {
 		let newErrors = errors;
 		if (shouldRevalidate || hasError(fullPath)) {
@@ -161,25 +159,11 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		return newErrors;
 	});
 
-	const _remapArrayErrors = useStableRef((fullPath, newErrors, newValues) => {
-		const newError = getNested(fullPath, resolver(newValues));
-		const existing = getNested(fullPath, newErrors);
-		if (existing) {
-			delete existing.message;
-			delete existing.type;
-			if (newError?.message) {
-				existing.message = newError.message;
-				existing.type = newError.type;
-			}
-		}
-		return newErrors;
-	});
-
 	const setValue = useStableRef(
 		(fullPath, value, resolveErrors = _resolveErrors) =>
 			new Promise((resolve = noOp) => {
 				setState(prevState => {
-					const newValues = setNested(fullPath, values, value);
+					const newValues = setNested(fullPath, prevState.values, value);
 
 					isTouched.current = true;
 					isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
@@ -192,60 +176,84 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 						errors: newErrors,
 					};
 
-					// console.log(`newErrors`);
-					// console.log(newState.errors);
-
 					resolve(newState);
 					return newState;
 				});
 			}),
 	);
 
-	const clear = useStableRef(fullPath => setValue(fullPath, [], shouldRevalidateArray ? _resolveErrors : () => []));
-
-	const append = useStableRef((fullPath, object) => {
-		const resolve = shouldRevalidateArray ? _resolveErrors : () => errors;
-		return setValue(fullPath, [...getNested(fullPath, values), object], resolve);
-	});
-
-	const prepend = useStableRef((fullPath, object) => {
-		const resolve = shouldRevalidateArray
+	// tracks positions or array errors when doing array operations
+	const _backTrackArrayErrors = useStableRef((fullPath, reValidate, getNewArrayErrors) =>
+		shouldRevalidateArray && reValidate
 			? _resolveErrors
-			: (_, newValues) => {
-					let newErrors = shiftErrors(fullPath, errors, arrErrors => [undefined, ...arrErrors]);
-					return _remapArrayErrors(fullPath, newErrors, newValues);
-			  };
-		return setValue(fullPath, [object, ...getNested(fullPath, values)], resolve);
-	});
+			: () => {
+					let newErrors = errors;
+					const errorsArray = getError(fullPath);
+					if (isArray(errorsArray)) {
+						const newErrorsArray = getNewArrayErrors(errorsArray);
+						// if null returned, that means no errors exist (empty array, or no errors on array object)
+						// then remove it from the errors tree to root
+						if (newErrorsArray === null) {
+							newErrors = deleteNestedToRoot(fullPath, newErrors);
+						} else {
+							if (errorsArray.message) {
+								newErrorsArray.message = errorsArray.message;
+								newErrorsArray.type = errorsArray.type;
+							}
+							newErrors = setNested(fullPath, errors, newErrorsArray);
+						}
 
-	const remove = useStableRef((fullPath, idx) => {
-		const resolve = shouldRevalidateArray // && !isArray(getError(fullPath))
-			? _resolveErrors
-			: (_, newValues) => {
-					let newErrors = clearError(`${fullPath}.${idx}`, { ...errors });
-					newErrors = shiftErrors(fullPath, newErrors, arrErrors => {
-						arrErrors.splice(idx, 1);
-						return arrErrors;
-					});
-					return _remapArrayErrors(fullPath, newErrors, newValues);
-			  };
-		return setValue(
+						// console.log(`newErrors`);
+						// console.log(newErrorsArray);
+					}
+					return newErrors;
+			  },
+	);
+
+	const clear = useStableRef((fullPath, reValidate = false) =>
+		setValue(
 			fullPath,
-			getNested(fullPath, values).filter((item, i) => i !== idx),
-			resolve,
-		);
-	});
+			[],
+			// if there is no error on array object itself, return null to clear all errors
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => (!errorsArray.message ? null : [])),
+		),
+	);
 
-	const _swap = useStableRef((fullPath, index1, index2) => {
-		const resolve = shouldRevalidateArray // && !isArray(getError(fullPath))
-			? _resolveErrors
-			: (_, newValues) => {
-					let newErrors = swap(getNested(fullPath, errors), index1, index2);
-					newErrors = newErrors ? setNested(fullPath, errors, newErrors) : errors;
-					return _remapArrayErrors(fullPath, newErrors, newValues);
-			  };
-		return setValue(fullPath, swap(getValue(fullPath), index1, index2), resolve);
-	});
+	const append = useStableRef((fullPath, object, reValidate = false) =>
+		setValue(
+			fullPath,
+			[...getValue(fullPath), object],
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => errorsArray),
+		),
+	);
+
+	const prepend = useStableRef((fullPath, object, reValidate = false) =>
+		setValue(
+			fullPath,
+			[object, ...getValue(fullPath)],
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => [undefined, ...errorsArray]),
+		),
+	);
+
+	const remove = useStableRef((fullPath, idx, reValidate = false) =>
+		setValue(
+			fullPath,
+			getValue(fullPath).filter((_, i) => i !== idx),
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => {
+				const newErrors = errorsArray.filter((_, i) => i !== idx);
+				// if array is empty and no error on array object itself, return null to clear all errors
+				return newErrors.length === 0 && !errorsArray.message ? null : newErrors;
+			}),
+		),
+	);
+
+	const _swap = useStableRef((fullPath, index1, index2, reValidate = false) =>
+		setValue(
+			fullPath,
+			swap(getValue(fullPath), index1, index2),
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => swap(errorsArray, index1, index2)),
+		),
+	);
 
 	const getRef = useStableRef(fullPath => refsMap.current.get(fullPath));
 
@@ -294,10 +302,18 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		return registerProps;
 	});
 
+	const reset = useStableRef((values = defaultValues, reValidate = true) => {
+		init(values);
+		isTouched.current = false;
+		isDirty.current = false;
+		if (reValidate) {
+			trigger('', values);
+		}
+	});
+
 	const handleSubmit = handler => e => {
 		// eslint-disable-next-line no-unused-expressions
-		e && e?.preventDefault();
-
+		e && e.preventDefault();
 		const newErrors = resolver(values);
 		setErrors(newErrors);
 		if (hasError('', newErrors)) {
@@ -316,17 +332,10 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		return true;
 	};
 
-	const reset = useStableRef((values = defaultValues, validate = true) => {
-		init(values);
-		isTouched.current = false;
-		isDirty.current = false;
-		validate && trigger('', values);
-	});
-
 	const Error = useStableRef(({ for: fullPath, children }) => {
 		const error = getError(fullPath, errors);
 
-		if (!error?.message) {
+		if (!error || !error.message) {
 			return false;
 		}
 
@@ -348,7 +357,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			.sort();
 
 		const result = errorPaths.map(fullPath => {
-			const error = getNested(fullPath, errors);
+			const error = getError(fullPath);
 			return (
 				<li key={fullPath} className={getErrorClassName(error, classNameError)}>
 					{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}
@@ -377,11 +386,11 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			setErrors(newErrors);
 		},
 		array: {
+			clear,
 			append,
 			prepend,
 			remove,
 			swap: _swap,
-			clear,
 		},
 		key,
 		reset,
@@ -392,6 +401,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			isValid,
 			isTouched: isTouched.current,
 			isDirty: isDirty.current,
+			hadError: formHadError.current,
 		},
 	};
 };
