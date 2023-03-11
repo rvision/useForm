@@ -1,9 +1,9 @@
 # useForm
 React forms hook, lightweight alternative to existing frameworks.
 
-[see full demo](https://k7s4y.csb.app/)
+[See full demo](https://k7s4y.csb.app/)
 
-Concerned about performance? Try demo with **400 form inputs**, with React.memo:
+Concerned about performance? Try this demo, optimized with with React.memo:
 
 [400 form inputs](https://7izw4f.csb.app/)
 
@@ -75,6 +75,7 @@ Note that handlers have **stable references**. This allows you to memoize parts 
 - **simplicity**: low learning curve
 - **nested arrays** without hassle
 - **un-opinionated** - components freedom: doesn't force you to use any specific component for inputs or form, it allows use of native input fields via ```register``` and custom components via ```getValue/setValue``` functions
+- **stable handlers** allow easily to memoize rendering
 - **schema-based validation**: sync validation support for [yup](https://github.com/jquense/yup) and [zod](https://github.com/colinhacks/zod) included
 - **natural way** to reference to any field with regards of the initial object shape/structure. For example:
 
@@ -388,7 +389,9 @@ helper method to get unique keys for siblings when rendering arrays. It works by
 
 ### Methods to work with arrays
 
-#### clear(fullPath: string) : Promise<{values: any, errors: any}>
+**NOTE:** Pass reValidate parameter as true if you want to trigger validation (if set mode requires it (onSubmit, onChange, onBlur)), otherwise false. This allows flexibility in behaviour, e.g. if you are adding an element to array which already has error on let's say 1st element, but limit of the array size is 2
+
+#### array.clear(fullPath: string, reValidate?: boolean) : Promise<{values: any, errors: any}>
 
 clears existing array; returns Promise with resulting values and errors
 ```jsx
@@ -398,7 +401,7 @@ clears existing array; returns Promise with resulting values and errors
 }}>Clear albums</button>
 ```
 
-#### append(fullPath: string, newValue: any) : Promise<{values: any, errors: any}>
+#### array.append(fullPath: string, newValue: any, reValidate?: boolean) : Promise<{values: any, errors: any}>
 
 appends new object to the existing array of objects; returns Promise with resulting values and errors
 ```jsx
@@ -408,7 +411,7 @@ appends new object to the existing array of objects; returns Promise with result
 }}>Add new album</button>
 ```
 
-#### prepend(fullPath: string, newValue: any) : Promise<{values: any, errors: any}>
+#### array.prepend(fullPath: string, newValue: any, reValidate?: boolean) : Promise<{values: any, errors: any}>
 
 prepends new object to the existing array of objects; returns Promise with resulting values and errors
 ```jsx
@@ -418,7 +421,7 @@ prepends new object to the existing array of objects; returns Promise with resul
 }}>Add new actor</button>
 ```
 
-#### remove(fullPath: string, index: int) : Promise<{values: any, errors: any}>
+#### array.remove(fullPath: string, index: int, reValidate?: boolean) : Promise<{values: any, errors: any}>
 
 removes array item from the existing array; returns Promise with resulting values and errors
 ```jsx
@@ -428,7 +431,7 @@ removes array item from the existing array; returns Promise with resulting value
 }}>Remove this actor</button>
 ```
 
-#### swap(fullPath: string, index1: int, index2: int) : Promise<{values: any, errors: any}>
+#### array.swap(fullPath: string, index1: int, index2: int, reValidate?: boolean) : Promise<{values: any, errors: any}>
 
 swaps item positions in the existing array, useful for drag'n'drop operations; returns Promise with resulting values and errors
 ```jsx
