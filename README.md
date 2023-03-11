@@ -5,7 +5,7 @@ React forms hook, lightweight alternative to existing frameworks.
 
 Concerned about performance? Try demo with **400 form inputs**, with React.memo:
 
-[performance demo](https://7izw4f.csb.app/)
+[400 form inputs](https://7izw4f.csb.app/)
 
 ## Installation
 ```bash

@@ -66,17 +66,17 @@ const extractPath = (string) => {
 const resetSplitCache = () => {
   _splitCache = /* @__PURE__ */ new Map();
 };
-const __getNested = (fullPath, source) => {
+const _getNested = (fullPath, source) => {
   if (source === void 0) {
     return void 0;
   }
   if (fullPath.length === 0) {
     return source;
   }
-  return __getNested(fullPath.slice(1), source[fullPath[0]]);
+  return _getNested(fullPath.slice(1), source[fullPath[0]]);
 };
-const getNested = (fullPath, source) => __getNested(extractPath(fullPath), source);
-const __setNested = (fullPath, target, value) => {
+const getNested = (fullPath, source) => _getNested(extractPath(fullPath), source);
+const _setNested = (fullPath, target, value) => {
   const { length } = fullPath;
   const path = fullPath[0];
   switch (length) {
@@ -95,9 +95,9 @@ const __setNested = (fullPath, target, value) => {
         target[path] = hasTargetProperty ? newObject : backTrackKey(target[path]);
         if (isIndexANumber) {
           target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
-          __setNested(fullPath.slice(2), target[path][idx], value);
+          _setNested(fullPath.slice(2), target[path][idx], value);
         } else {
-          __setNested(fullPath.slice(1), target[path], value);
+          _setNested(fullPath.slice(1), target[path], value);
         }
       }
       break;
@@ -105,10 +105,10 @@ const __setNested = (fullPath, target, value) => {
 };
 const setNested = (fullPath, target, value) => {
   const clonedTarget = __spreadValues({}, target);
-  __setNested(extractPath(fullPath), clonedTarget, value);
+  _setNested(extractPath(fullPath), clonedTarget, value);
   return clonedTarget;
 };
-const __deleteNested = (fullPath, target) => {
+const _deleteNested = (fullPath, target) => {
   const { length } = fullPath;
   if (length === 0 || target === void 0) {
     return;
@@ -118,30 +118,30 @@ const __deleteNested = (fullPath, target) => {
     delete target[path];
     return;
   }
-  __deleteNested(fullPath.slice(1), target[path]);
+  _deleteNested(fullPath.slice(1), target[path]);
 };
 const _isEmptyObjectOrFalsy = (item) => objectKeys(item || EMPTY_OBJECT).length === 0;
-const __deleteNestedToRoot = (fullPath, target) => {
-  __deleteNested(fullPath, target);
+const _deleteNestedToRoot = (fullPath, target) => {
+  _deleteNested(fullPath, target);
   const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
   pathsToRoot.forEach((path) => {
-    const value = __getNested(path, target);
+    const value = _getNested(path, target);
     if (value !== void 0) {
       if (isArray(value)) {
         if (value.length === 0 || value.every(_isEmptyObjectOrFalsy)) {
           if (!value.message) {
-            __deleteNested(path, target);
+            _deleteNested(path, target);
           }
         }
       } else if (_isEmptyObjectOrFalsy(value)) {
-        __deleteNested(path, target);
+        _deleteNested(path, target);
       }
     }
   });
 };
 const deleteNestedToRoot = (fullPath, target) => {
   const clonedTarget = __spreadValues({}, target);
-  __deleteNestedToRoot(extractPath(fullPath), clonedTarget);
+  _deleteNestedToRoot(extractPath(fullPath), clonedTarget);
   return clonedTarget;
 };
 const getInputValue = (e) => {
@@ -500,10 +500,10 @@ const yupResolver = (schema) => (formValues) => {
     });
   } catch (validationError) {
     for (const error of validationError.inner) {
-      const errorToEdit = getNested(error.path, errors) || {};
-      errorToEdit.message = error.message;
-      errorToEdit.type = error.type;
-      errors = setNested(error.path, errors, errorToEdit);
+      const newOrExistingError = getNested(error.path, errors) || {};
+      newOrExistingError.message = error.message;
+      newOrExistingError.type = error.type;
+      errors = setNested(error.path, errors, newOrExistingError);
     }
   }
   return errors;
@@ -514,10 +514,10 @@ const zodResolver = (schema) => (formValues) => {
   if (!parsed.success) {
     parsed.error.errors.forEach((error) => {
       const path = error.path.join(".");
-      const existingError = getNested(path, errors) || {};
-      existingError.message = error.message;
-      existingError.type = error.type;
-      errors = setNested(path, errors, existingError);
+      const newOrExistingError = getNested(path, errors) || {};
+      newOrExistingError.message = error.message;
+      newOrExistingError.type = error.type;
+      errors = setNested(path, errors, newOrExistingError);
     });
   }
   return errors;

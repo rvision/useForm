@@ -209,7 +209,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		setValue(
 			fullPath,
 			[],
-			// if there is no error on array object itself, return null to clear all errors
 			_backTrackArrayErrors(fullPath, reValidate, () => []),
 		),
 	);
@@ -404,10 +403,10 @@ export const yupResolver = schema => formValues => {
 	} catch (validationError) {
 		// eslint-disable-next-line no-restricted-syntax
 		for (const error of validationError.inner) {
-			const errorToEdit = getNested(error.path, errors) || {};
-			errorToEdit.message = error.message;
-			errorToEdit.type = error.type;
-			errors = setNested(error.path, errors, errorToEdit);
+			const newOrExistingError = getNested(error.path, errors) || {};
+			newOrExistingError.message = error.message;
+			newOrExistingError.type = error.type;
+			errors = setNested(error.path, errors, newOrExistingError);
 		}
 	}
 	return errors;
@@ -419,10 +418,10 @@ export const zodResolver = schema => formValues => {
 	if (!parsed.success) {
 		parsed.error.errors.forEach(error => {
 			const path = error.path.join('.');
-			const existingError = getNested(path, errors) || {};
-			existingError.message = error.message;
-			existingError.type = error.type;
-			errors = setNested(path, errors, existingError);
+			const newOrExistingError = getNested(path, errors) || {};
+			newOrExistingError.message = error.message;
+			newOrExistingError.type = error.type;
+			errors = setNested(path, errors, newOrExistingError);
 		});
 	}
 	return errors;
