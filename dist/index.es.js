@@ -341,25 +341,18 @@ const useForm = ({
     const errorsArray = getError(fullPath);
     if (isArray(errorsArray)) {
       const newErrorsArray = getNewArrayErrors(errorsArray);
-      if (newErrorsArray === null) {
-        newErrors = deleteNestedToRoot(fullPath, newErrors);
-      } else {
-        if (errorsArray.message) {
-          newErrorsArray.message = errorsArray.message;
-          newErrorsArray.type = errorsArray.type;
-        }
-        newErrors = setNested(fullPath, errors, newErrorsArray);
+      if (errorsArray.message) {
+        newErrorsArray.message = errorsArray.message;
+        newErrorsArray.type = errorsArray.type;
       }
+      newErrors = newErrorsArray.length > 0 ? setNested(fullPath, errors, newErrorsArray) : deleteNestedToRoot(fullPath, newErrors);
     }
     return newErrors;
   });
-  const clear = useStableRef((fullPath, reValidate = false) => setValue(fullPath, [], _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => !errorsArray.message ? null : [])));
+  const clear = useStableRef((fullPath, reValidate = false) => setValue(fullPath, [], _backTrackArrayErrors(fullPath, reValidate, () => [])));
   const append = useStableRef((fullPath, object, reValidate = false) => setValue(fullPath, [...getValue(fullPath), object], _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => errorsArray)));
   const prepend = useStableRef((fullPath, object, reValidate = false) => setValue(fullPath, [object, ...getValue(fullPath)], _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => [void 0, ...errorsArray])));
-  const remove = useStableRef((fullPath, idx, reValidate = false) => setValue(fullPath, getValue(fullPath).filter((_, i) => i !== idx), _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => {
-    const newErrors = errorsArray.filter((_, i) => i !== idx);
-    return newErrors.length === 0 && !errorsArray.message ? null : newErrors;
-  })));
+  const remove = useStableRef((fullPath, idx, reValidate = false) => setValue(fullPath, getValue(fullPath).filter((_, i) => i !== idx), _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => errorsArray.filter((_, i) => i !== idx))));
   const _swap = useStableRef((fullPath, index1, index2, reValidate = false) => setValue(fullPath, swap(getValue(fullPath), index1, index2), _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => swap(errorsArray, index1, index2))));
   const getRef = useStableRef((fullPath) => refsMap.current.get(fullPath));
   const setRef = useStableRef((fullPath, element) => {

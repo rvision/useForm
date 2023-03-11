@@ -191,17 +191,12 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 					const errorsArray = getError(fullPath);
 					if (isArray(errorsArray)) {
 						const newErrorsArray = getNewArrayErrors(errorsArray);
-						// if null returned, that means no errors exist (empty array, or no errors on array object)
-						// then remove it from the errors tree to root
-						if (newErrorsArray === null) {
-							newErrors = deleteNestedToRoot(fullPath, newErrors);
-						} else {
-							if (errorsArray.message) {
-								newErrorsArray.message = errorsArray.message;
-								newErrorsArray.type = errorsArray.type;
-							}
-							newErrors = setNested(fullPath, errors, newErrorsArray);
+						// if previous array of errors had error, copy it
+						if (errorsArray.message) {
+							newErrorsArray.message = errorsArray.message;
+							newErrorsArray.type = errorsArray.type;
 						}
+						newErrors = newErrorsArray.length > 0 ? setNested(fullPath, errors, newErrorsArray) : deleteNestedToRoot(fullPath, newErrors);
 
 						// console.log(`newErrors`);
 						// console.log(newErrorsArray);
@@ -215,7 +210,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			fullPath,
 			[],
 			// if there is no error on array object itself, return null to clear all errors
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => (!errorsArray.message ? null : [])),
+			_backTrackArrayErrors(fullPath, reValidate, () => []),
 		),
 	);
 
@@ -239,11 +234,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		setValue(
 			fullPath,
 			getValue(fullPath).filter((_, i) => i !== idx),
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => {
-				const newErrors = errorsArray.filter((_, i) => i !== idx);
-				// if array is empty and no error on array object itself, return null to clear all errors
-				return newErrors.length === 0 && !errorsArray.message ? null : newErrors;
-			}),
+			_backTrackArrayErrors(fullPath, reValidate, errorsArray => errorsArray.filter((_, i) => i !== idx)),
 		),
 	);
 
