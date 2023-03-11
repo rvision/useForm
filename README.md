@@ -1,7 +1,11 @@
 # useForm
-React forms utility library, lightweight alternative to existing frameworks.
+React forms hook, lightweight alternative to existing frameworks.
 
 [see full demo](https://k7s4y.csb.app/)
+
+Concerned about performance? Try demo with **400 form inputs**, with React.memo:
+
+[performance demo](https://7izw4f.csb.app/)
 
 ## Installation
 ```bash
@@ -29,10 +33,10 @@ const Form = () => {
     defaultValues
   });
 
-  const onSubmit = values => console.log(values);
+  const onSubmit = values =>  console.log(values); // handles form submit: call API, etc.
 
   return (
-    <div>
+    <form onSubmit={handleSubmit(onSubmit)}>
         <label>
           Enter first name:
           <input type="text" {...register('firstName')} />
@@ -49,7 +53,7 @@ const Form = () => {
           <input type="checkbox" {...register('agree')} />
           I agree to terms and conditions
         </label>
-        <button type="submit" onClick={handleSubmit(onSubmit)}>
+        <button type="submit">
           Register
         </button>
     </div>
@@ -58,19 +62,20 @@ const Form = () => {
 ```
 
 ## Another form library?
-If you need performant forms library, please use [react-hook-form](https://react-hook-form.com/).
+Recently, [react-hook-form](https://react-hook-form.com/) gained stellar popularity because it's easy to use and it uses uncontrolled components, making it very performant. And it works fine. Unless you have to deal with complex, dynamic forms, then you'll have to use ```formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray``` and on and on. This imperative not to "re-render" form component ended up in having multiple useEffects and derived states which makes your code harder to reason about. [Removing unnecessary Effects will make your code easier to follow, faster to run, and less error-prone.](https://beta.reactjs.org/learn/escape-hatches#you-might-not-need-an-effect).
 
-If you think ```formState, control, Controller, useController, useFormContext, watch, useWatch, useFormState, useFieldArray``` is complicated to use, then read on.
-
-## Introduction
-This library works with **controlled components only**. Performance and number of re-renders depends on the **number** and **types** of components used. For native inputs, it is fast, for custom components, your mileage may vary.
+## Motivation
+I ended building this library because the code for the complex forms was absolute horror.
+This library works with **controlled components only**, meaning that on each keystroke in input field, whole form will be re-rendered. Performance depends on the **number** and **types** of components used. For native inputs, it is decently fast, for custom components, your mileage may vary.
+Note that handlers have **stable references**. This allows you to memoize parts of big forms and achieve better [rendering performance](https://7izw4f.csb.app/). If you have hundreds of inputs in your form, you're not building a form, you are building Excel clone an you should probably use uncontrolled inputs.
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~3.45kb minified & gzipped
-- **simplicity: low learning curve**
-- **nested arrays** support without hassle
-- **un-opinionated - components freedom**: doesn't force you to use any specific component for inputs or form, it embraces use of native input fields via ```register``` and custom components via ```getValue/setValue``` methods
+- **lightweight**: ~3.5kb minified & gzipped
+- **simplicity**: low learning curve
+- **nested arrays** without hassle
+- **un-opinionated** - components freedom: doesn't force you to use any specific component for inputs or form, it allows use of native input fields via ```register``` and custom components via ```getValue/setValue``` functions
+- **schema-based validation**: sync validation support for [yup](https://github.com/jquense/yup) and [zod](https://github.com/colinhacks/zod) included
 - **natural way** to reference to any field with regards of the initial object shape/structure. For example:
 
 ```js
@@ -94,51 +99,67 @@ useForm({
 });
 ```
 
-**Field**       | **Type**      | **Description**
+**Property**       | **Type**      | **Description**
 --------------- | ------------- | --------------------------------------------------------------
-```defaultValues```   | ```object```        | initial form values; for new records it has to be populated with default values (e.g. empty strings, true/false, etc.)
-```mode```            | ```'onSubmit'/'onChange'/'onBlur'```   | validation behaviour: ```onSubmit``` validates form when submitting, ```onChange``` when field is edited, ```onBlur``` when field is blurred
-```classNameError``` | ```string```        | If set, registered fields with errors will have this css class name appended to their className list
-```shouldFocusError``` | ```bool```        | if field has errors, it will focus on error field - when? depends on the mode
-```resolver``` | ```function(fieldValues)```    | validation function; currently only [yup](https://github.com/jquense/yup) is supported out-of-the-box (```yupResolver```), but adding more can be done easily
+```defaultValues```| ```object```        | initial form values; for new records it has to be populated with default values (e.g. empty strings, true/false, date, etc.)
+```mode```      | ```'onSubmit' / 'onChange' / 'onBlur'```  | validation mode, see below
+```classNameError``` | ```string```        | Registered fields with validation error will have this css class name appended to their className list. Errors and Error components will use this class name also
+```shouldFocusError``` | ```bool```        | if field has validation error, it will focus on error field when validation mode is onBlur. Also, when form is submitted and there are errors, it will focus on the first field with validation error
+```resolver``` | ```function(fieldValues)```    | validation function, yupResolver and zodResolver are provided for [yup](https://github.com/jquense/yup) and [zod](https://github.com/colinhacks/zod) or you can write your custom
+
+
+
+### Validation
+**Mode**       | **Description**
+---------------| ------------------------------------------------------------------------------------------------------------------
+ <none> |  default validaton behaviour: validates when form is submitted, if there are any validation errors - when edited, fields with errors will be re-validated like ```'onChange'``` mode. Like a combination of ```'onSubmit'``` and ```'onChange'``` modes. I find this pattern suitable for most use cases.
+ ```'onSubmit'```    |   validates when form is submitted, if there are any validation errors - when edited, errors will be removed for fields with errors and revalidated on next form submit
+ ```'onChange'``` |  validates form fields on each change
+ ```'onBlur'``` |  validates fields when focused out. For registered inputs, it will trap user to the field if ```shouldFocusError``` option is set to true
+
 
 ### Returned props
 ```js
 const {
 	register,
-	onChange,
-	onBlur,
 	getValue,
 	setValue,
+	onChange,
+	onBlur,
 	getRef,
 	setRef,
-	Error,
-	Errors,
 	trigger,
+	handleSubmit,
 	hasError,
 	getError,
 	clearError,
 	setErrors,
+	array: {
+		clear,
+		append,
+		prepend,
+		remove,
+		swap,
+	},
 	key,
-	append,
-	prepend,
-	remove,
-	swap,
 	reset,
-	handleSubmit,
+	Error,
+	Errors,
 	formState: {
 		errors,
 		isValid,
 		isTouched,
 		isDirty,
-	}
+		hadError,
+	},
 } = useForm(options);
 ```
 
 #### register(fullPath: string, className: string )
 
-field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; options object with className is used to concat this className with classNameError setting if field has validation error
+field registration method for native inputs; uses ```fullPath``` concept to identify the field in the object hierarchy; className is used with classNameError setting if field has validation error
 ```jsx
+{/* Examples: */}
 <input type="text" {...register('movies[${i}].coStars[${j}].firstName')} />
 {/* or */}
 <input type="checkbox" {...register('agreeToTermsAndConditions')} />
@@ -167,11 +188,32 @@ Only input type that doesn't allow automatic registration is file type, because 
 						</span>
 					</label>
 				</div>
-				<BulmaError for={`files[${idx}]`} />
+				<Error for={`files[${idx}]`} />
 			</React.Fragment>
 		);
 	})}
 </div>
+```
+
+
+#### getValue(fullPath: string) : any
+
+method to get value of the field, uses ```fullPath``` concept as field identifier. use it for custom components
+```jsx
+<ReactDatePicker selected={getValue('birthDate')} />
+```
+
+#### setValue(fullPath: string, newValue: any, shouldRevalidate: true) : Promise<{values: any, errors: any}>
+
+method to set value of the field, uses ```fullPath``` concept as field identifier. promise returns new values/errors object. use it for custom components.
+```jsx
+<ReactDatePicker
+	onChange={date => {
+		setValue('movies.3.releaseDate', date, false);
+	}}
+/>
+{/* or */}
+<a onClick={setValue('movies',[])}>Clear movie list</a>{/* NOTE:use array.clear if you want to preserve existing validation errors */}
 ```
 
 #### onChange(event: React.SyntheticEvent)
@@ -200,22 +242,6 @@ same, but for ```onBlur``` event
 		onBlur(e);
 	}}
 />
-```
-
-#### key(any?): string
-
-helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()).
-
-
-**NOTE:** it is advised to use stable keys, so if you have database uuid, give it a priority:
-```jsx
-{getValue(`movies[${i}].coStars`).map((star) => {
-	return (
-		<li key={star.id || key(star)}>
-			...other markup
-		</li>
-	)
-}
 ```
 
 #### getRef(fullPath: string)
@@ -252,56 +278,6 @@ helper method to store reference (ref) to the native input, uses ```fullPath``` 
 />
 ```
 
-#### Error
-
-React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error; if set, uses classNameError from the options
-```jsx
-<Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
-{/* or */}
-<Error for="firstName" />	// will render <span className="required classNameError">First name is required</span>
-```
-
-#### Errors
-
-React component that renders all validation errors **for focusable inputs** as ```<li />```, registered by ```register``` method or for custom components that passed the ref via ```setRef``` method. Each of the errors will behave like a link when clicked if prop, focuses on the input with error. Can be used with render prop or without.
-```jsx
-<Errors focusable>
-	{errorList => (
-		<div className="notification is-danger">
-			<ul className="validation-errors">{errorList}</ul>
-		</div>
-	)}
-</Errors>
-{/* or */}
-<Errors focusable={false} />	// will render <li>Please enter first name</li>... etc.
-```
-
-#### getValue(fullPath: string) : any
-
-method to get value of the field, uses ```fullPath``` concept as field identifier. use it for custom components
-```jsx
-<ReactDatePicker selected={getValue('birthDate')} />
-```
-
-#### setValue(fullPath: string, newValue: any, shouldRevalidate: true) : Promise<{values: any, errors: any}>
-
-method to set value of the field, uses ```fullPath``` concept as field identifier. promise returns new values/errors object. use it for custom components.
-```jsx
-<ReactDatePicker
-	onChange={date => {
-		setValue('movies.3.releaseDate', date, false);
-	}}
-/>
-{/* or */}
-<a onClick={setValue('movies',[])}>Clear movie list</a>
-```
-
-#### trigger(fullPath: string? | string[], newValues: any?) : Promise<errors: any>
-
-triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors in promise
-```jsx
-<a onClick={trigger('firstName').then(errors => console.log(errors))}>Check first name</a>
-```
 
 #### hasError(fullPath: string?, targetErrors: any?) : bool
 
@@ -317,16 +293,16 @@ returns error object (type/message) if field value has validation errors; if ```
 {hasError('firstName') && <p>{getError('firstName').message}</p>}
 ```
 
-#### clearError(fullPath: string, targetErrors: any?) : any
+#### clearError(fullPath: string)
 
-clears error from the errors object, returns errors
+clears error from the errors object for specific fullPath
 ```jsx
 <a onClick={clearError('firstName')}>Clear firstname validation error</a>
 ```
 
-#### setErrors(errors: object) : any
+#### setErrors(errors: object)
 
-used to set validation errrors from other parts of the system (API or similar); sets 1 or more errors via errors object: keys are fullPath identifiers, values are message/type error objects; returns errors
+allows to set validation errrors from other parts of the system (e.g. API or similar)
 ```jsx
 setErrors({
 	email: {
@@ -340,13 +316,48 @@ setErrors({
 });
 ```
 
+#### trigger(fullPath: string? | string[], newValues: any?) : Promise<errors: any>
+
+triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors in promise
+```jsx
+<a onClick={trigger('firstName').then(errors => console.log(errors))}>Check first name</a>
+```
+
+#### Error
+
+React component to display field validation error, can be used with render props or can be wrapped to customize the error markup; visible only if there is a validation error; if set, uses classNameError from the options
+```jsx
+<Error for="movies[3].actors[0].firstName">{({ type, message }) => <p className="my-custom-css-class">{message}</p>}</Error>
+{/* or */}
+<Error for="firstName" />	// => this will render <span className="required classNameError">First name is required</span>
+```
+
+#### Errors
+
+React component that renders validation summary with all validation errors as ```<li />```. If ```focusable```, each of the errors will behave like a link when clicked and focus on the input with error. Can be used with render prop or without.
+```jsx
+<Errors focusable>
+	{errorList => (
+		<div className="notification is-danger">
+			<ul className="validation-errors">{errorList}</ul>
+		</div>
+	)}
+</Errors>
+{/* or */}
+<Errors focusable={false} />	// => will render <li>Please enter first name</li>... etc.
+```
+
 #### handleSubmit(handler: function) : bool
 
-submits form data to handler function; performs validation first; prevents default event; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true); returns true/false if form was submitted
+performs validation first; prevents default event; submits form data to handler function; focuses on first field with error (if errors exist and ```shouldFocusError``` is set to true); returns true if form was submitted, otherwise false
 ```jsx
 <button type="submit" onClick={handleSubmit(values => console.log(values))}>
 	Save the form
 </button>
+{/* or */}
+<form onSubmit={handleSubmit(onSubmit)}>
+	<button type="submit">Submit</button>
+</form>
 ```
 
 #### reset(newValues: any?, reValidate: bool)
@@ -358,7 +369,34 @@ resets the form to newValues or default ones; triggers revalidation based on sec
 </button>
 ```
 
+
+#### key(any?): string
+
+helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()). It keeps same keys even for new objects, modified via setValue
+
+
+**NOTE:** it is advised to use stable keys, so if you have database uuid, give it a priority:
+```jsx
+{getValue(`movies[${i}].coStars`).map((star) => {
+	return (
+		<li key={star.id || key(star)}>
+			...other markup
+		</li>
+	)
+}
+```
+
 ### Methods to work with arrays
+
+#### clear(fullPath: string) : Promise<{values: any, errors: any}>
+
+clears existing array; returns Promise with resulting values and errors
+```jsx
+<button onClick={e => {
+	e.preventDefault();
+	array.clear('albums');
+}}>Clear albums</button>
+```
 
 #### append(fullPath: string, newValue: any) : Promise<{values: any, errors: any}>
 
@@ -366,7 +404,7 @@ appends new object to the existing array of objects; returns Promise with result
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
-	append('albums', { name: '', releaseDate: null });
+	array.append('albums', { name: '', releaseDate: null });
 }}>Add new album</button>
 ```
 
@@ -376,7 +414,7 @@ prepends new object to the existing array of objects; returns Promise with resul
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
-	prepend('movies[3].actors', { name: '' });
+	array.prepend('movies[3].actors', { name: '' });
 }}>Add new actor</button>
 ```
 
@@ -386,7 +424,7 @@ removes array item from the existing array; returns Promise with resulting value
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
-	remove('movies[3].actors', 3);
+	array.remove('movies[3].actors', 3);
 }}>Remove this actor</button>
 ```
 
@@ -396,7 +434,7 @@ swaps item positions in the existing array, useful for drag'n'drop operations; r
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
-	swap('movies[3].actors', 0, 1);
+	array.swap('movies[3].actors', 0, 1);
 }}>Swap actors</button>
 ```
 
@@ -408,6 +446,7 @@ formState: {
 	isValid: bool,
 	isTouched: bool,
 	isDirty: bool
+	hadError: bool
 }
 ```
 
@@ -426,6 +465,10 @@ true if any of the fields are changed
 #### isDirty: bool
 
 true if any of form values is different than default ones provided
+
+#### hadError: bool
+
+true if any of form data changes produced validation errors
 
 #### Contributions
 PRs welcome
