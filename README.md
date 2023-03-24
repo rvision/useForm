@@ -80,11 +80,11 @@ Note that handlers have **stable references**. This allows you to memoize parts 
 - **natural way** to reference to any field with regards of the initial object shape/structure. For example:
 
 ```js
-firstName // 1st level property
-birthDate // 1st level property
-departments[5].employees[3].tasks[1].name	// or departments.5.employees.3.tasks.1.name - nested property, name of second task
-cities[2].population	// or cities.2.population, whatever suits you better - nested property, population of third city
-artists[1].albums[2]	// or artists.1.albums.2, whatever suits you better - nested property, third album of the second artist
+getValue('firstName') // 1st level property
+setValue('birthDate') // 1st level property
+getValue('departments.5.employees.3.tasks.1.name')	// nested property, name of second task
+trigger('cities.2.population')	// nested property, population of third city
+getValue('artists.1.albums.2')	// nested property, third album of the second artist
 ```
 
 Let's call this identifier ```fullPath```. Most of the methods to work with fields and errors will use this naming convention for operations.

@@ -19,7 +19,6 @@ var __spreadValues = (a, b) => {
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 import require$$0, { useState, useRef, useCallback, useEffect } from "react";
 const isNumber = (num) => !Number.isNaN(num);
-const parseI = (num) => parseInt(num, 10);
 const isFunction = (obj) => typeof obj === "function";
 const { isArray } = Array;
 const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
@@ -89,16 +88,14 @@ const _setNested = (fullPath, target, value) => {
     default:
       {
         const hasTargetProperty = target[path] === void 0;
-        const idx = fullPath[1];
-        const isIndexANumber = isNumber(parseI(idx));
+        const idx = parseInt(fullPath[1], 10);
+        const isIndexANumber = isNumber(idx);
         const newObject = isIndexANumber ? [] : {};
         target[path] = hasTargetProperty ? newObject : backTrackKey(target[path]);
         if (isIndexANumber) {
           target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
-          _setNested(fullPath.slice(2), target[path][idx], value);
-        } else {
-          _setNested(fullPath.slice(1), target[path], value);
         }
+        _setNested(fullPath.slice(1), target[path], value);
       }
       break;
   }
