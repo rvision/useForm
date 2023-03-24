@@ -50,16 +50,16 @@ const backTrackKey = (object) => {
 };
 const _splitRegEx = /\[([^\]]+)\]/g;
 let _splitCache = /* @__PURE__ */ new Map();
-const extractPath = (string) => {
-  if (!string) {
+const extractPath = (path) => {
+  if (!path) {
     return [];
   }
-  let cached = _splitCache.get(string);
+  let cached = _splitCache.get(path);
   if (cached) {
     return cached;
   }
-  cached = string.replace(_splitRegEx, ".$1").split(".");
-  _splitCache.set(string, cached);
+  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => isNumber(parseInt(pathPart, 10)) ? +pathPart : pathPart);
+  _splitCache.set(path, cached);
   return cached;
 };
 const resetSplitCache = () => {
@@ -86,7 +86,7 @@ const _setNested = (fullPath, target, value) => {
     return;
   }
   const hasNextProperty = target[path] !== void 0;
-  const idx = parseInt(fullPath[1], 10);
+  const idx = fullPath[1];
   const isIndexANumber = isNumber(idx);
   target[path] = hasNextProperty ? backTrackKey(target[path]) : isIndexANumber ? [] : {};
   if (isIndexANumber) {
@@ -149,10 +149,7 @@ const getInputValue = (e) => {
         return null;
       }
       const parsed = Number.parseFloat(value);
-      if (!isNumber(parsed)) {
-        return void 0;
-      }
-      return parsed;
+      return isNumber(parsed) ? parsed : void 0;
     }
     case "file":
       return multiple ? files : files.item(0);
