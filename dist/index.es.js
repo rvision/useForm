@@ -77,28 +77,22 @@ const _getNested = (fullPath, source) => {
 const getNested = (fullPath, source) => _getNested(extractPath(fullPath), source);
 const _setNested = (fullPath, target, value) => {
   const { length } = fullPath;
-  const path = fullPath[0];
-  switch (length) {
-    case 0:
-      target = value;
-      return;
-    case 1:
-      target[path] = value;
-      return;
-    default:
-      {
-        const hasTargetProperty = target[path] === void 0;
-        const idx = parseInt(fullPath[1], 10);
-        const isIndexANumber = isNumber(idx);
-        const newObject = isIndexANumber ? [] : {};
-        target[path] = hasTargetProperty ? newObject : backTrackKey(target[path]);
-        if (isIndexANumber) {
-          target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
-        }
-        _setNested(fullPath.slice(1), target[path], value);
-      }
-      break;
+  if (length === 0) {
+    return;
   }
+  const path = fullPath[0];
+  if (length === 1) {
+    target[path] = value;
+    return;
+  }
+  const hasNextProperty = target[path] !== void 0;
+  const idx = parseInt(fullPath[1], 10);
+  const isIndexANumber = isNumber(idx);
+  target[path] = hasNextProperty ? backTrackKey(target[path]) : isIndexANumber ? [] : {};
+  if (isIndexANumber) {
+    target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
+  }
+  _setNested(fullPath.slice(1), target[path], value);
 };
 const setNested = (fullPath, target, value) => {
   const clonedTarget = __spreadValues({}, target);
