@@ -143,7 +143,6 @@ const {
 		swap,
 	},
 	key,
-	reset,
 	Error,
 	Errors,
 	formState: {
@@ -152,6 +151,7 @@ const {
 		isTouched,
 		isDirty,
 		hadError,
+		reset,
 	},
 } = useForm(options);
 ```
@@ -361,16 +361,6 @@ performs validation first; prevents default event; submits form data to handler 
 </form>
 ```
 
-#### reset(newValues: any?, reValidate: bool)
-
-resets the form to newValues or default ones; triggers revalidation based on second parameter
-```jsx
-<button type="submit" onClick={() => reset()}>
-	Reset the form
-</button>
-```
-
-
 #### key(any?): string
 
 helper method to get unique keys for siblings when rendering arrays. It works by utilizing WeakMap where objects are keys. Can be used to generate unique id's as well, by omitting the object parameter (e.g. key()). It keeps same keys even for new objects, modified via setValue
@@ -442,14 +432,15 @@ swaps item positions in the existing array, useful for drag'n'drop operations; r
 ```
 
 ### Form state props
-These props return current form state
+These props return current form state and reset function
 ```js
 formState: {
 	errors: object,
 	isValid: bool,
 	isTouched: bool,
 	isDirty: bool
-	hadError: bool
+	hadError: bool,
+	reset: (values?: any, reValidate?: boolean) => void;
 }
 ```
 
@@ -472,6 +463,15 @@ true if any of form values is different than default ones provided
 #### hadError: bool
 
 true if any of form data changes produced validation errors
+
+#### reset(newValues: any?, reValidate: bool)
+
+resets the form to newValues or default ones; triggers revalidation based on reValidate parameter
+```jsx
+<button type="button" onClick={formState.reset}>
+	Reset the form
+</button>
+```
 
 #### Contributions
 PRs welcome

@@ -2,7 +2,8 @@ import React from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
-import useForm, { yupResolver } from '../../useForm';
+import { yupResolver } from '../../resolvers';
+import useForm from '../../useForm';
 import defaultValues from './defaultValues';
 import { optionsGenres, optionsOccupation, optionsRadio, optionsTitle } from './options';
 import schema from './schema';
@@ -25,8 +26,7 @@ function TestForm({ onFormSubmit }) {
 		hasError,
 		Error,
 		Errors,
-		reset,
-		formState: { isDirty, isValid, isTouched, errors },
+		formState: { isDirty, isValid, isTouched, errors, reset },
 	} = useForm({
 		defaultValues,
 		mode: 'onSubmit',
@@ -479,9 +479,9 @@ function TestForm({ onFormSubmit }) {
 					<div className="field is-narrow">
 						<div className="control">
 							<div className={hasError('occupation') ? 'select is-multiple is-small is-fullwidth is-danger' : 'select is-multiple is-small is-fullwidth'}>
-								<select multiple {...register('occupation')}>
+								<select multiple {...register('occupation')} data-testid="occupation">
 									{optionsOccupation.map(option => (
-										<option key={option} value={option}>
+										<option key={option} value={option} data-testid={`occupation-option-${option}`}>
 											{option}
 										</option>
 									))}

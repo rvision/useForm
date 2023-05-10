@@ -3,8 +3,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import defaultValues from './components/defaultValues';
 import TestForm from './components/TestForm';
+import defaultValues from './components/defaultValues';
 
 // import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 // import Accordion from './Accordion';

@@ -156,12 +156,6 @@ declare function useForm(options: UseFormOptions): {
 	 * @returns hash string
 	 */
     key: (object?: any) => string;
-	/**
-	 * resets the form values to initial or custom
-	 * @param values sets custom values
-	 * @param reValidate set to true if you want to revalidate form fields, false to skip validation
-	 */
-    reset: (values?: any, validate?: boolean) => void;
     Error: ({ for: fullPath, children }: {
         fullPath: string;
         children: ReactNode;
@@ -194,6 +188,12 @@ declare function useForm(options: UseFormOptions): {
 		 * did form had any validation errors?
 		 */
         hadError: boolean;
+		/**
+		 * resets the form values to initial or custom
+		 * @param values sets custom values
+		 * @param reValidate set to true if you want to revalidate form fields, false to skip validation
+		 */
+		reset: (values?: any, validate?: boolean) => void;
     };
 };
 export default useForm;

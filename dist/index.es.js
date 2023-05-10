@@ -111,7 +111,7 @@ const _deleteNested = (fullPath, target) => {
   }
   _deleteNested(fullPath.slice(1), target[path]);
 };
-const _isEmptyObjectOrFalsy = (item) => objectKeys(item || EMPTY_OBJECT).length === 0;
+const isEmptyObjectOrFalsy = (item) => objectKeys(item || EMPTY_OBJECT).length === 0;
 const _deleteNestedToRoot = (fullPath, target) => {
   _deleteNested(fullPath, target);
   const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
@@ -119,12 +119,12 @@ const _deleteNestedToRoot = (fullPath, target) => {
     const value = _getNested(path, target);
     if (value !== void 0) {
       if (isArray(value)) {
-        if (value.length === 0 || value.every(_isEmptyObjectOrFalsy)) {
+        if (value.length === 0 || value.every(isEmptyObjectOrFalsy)) {
           if (!value.message) {
             _deleteNested(path, target);
           }
         }
-      } else if (_isEmptyObjectOrFalsy(value)) {
+      } else if (isEmptyObjectOrFalsy(value)) {
         _deleteNested(path, target);
       }
     }
@@ -168,6 +168,34 @@ const swap = (arr, idx1, idx2) => {
   return arr;
 };
 const getErrorClassName = (errorObject, classNameError, className) => `${className || ""} ${classNameError || ""} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
+const yupResolver = (schema) => (formValues) => {
+  let errors = {};
+  try {
+    schema.validateSync(formValues, { abortEarly: false });
+  } catch (validationError) {
+    for (const error of validationError.inner) {
+      const newOrExistingError = getNested(error.path, errors) || {};
+      newOrExistingError.message = error.message;
+      newOrExistingError.type = error.type;
+      errors = setNested(error.path, errors, newOrExistingError);
+    }
+  }
+  return errors;
+};
+const zodResolver = (schema) => (formValues) => {
+  let errors = {};
+  const parsed = schema.safeParse(formValues);
+  if (!parsed.success) {
+    parsed.error.errors.forEach((error) => {
+      const path = error.path.join(".");
+      const newOrExistingError = getNested(path, errors) || {};
+      newOrExistingError.message = error.message;
+      newOrExistingError.type = error.type;
+      errors = setNested(path, errors, newOrExistingError);
+    });
+  }
+  return errors;
+};
 var jsxRuntime = { exports: {} };
 var reactJsxRuntime_production_min = {};
 /**
@@ -199,15 +227,15 @@ reactJsxRuntime_production_min.jsxs = q;
   jsxRuntime.exports = reactJsxRuntime_production_min;
 }
 const jsx = jsxRuntime.exports.jsx;
+const ARIA_INVALID = "aria-invalid";
 const useStableRef = (callback) => {
   const handlerRef = useRef(callback);
   handlerRef.current = callback;
   return useCallback((...args) => handlerRef.current(...args), []);
 };
 const registerProps = {
-  key: "",
   name: "",
-  "aria-invalid": false,
+  [ARIA_INVALID]: false,
   className: "",
   onChange: noOp,
   onBlur: noOp,
@@ -268,7 +296,7 @@ const useForm = ({
     return getNested(fullPath, values);
   });
   const getError = useStableRef((fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
-  const hasError = useStableRef((fullPath = "", targetErrors = errors) => fullPath === "" ? objectKeys(targetErrors).length > 0 : getNested(fullPath, targetErrors) !== void 0);
+  const hasError = useStableRef((fullPath = "", targetErrors = errors) => fullPath === "" ? !isEmptyObjectOrFalsy(targetErrors) : getNested(fullPath, targetErrors) !== void 0);
   const clearError = useStableRef((fullPath, targetErrors = errors) => {
     let newErrors = targetErrors;
     if (hasError(fullPath, targetErrors)) {
@@ -368,7 +396,7 @@ const useForm = ({
     const value = getValue(fullPath);
     const hasFieldError = hasError(fullPath);
     registerProps.name = fullPath;
-    registerProps["aria-invalid"] = hasFieldError;
+    registerProps[ARIA_INVALID] = hasFieldError;
     registerProps.className = getErrorClassName(EMPTY_OBJECT, hasFieldError ? classNameError : "", className);
     registerProps.onChange = onChange;
     registerProps.ref = ref;
@@ -468,7 +496,6 @@ const useForm = ({
       swap: _swap
     },
     key,
-    reset,
     Error: Error2,
     Errors,
     formState: {
@@ -476,38 +503,9 @@ const useForm = ({
       isValid,
       isTouched: isTouched.current,
       isDirty: isDirty.current,
-      hadError: formHadError.current
+      hadError: formHadError.current,
+      reset
     }
   };
-};
-const yupResolver = (schema) => (formValues) => {
-  let errors = {};
-  try {
-    schema.validateSync(formValues, {
-      abortEarly: false
-    });
-  } catch (validationError) {
-    for (const error of validationError.inner) {
-      const newOrExistingError = getNested(error.path, errors) || {};
-      newOrExistingError.message = error.message;
-      newOrExistingError.type = error.type;
-      errors = setNested(error.path, errors, newOrExistingError);
-    }
-  }
-  return errors;
-};
-const zodResolver = (schema) => (formValues) => {
-  let errors = {};
-  const parsed = schema.safeParse(formValues);
-  if (!parsed.success) {
-    parsed.error.errors.forEach((error) => {
-      const path = error.path.join(".");
-      const newOrExistingError = getNested(path, errors) || {};
-      newOrExistingError.message = error.message;
-      newOrExistingError.type = error.type;
-      errors = setNested(path, errors, newOrExistingError);
-    });
-  }
-  return errors;
 };
 export { useForm as default, yupResolver, zodResolver };
