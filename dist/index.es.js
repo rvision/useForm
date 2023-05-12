@@ -18,7 +18,7 @@ var __spreadValues = (a, b) => {
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 import require$$0, { useState, useRef, useCallback, useEffect } from "react";
-const isNumber = (num) => !Number.isNaN(num);
+const isNumber = (num) => !isNaN(num);
 const isFunction = (obj) => typeof obj === "function";
 const { isArray } = Array;
 const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
@@ -149,7 +149,7 @@ const getInputValue = (e) => {
         return null;
       }
       const parsed = Number.parseFloat(value);
-      return isNumber(parsed) ? parsed : void 0;
+      return isNumber(parsed) ? +parsed : void 0;
     }
     case "file":
       return multiple ? files : files.item(0);
