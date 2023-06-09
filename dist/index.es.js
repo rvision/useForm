@@ -18,7 +18,6 @@ var __spreadValues = (a, b) => {
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 import require$$0, { useState, useRef, useCallback, useEffect } from "react";
-const isNumber = (num) => !isNaN(num);
 const isFunction = (obj) => typeof obj === "function";
 const { isArray } = Array;
 const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
@@ -58,7 +57,7 @@ const extractPath = (path) => {
   if (cached) {
     return cached;
   }
-  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => isNumber(parseInt(pathPart, 10)) ? +pathPart : pathPart);
+  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => !isNaN(parseInt(pathPart, 10)) ? +pathPart : pathPart);
   _splitCache.set(path, cached);
   return cached;
 };
@@ -87,7 +86,7 @@ const _setNested = (fullPath, target, value) => {
   }
   const hasNextProperty = target[path] !== void 0;
   const idx = fullPath[1];
-  const isIndexANumber = isNumber(idx);
+  const isIndexANumber = !isNaN(idx);
   target[path] = hasNextProperty ? backTrackKey(target[path]) : isIndexANumber ? [] : {};
   if (isIndexANumber) {
     target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
@@ -149,7 +148,7 @@ const getInputValue = (e) => {
         return null;
       }
       const parsed = Number.parseFloat(value);
-      return isNumber(parsed) ? +parsed : void 0;
+      return !isNaN(parsed) ? +parsed : void 0;
     }
     case "file":
       return multiple ? files : files.item(0);
@@ -304,24 +303,27 @@ const useForm = ({
     }
     return newErrors;
   });
-  const trigger = useStableRef((fullPath = "", newValues = values) => new Promise((resolve = noOp) => {
-    const newErrors = resolver(newValues);
-    if (fullPath === "") {
-      setErrors(newErrors);
-      resolve(newErrors);
-      return;
-    }
-    const paths = isArray(fullPath) ? fullPath : [fullPath];
-    let updatedErrors = __spreadValues({}, errors);
-    paths.forEach((fullPath2) => {
-      const error = getNested(fullPath2, newErrors);
-      updatedErrors = deleteNestedToRoot(fullPath2, updatedErrors);
-      if (error !== void 0) {
-        updatedErrors = setNested(fullPath2, updatedErrors, error);
+  const trigger = useStableRef((fullPath = "") => new Promise((resolve = noOp) => {
+    setState((prevState) => {
+      let newErrors = resolver(prevState.values);
+      if (fullPath !== "") {
+        const paths = isArray(fullPath) ? fullPath : [fullPath];
+        let pathsErrors = __spreadValues({}, prevState.errors);
+        paths.forEach((fullPath2) => {
+          const error = getNested(fullPath2, newErrors);
+          pathsErrors = deleteNestedToRoot(fullPath2, pathsErrors);
+          if (error !== void 0) {
+            pathsErrors = setNested(fullPath2, pathsErrors, error);
+          }
+        });
+        newErrors = pathsErrors;
       }
+      const newState = __spreadProps(__spreadValues({}, prevState), {
+        errors: newErrors
+      });
+      resolve(newErrors, prevState.values);
+      return newState;
     });
-    setErrors(updatedErrors);
-    resolve(updatedErrors);
   }));
   const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
   const shouldRevalidateArray = shouldRevalidate && !isOnSubmitMode;
@@ -338,21 +340,17 @@ const useForm = ({
     }
     return newErrors;
   });
-  const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) => new Promise((resolve = noOp) => {
-    setState((prevState) => {
-      const newValues = setNested(fullPath, prevState.values, value);
-      isTouched.current = true;
-      isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-      const newErrors = resolveErrors(fullPath, newValues);
-      const newState = {
-        values: newValues,
-        errors: newErrors
-      };
-      resolve(newState);
-      return newState;
-    });
+  const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) => setState((prevState) => {
+    const newValues = setNested(fullPath, prevState.values, value);
+    isTouched.current = true;
+    isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+    const newState = {
+      values: newValues,
+      errors: resolveErrors(fullPath, newValues)
+    };
+    return newState;
   }));
-  const _backTrackArrayErrors = useStableRef((fullPath, reValidate, getNewArrayErrors) => shouldRevalidateArray && reValidate ? _resolveErrors : () => {
+  const _backTrackArrayErrors = useStableRef((fullPath, getNewArrayErrors) => shouldRevalidateArray ? _resolveErrors : () => {
     let newErrors = errors;
     const errorsArray = getError(fullPath);
     if (isArray(errorsArray)) {
@@ -365,11 +363,11 @@ const useForm = ({
     }
     return newErrors;
   });
-  const clear = useStableRef((fullPath, reValidate = false) => setValue(fullPath, [], _backTrackArrayErrors(fullPath, reValidate, () => [])));
-  const append = useStableRef((fullPath, object, reValidate = false) => setValue(fullPath, [...getValue(fullPath), object], _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => errorsArray)));
-  const prepend = useStableRef((fullPath, object, reValidate = false) => setValue(fullPath, [object, ...getValue(fullPath)], _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => [void 0, ...errorsArray])));
-  const remove = useStableRef((fullPath, idx, reValidate = false) => setValue(fullPath, getValue(fullPath).filter((_, i) => i !== idx), _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => errorsArray.filter((_, i) => i !== idx))));
-  const _swap = useStableRef((fullPath, index1, index2, reValidate = false) => setValue(fullPath, swap(getValue(fullPath), index1, index2), _backTrackArrayErrors(fullPath, reValidate, (errorsArray) => swap(errorsArray, index1, index2))));
+  const clear = useStableRef((fullPath) => setValue(fullPath, [], _backTrackArrayErrors(fullPath, () => [])));
+  const append = useStableRef((fullPath, object) => setValue(fullPath, [...getValue(fullPath), object], _backTrackArrayErrors(fullPath, (errorsArray) => errorsArray)));
+  const prepend = useStableRef((fullPath, object) => setValue(fullPath, [object, ...getValue(fullPath)], _backTrackArrayErrors(fullPath, (errorsArray) => [void 0, ...errorsArray])));
+  const remove = useStableRef((fullPath, idx) => setValue(fullPath, getValue(fullPath).filter((_, i) => i !== idx), _backTrackArrayErrors(fullPath, (errorsArray) => errorsArray.filter((_, i) => i !== idx))));
+  const swap$1 = useStableRef((fullPath, index1, index2) => setValue(fullPath, swap(getValue(fullPath), index1, index2), _backTrackArrayErrors(fullPath, (errorsArray) => swap(errorsArray, index1, index2))));
   const getRef = useStableRef((fullPath) => refsMap.current.get(fullPath));
   const setRef = useStableRef((fullPath, element) => {
     if (element) {
@@ -493,7 +491,7 @@ const useForm = ({
       append,
       prepend,
       remove,
-      swap: _swap
+      swap: swap$1
     },
     key,
     Error: Error2,
