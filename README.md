@@ -71,7 +71,7 @@ Note that handlers have **stable references**. This allows you to memoize parts 
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~3.5kb minified & gzipped
+- **lightweight**: ~3.4kb minified & gzipped
 - **simplicity**: low learning curve
 - **nested arrays** without hassle
 - **un-opinionated** - components freedom: doesn't force you to use any specific component for inputs or form, it allows use of native input fields via ```register``` and custom components via ```getValue/setValue``` functions
@@ -204,7 +204,7 @@ method to get value of the field, uses ```fullPath``` concept as field identifie
 <ReactDatePicker selected={getValue('birthDate')} />
 ```
 
-#### setValue(fullPath: string, newValue: any, shouldRevalidate: true) : Promise<{values: any, errors: any}>
+#### setValue(fullPath: string, newValue: any, shouldRevalidate: true)
 
 method to set value of the field, uses ```fullPath``` concept as field identifier. promise returns new values/errors object. use it for custom components.
 ```jsx
@@ -317,7 +317,7 @@ setErrors({
 });
 ```
 
-#### trigger(fullPath: string? | string[], newValues: any?) : Promise<errors: any>
+#### trigger(fullPath: string? | string[], newValues: any?)
 
 triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors in promise
 ```jsx
@@ -381,9 +381,9 @@ helper method to get unique keys for siblings when rendering arrays. It works by
 
 **NOTE:** Pass reValidate parameter as true if you want to trigger validation (if set mode requires it (onSubmit, onChange, onBlur)), otherwise false. This allows flexibility in behaviour, e.g. if you are adding an element to array which already has error on let's say 1st element, but limit of the array size is 2
 
-#### array.clear(fullPath: string, reValidate?: boolean) : Promise<{values: any, errors: any}>
+#### array.clear(fullPath: string)
 
-clears existing array; returns Promise with resulting values and errors
+clears existing array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -391,9 +391,9 @@ clears existing array; returns Promise with resulting values and errors
 }}>Clear albums</button>
 ```
 
-#### array.append(fullPath: string, newValue: any, reValidate?: boolean) : Promise<{values: any, errors: any}>
+#### array.append(fullPath: string, newValue: any)
 
-appends new object to the existing array of objects; returns Promise with resulting values and errors
+appends new object to the existing array of objects
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -401,9 +401,9 @@ appends new object to the existing array of objects; returns Promise with result
 }}>Add new album</button>
 ```
 
-#### array.prepend(fullPath: string, newValue: any, reValidate?: boolean) : Promise<{values: any, errors: any}>
+#### array.prepend(fullPath: string, newValue: any)
 
-prepends new object to the existing array of objects; returns Promise with resulting values and errors
+prepends new object to the existing array of objects
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -411,9 +411,9 @@ prepends new object to the existing array of objects; returns Promise with resul
 }}>Add new actor</button>
 ```
 
-#### array.remove(fullPath: string, index: int, reValidate?: boolean) : Promise<{values: any, errors: any}>
+#### array.remove(fullPath: string, index: int)
 
-removes array item from the existing array; returns Promise with resulting values and errors
+removes array item from the existing array
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -421,9 +421,9 @@ removes array item from the existing array; returns Promise with resulting value
 }}>Remove this actor</button>
 ```
 
-#### array.swap(fullPath: string, index1: int, index2: int, reValidate?: boolean) : Promise<{values: any, errors: any}>
+#### array.swap(fullPath: string, index1: int, index2: int)
 
-swaps item positions in the existing array, useful for drag'n'drop operations; returns Promise with resulting values and errors
+swaps item positions in the existing array, useful for drag'n'drop operations
 ```jsx
 <button onClick={e => {
 	e.preventDefault();
@@ -440,7 +440,7 @@ formState: {
 	isTouched: bool,
 	isDirty: bool
 	hadError: bool,
-	reset: (values?: any, reValidate?: boolean) => void;
+	reset: (values?: any) => void;
 }
 ```
 
@@ -484,8 +484,10 @@ PRs welcome
 
 ## Changelog
 
-<= v1.0.18:
-- all array operations return Promise<{values: any, errors: any}>
+<= v1.0.24:
+- fixed number detection
+- refactored trigger
+- removed promises and revalidate flag form array operations
 - reset form fix
 - exports getError
 - _deleteNested fix
