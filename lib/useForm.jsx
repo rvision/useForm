@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as core from './core';
 
 const ARIA_INVALID = 'aria-invalid';
-const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
+export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
 const useStableRef = callback => {

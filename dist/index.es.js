@@ -19,7 +19,6 @@ var __spreadValues = (a, b) => {
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 import require$$0, { useState, useRef, useCallback, useEffect } from "react";
 const isFunction = (obj) => typeof obj === "function";
-const objectKeys = Object.keys;
 const EMPTY_OBJECT = {};
 const noOp = () => EMPTY_OBJECT;
 let keySeed = 9999;
@@ -108,7 +107,7 @@ const _deleteNested = (fullPath, target) => {
   }
   _deleteNested(fullPath.slice(1), target[path]);
 };
-const isEmptyObjectOrFalsy = (item) => objectKeys(item || EMPTY_OBJECT).length === 0;
+const isEmptyObjectOrFalsy = (item) => Object.keys(item || EMPTY_OBJECT).length === 0;
 const _deleteNestedToRoot = (fullPath, target) => {
   _deleteNested(fullPath, target);
   const pathsToRoot = fullPath.map((part, idx) => idx === 0 ? [...fullPath] : [...fullPath].slice(0, -1 * idx));
