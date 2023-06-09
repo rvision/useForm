@@ -125,7 +125,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 						...prevState,
 						errors: newErrors,
 					};
-					resolve(newErrors, prevState.values);
+					resolve(newState);
 					return newState;
 				});
 			}),

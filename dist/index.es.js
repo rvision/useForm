@@ -319,7 +319,7 @@ const useForm = ({
       const newState = __spreadProps(__spreadValues({}, prevState), {
         errors: newErrors
       });
-      resolve(newErrors, prevState.values);
+      resolve(newState);
       return newState;
     });
   }));

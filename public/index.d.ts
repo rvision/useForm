@@ -36,9 +36,8 @@ declare function useForm(options: UseFormOptions): {
 	 * sets form property value via dot notationh
 	 * @param fullPath path to property, e.g. 'firstName'; for array items, use indexes - e.g. 'albums.3.name'
 	 * @param value value to be set
-	 * @returns Promise<{values: any, errors: any}>
 	 */
-    setValue: (fullPath: string, value: any) => Promise<{values: any, errors: any}>;
+    setValue: (fullPath: string, value: any) => void;
 	/**
 	 * registers native input via dot notationh
 	 * @param fullPath path to property, e.g. 'firstName'; for array items, use indexes - e.g. 'albums.3.name'
@@ -71,10 +70,9 @@ declare function useForm(options: UseFormOptions): {
 	/**
 	 * triggers validation on specific form field(s); if fullPath is omitted, it will validate whole form
 	 * @param fullPath path(s) to properties to validate, e.g. 'firstName'; for array items, use indexes - e.g. 'albums.3.name'
-	 * @param newValues custom values to trigger validation on
 	 * @returns Promise<{errors: any}>
 	 */
-    trigger: (fullPath?: string | string[], newValues?: any) => Promise<{errors: any}>;
+    trigger: (fullPath?: string | string[]) => Promise<{errors: any, values: any}>;
 	/**
 	 * submit handler: use in form element (&lt;form onSubmit={handleSubmit(onSubmit)} onReset={onReset}&gt;) or directly on submit button (&lt;button type="submit" onClick={handleSubmit(onSubmit)} /&gt;)
 	 * @param handler handler function
@@ -112,43 +110,33 @@ declare function useForm(options: UseFormOptions): {
 		/**
 		 * clears all array elements
 		 * @param fullPath path to array property, e.g. 'albums'
-		 * @param reValidate set to true if you want to revalidate array form field, false to skip validation
-		 * @returns Promise<{values: any, errors: any}>
 		 */
-		clear: (fullPath: string, reValidate?: boolean) => Promise<{values: any, errors: any}>;
+		clear: (fullPath: string) => void;
 		/**
 		 * appends array element at the end of the array
 		 * @param fullPath path to array property, e.g. 'albums'
 		 * @param object element to add to array
-		 * @param reValidate set to true if you want to revalidate array form field, false to skip validation
-		 * @returns Promise<{values: any, errors: any}>
 		 */
-		append: (fullPath: string, object: any, reValidate?: boolean) => Promise<{values: any, errors: any}>;
+		append: (fullPath: string, object: any) => void;
 		/**
 		 * adds array element at the start of the array
 		 * @param fullPath path to array property, e.g. 'albums'
 		 * @param object element to add to array
-		 * @param reValidate set to true if you want to revalidate array form field, false to skip validation
-		 * @returns Promise<{values: any, errors: any}>
 		 */
-		prepend: (fullPath: string, object: any, reValidate?: boolean) => Promise<{values: any, errors: any}>;
+		prepend: (fullPath: string, object: any) => void;
 		/**
 		 * removes element of the array at specific index
 		 * @param fullPath path to array property, e.g. 'albums'
 		 * @param index position of the element in the array to be removed
-		 * @param reValidate set to true if you want to revalidate array form field, false to skip validation
-		 * @returns Promise<{values: any, errors: any}>
 		 */
-		remove: (fullPath: string, index: number, reValidate?: boolean) => Promise<{values: any, errors: any}>;
+		remove: (fullPath: string, index: number) => void;
 		/**
 		 * swaps two elements in the array
 		 * @param fullPath path to array property, e.g. 'albums'
 		 * @param index1 position of the first element in the array
 		 * @param index2 position of the second element in the array
-		 * @param reValidate set to true if you want to revalidate array form field, false to skip validation
-		 * @returns Promise<{values: any, errors: any}>
 		 */
-		swap: (fullPath: string, index1: number, index2: number, reValidate?: boolean) => Promise<{values: any, errors: any}>;
+		swap: (fullPath: string, index1: number, index2: number) => void;
 	},
 	/**
 	 * returns stable key for objects to use as React key property (e.g. &lt;div key={key(object)}) /&gt;)
@@ -193,7 +181,7 @@ declare function useForm(options: UseFormOptions): {
 		 * @param values sets custom values
 		 * @param reValidate set to true if you want to revalidate form fields, false to skip validation
 		 */
-		reset: (values?: any, validate?: boolean) => void;
+		reset: (values?: any, reValidate?: boolean) => void;
     };
 };
 export default useForm;
