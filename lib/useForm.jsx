@@ -175,8 +175,8 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	);
 
 	// tracks positions or array errors when doing array operations
-	const _backTrackArrayErrors = useStableRef((fullPath, reValidate, getNewArrayErrors) =>
-		shouldRevalidateArray && reValidate
+	const _backTrackArrayErrors = useStableRef((fullPath, getNewArrayErrors) =>
+		shouldRevalidateArray
 			? _resolveErrors
 			: () => {
 					let newErrors = errors;
@@ -189,51 +189,48 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 							newErrorsArray.type = errorsArray.type;
 						}
 						newErrors = newErrorsArray.length > 0 ? core.setNested(fullPath, errors, newErrorsArray) : core.deleteNestedToRoot(fullPath, newErrors);
-
-						// console.log(`newErrors`);
-						// console.log(newErrorsArray);
 					}
 					return newErrors;
 			  },
 	);
 
-	const clear = useStableRef((fullPath, reValidate = false) =>
+	const clear = useStableRef(fullPath =>
 		setValue(
 			fullPath,
 			[],
-			_backTrackArrayErrors(fullPath, reValidate, () => []),
+			_backTrackArrayErrors(fullPath, () => []),
 		),
 	);
 
-	const append = useStableRef((fullPath, object, reValidate = false) =>
+	const append = useStableRef((fullPath, object) =>
 		setValue(
 			fullPath,
 			[...getValue(fullPath), object],
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => errorsArray),
+			_backTrackArrayErrors(fullPath, errorsArray => errorsArray),
 		),
 	);
 
-	const prepend = useStableRef((fullPath, object, reValidate = false) =>
+	const prepend = useStableRef((fullPath, object) =>
 		setValue(
 			fullPath,
 			[object, ...getValue(fullPath)],
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => [undefined, ...errorsArray]),
+			_backTrackArrayErrors(fullPath, errorsArray => [undefined, ...errorsArray]),
 		),
 	);
 
-	const remove = useStableRef((fullPath, idx, reValidate = false) =>
+	const remove = useStableRef((fullPath, idx) =>
 		setValue(
 			fullPath,
 			getValue(fullPath).filter((_, i) => i !== idx),
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => errorsArray.filter((_, i) => i !== idx)),
+			_backTrackArrayErrors(fullPath, errorsArray => errorsArray.filter((_, i) => i !== idx)),
 		),
 	);
 
-	const _swap = useStableRef((fullPath, index1, index2, reValidate = false) =>
+	const _swap = useStableRef((fullPath, index1, index2) =>
 		setValue(
 			fullPath,
 			core.swap(getValue(fullPath), index1, index2),
-			_backTrackArrayErrors(fullPath, reValidate, errorsArray => core.swap(errorsArray, index1, index2)),
+			_backTrackArrayErrors(fullPath, errorsArray => core.swap(errorsArray, index1, index2)),
 		),
 	);
 
