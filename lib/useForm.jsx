@@ -151,27 +151,20 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		return newErrors;
 	});
 
-	const setValue = useStableRef(
-		(fullPath, value, resolveErrors = _resolveErrors) =>
-			new Promise((resolve = core.noOp) => {
-				setState(prevState => {
-					const newValues = core.setNested(fullPath, prevState.values, value);
+	const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) =>
+		setState(prevState => {
+			const newValues = core.setNested(fullPath, prevState.values, value);
 
-					isTouched.current = true;
-					isDirty.current = defaultValuesJSON.current !== core.toJSON(newValues);
+			isTouched.current = true;
+			isDirty.current = defaultValuesJSON.current !== core.toJSON(newValues);
 
-					// resolve errors elsewhere
-					const newErrors = resolveErrors(fullPath, newValues);
+			const newState = {
+				values: newValues,
+				errors: resolveErrors(fullPath, newValues), // resolve errors elsewhere
+			};
 
-					const newState = {
-						values: newValues,
-						errors: newErrors,
-					};
-
-					resolve(newState);
-					return newState;
-				});
-			}),
+			return newState;
+		}),
 	);
 
 	// tracks positions or array errors when doing array operations
@@ -226,7 +219,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		),
 	);
 
-	const _swap = useStableRef((fullPath, index1, index2) =>
+	const swap = useStableRef((fullPath, index1, index2) =>
 		setValue(
 			fullPath,
 			core.swap(getValue(fullPath), index1, index2),
@@ -369,7 +362,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			append,
 			prepend,
 			remove,
-			swap: _swap,
+			swap,
 		},
 		key: core.key,
 		Error,
