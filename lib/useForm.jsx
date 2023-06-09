@@ -102,25 +102,32 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	});
 
 	const trigger = useStableRef(
-		(fullPath = '', newValues = values) =>
+		(fullPath = '') =>
 			new Promise((resolve = core.noOp) => {
-				const newErrors = resolver(newValues);
-				if (fullPath === '') {
-					setErrors(newErrors);
-					resolve(newErrors);
-					return;
-				}
-				const paths = core.isArray(fullPath) ? fullPath : [fullPath];
-				let updatedErrors = { ...errors };
-				paths.forEach(fullPath => {
-					const error = core.getNested(fullPath, newErrors);
-					updatedErrors = core.deleteNestedToRoot(fullPath, updatedErrors);
-					if (error !== undefined) {
-						updatedErrors = core.setNested(fullPath, updatedErrors, error);
+				setState(prevState => {
+					let newErrors = resolver(prevState.values);
+					if (fullPath !== '') {
+						const paths = core.isArray(fullPath) ? fullPath : [fullPath];
+						let pathsErrors = { ...prevState.errors };
+						paths.forEach(fullPath => {
+							// get error from new errors
+							const error = core.getNested(fullPath, newErrors);
+							// delete existing
+							pathsErrors = core.deleteNestedToRoot(fullPath, pathsErrors);
+							if (error !== undefined) {
+								// set new error if exist
+								pathsErrors = core.setNested(fullPath, pathsErrors, error);
+							}
+						});
+						newErrors = pathsErrors;
 					}
+					const newState = {
+						...prevState,
+						errors: newErrors,
+					};
+					resolve(newErrors, prevState.values);
+					return newState;
 				});
-				setErrors(updatedErrors);
-				resolve(updatedErrors);
 			}),
 	);
 
