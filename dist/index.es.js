@@ -19,8 +19,6 @@ var __spreadValues = (a, b) => {
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 import require$$0, { useState, useRef, useCallback, useEffect } from "react";
 const isFunction = (obj) => typeof obj === "function";
-const { isArray } = Array;
-const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
 const objectKeys = Object.keys;
 const EMPTY_OBJECT = {};
 const noOp = () => EMPTY_OBJECT;
@@ -39,7 +37,7 @@ const backTrackKey = (object) => {
   if (object instanceof Set) {
     clone = /* @__PURE__ */ new Set([...object]);
   } else {
-    clone = isArray(object) ? [...object] : __spreadValues({}, object);
+    clone = Array.isArray(object) ? [...object] : __spreadValues({}, object);
   }
   if (keysMap.has(object)) {
     keysMap.set(clone, keysMap.get(object));
@@ -117,7 +115,7 @@ const _deleteNestedToRoot = (fullPath, target) => {
   pathsToRoot.forEach((path) => {
     const value = _getNested(path, target);
     if (value !== void 0) {
-      if (isArray(value)) {
+      if (Array.isArray(value)) {
         if (value.length === 0 || value.every(isEmptyObjectOrFalsy)) {
           if (!value.message) {
             _deleteNested(path, target);
@@ -159,7 +157,7 @@ const getInputValue = (e) => {
   }
 };
 const swap = (arr, idx1, idx2) => {
-  if (isArray(arr)) {
+  if (Array.isArray(arr)) {
     const newArr = [...arr];
     [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
     return newArr;
@@ -227,6 +225,7 @@ reactJsxRuntime_production_min.jsxs = q;
 }
 const jsx = jsxRuntime.exports.jsx;
 const ARIA_INVALID = "aria-invalid";
+const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
 const useStableRef = (callback) => {
   const handlerRef = useRef(callback);
   handlerRef.current = callback;
@@ -307,7 +306,7 @@ const useForm = ({
     setState((prevState) => {
       let newErrors = resolver(prevState.values);
       if (fullPath !== "") {
-        const paths = isArray(fullPath) ? fullPath : [fullPath];
+        const paths = Array.isArray(fullPath) ? fullPath : [fullPath];
         let pathsErrors = __spreadValues({}, prevState.errors);
         paths.forEach((fullPath2) => {
           const error = getNested(fullPath2, newErrors);
@@ -353,7 +352,7 @@ const useForm = ({
   const _backTrackArrayErrors = useStableRef((fullPath, getNewArrayErrors) => shouldRevalidateArray ? _resolveErrors : () => {
     let newErrors = errors;
     const errorsArray = getError(fullPath);
-    if (isArray(errorsArray)) {
+    if (Array.isArray(errorsArray)) {
       const newErrorsArray = getNewArrayErrors(errorsArray);
       if (errorsArray.message) {
         newErrorsArray.message = errorsArray.message;

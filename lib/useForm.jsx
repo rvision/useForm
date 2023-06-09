@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as core from './core';
 
 const ARIA_INVALID = 'aria-invalid';
-
+const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
 const useStableRef = callback => {
@@ -57,7 +57,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const init = useCallback(initValues => {
 		const vals = initValues || core.EMPTY_OBJECT;
-		defaultValuesJSON.current = core.toJSON(vals);
+		defaultValuesJSON.current = toJSON(vals);
 		setState(prev => ({
 			...prev,
 			values: { ...vals },
@@ -107,7 +107,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 				setState(prevState => {
 					let newErrors = resolver(prevState.values);
 					if (fullPath !== '') {
-						const paths = core.isArray(fullPath) ? fullPath : [fullPath];
+						const paths = Array.isArray(fullPath) ? fullPath : [fullPath];
 						let pathsErrors = { ...prevState.errors };
 						paths.forEach(fullPath => {
 							// get error from new errors
@@ -156,7 +156,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			const newValues = core.setNested(fullPath, prevState.values, value);
 
 			isTouched.current = true;
-			isDirty.current = defaultValuesJSON.current !== core.toJSON(newValues);
+			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
 			const newState = {
 				values: newValues,
@@ -174,7 +174,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			: () => {
 					let newErrors = errors;
 					const errorsArray = getError(fullPath);
-					if (core.isArray(errorsArray)) {
+					if (Array.isArray(errorsArray)) {
 						const newErrorsArray = getNewArrayErrors(errorsArray);
 						// if previous array of errors had error, copy it
 						if (errorsArray.message) {
