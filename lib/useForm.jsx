@@ -132,8 +132,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	);
 
 	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
-	const shouldRevalidateArray = shouldRevalidate && !isOnSubmitMode;
-
 	// default errors revalidation when changing form values
 	const _resolveErrors = useStableRef((fullPath, newValues) => {
 		let newErrors = errors;
@@ -167,65 +165,58 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		}),
 	);
 
-	// tracks positions or array errors when doing array operations
-	const _backTrackArrayErrors = useStableRef((fullPath, getNewArrayErrors) =>
-		shouldRevalidateArray
-			? _resolveErrors
-			: () => {
-					let newErrors = errors;
-					const errorsArray = getError(fullPath);
-					if (Array.isArray(errorsArray)) {
-						const newErrorsArray = getNewArrayErrors(errorsArray);
-						// if previous array of errors had error, copy it
-						if (errorsArray.message) {
-							newErrorsArray.message = errorsArray.message;
-							newErrorsArray.type = errorsArray.type;
-						}
-						newErrors = newErrorsArray.length > 0 ? core.setNested(fullPath, errors, newErrorsArray) : core.deleteNestedToRoot(fullPath, newErrors);
-					}
-					return newErrors;
-			  },
-	);
+	const setArrayValue = useStableRef((fullPath, mutateArray, mutateArrayErrors) => {
+		setState(prevState => {
+			const newArrayValues = mutateArray(core.getNested(fullPath, prevState.values));
+			const newValues = core.setNested(fullPath, prevState.values, newArrayValues);
 
-	const clear = useStableRef(fullPath =>
-		setValue(
-			fullPath,
-			[],
-			_backTrackArrayErrors(fullPath, () => []),
-		),
-	);
+			let newErrors = prevState.errors;
+			const existingArrayErrors = core.getNested(fullPath, newErrors);
 
-	const append = useStableRef((fullPath, object) =>
-		setValue(
-			fullPath,
-			[...getValue(fullPath), object],
-			_backTrackArrayErrors(fullPath, errorsArray => errorsArray),
-		),
-	);
+			if (mutateArrayErrors && Array.isArray(existingArrayErrors)) {
+				const newArrayErrors = mutateArrayErrors(existingArrayErrors);
+				// if previous array of errors had error, copy it
+				if (existingArrayErrors.message) {
+					newArrayErrors.message = existingArrayErrors.message;
+					newArrayErrors.type = existingArrayErrors.type;
+				}
+				newErrors = newArrayErrors.length > 0 ? core.setNested(fullPath, newErrors, newArrayErrors) : core.deleteNestedToRoot(fullPath, newErrors);
+			}
 
-	const prepend = useStableRef((fullPath, object) =>
-		setValue(
-			fullPath,
-			[object, ...getValue(fullPath)],
-			_backTrackArrayErrors(fullPath, errorsArray => [undefined, ...errorsArray]),
-		),
-	);
+			isTouched.current = true;
+			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
-	const remove = useStableRef((fullPath, idx) =>
-		setValue(
-			fullPath,
-			getValue(fullPath).filter((_, i) => i !== idx),
-			_backTrackArrayErrors(fullPath, errorsArray => errorsArray.filter((_, i) => i !== idx)),
-		),
-	);
+			const newState = {
+				values: newValues,
+				errors: newErrors,
+			};
 
-	const swap = useStableRef((fullPath, index1, index2) =>
-		setValue(
+			return newState;
+		});
+	});
+
+	const append = useStableRef((fullPath, item) => {
+		setArrayValue(fullPath, arr => [...arr, item]);
+	});
+	const prepend = useStableRef((fullPath, item) => {
+		setArrayValue(
 			fullPath,
-			core.swap(getValue(fullPath), index1, index2),
-			_backTrackArrayErrors(fullPath, errorsArray => core.swap(errorsArray, index1, index2)),
-		),
-	);
+			arr => [item, ...arr],
+			arr => [undefined, ...arr],
+		);
+	});
+	const clear = useStableRef(fullPath => {
+		const clearArr = () => [];
+		setArrayValue(fullPath, clearArr, clearArr);
+	});
+	const remove = useStableRef((fullPath, idx) => {
+		const removeByIdx = arr => arr.filter((_, i) => i !== idx);
+		setArrayValue(fullPath, removeByIdx, removeByIdx);
+	});
+	const swap = useStableRef((fullPath, index1, index2) => {
+		const swapByIdx = arr => core.swap(arr, index1, index2);
+		setArrayValue(fullPath, swapByIdx, swapByIdx);
+	});
 
 	const getRef = useStableRef(fullPath => refsMap.current.get(fullPath));
 
