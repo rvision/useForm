@@ -153,50 +153,66 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		setState(prevState => {
 			const newValues = core.setNested(fullPath, prevState.values, value);
 
+			// set flags
 			isTouched.current = true;
 			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
-			const newState = {
+			return {
 				values: newValues,
 				errors: resolveErrors(fullPath, newValues), // resolve errors elsewhere
 			};
-
-			return newState;
 		}),
 	);
 
-	const setArrayValue = useStableRef((fullPath, mutateArray, mutateArrayErrors) => {
+	const setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
 		setState(prevState => {
-			const newArrayValues = mutateArray(core.getNested(fullPath, prevState.values));
-			const newValues = core.setNested(fullPath, prevState.values, newArrayValues);
+			// calculate new form values
+			const newValues = core.setNested(fullPath, prevState.values, getArray(core.getNested(fullPath, prevState.values)));
 
-			let newErrors = prevState.errors;
-			const existingArrayErrors = core.getNested(fullPath, newErrors);
-
-			if (mutateArrayErrors && Array.isArray(existingArrayErrors)) {
-				const newArrayErrors = mutateArrayErrors(existingArrayErrors);
-				// if previous array of errors had error, copy it
-				if (existingArrayErrors.message) {
-					newArrayErrors.message = existingArrayErrors.message;
-					newArrayErrors.type = existingArrayErrors.type;
-				}
-				newErrors = newArrayErrors.length > 0 ? core.setNested(fullPath, newErrors, newArrayErrors) : core.deleteNestedToRoot(fullPath, newErrors);
-			}
-
+			// set flags
 			isTouched.current = true;
 			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
-			const newState = {
+			// calculate new errors
+			let newErrors = prevState.errors;
+			const existingArrayErrors = core.getNested(fullPath, newErrors);
+
+			// if errors exist in array form, get shifted errors from specific operation
+			let newArrayErrors = [];
+			if (Array.isArray(existingArrayErrors)) {
+				newArrayErrors = getArrayErrors(existingArrayErrors);
+			}
+
+			// shouldRevalidateArray
+			if (shouldRevalidate) {
+				const resolved = core.getNested(fullPath, resolver(newValues));
+				if (resolved && resolved.message) {
+					const target = newArrayErrors.length > 0 ? newArrayErrors : {};
+					target.message = resolved.message;
+					target.type = resolved.type;
+					newArrayErrors = target;
+				}
+			}
+			// first, remove all array errors
+			newErrors = core.deleteNestedToRoot(fullPath, newErrors);
+			// if any errors exist in shifted array, set them
+			if (newArrayErrors.length > 0 || newArrayErrors.message) {
+				newErrors = core.setNested(fullPath, newErrors, newArrayErrors);
+			}
+
+			return {
 				values: newValues,
 				errors: newErrors,
 			};
-
-			return newState;
 		});
 	});
 
 	const append = useStableRef((fullPath, item) => {
-		setArrayValue(fullPath, arr => [...arr, item]);
+		setArrayValue(
+			fullPath,
+			arr => [...arr, item],
+			arr => arr,
+		);
 	});
 	const prepend = useStableRef((fullPath, item) => {
 		setArrayValue(

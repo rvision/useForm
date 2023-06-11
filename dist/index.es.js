@@ -21,12 +21,12 @@ import require$$0, { useState, useRef, useCallback, useEffect } from "react";
 const isFunction = (obj) => typeof obj === "function";
 const EMPTY_OBJECT = {};
 const noOp = () => EMPTY_OBJECT;
-let keySeed = 1e9;
+let keySeed = 2e9;
 const keysMap = /* @__PURE__ */ new WeakMap();
 const key = (object) => {
   let result = keysMap.get(object);
   if (!result) {
-    result = (++keySeed).toString(36).split("").reduce((reversed, character) => character + reversed, "");
+    result = (keySeed++).toString(36);
     keysMap.set(object, result);
   }
   return result;
@@ -156,6 +156,9 @@ const getInputValue = (e) => {
 const swap = (arr, idx1, idx2) => {
   if (Array.isArray(arr)) {
     const newArr = [...arr];
+    while (newArr.length < idx1 || newArr.length < idx2) {
+      newArr.length++;
+    }
     [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
     return newArr;
   }
@@ -339,37 +342,43 @@ const useForm = ({
     const newValues = setNested(fullPath, prevState.values, value);
     isTouched.current = true;
     isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-    const newState = {
+    return {
       values: newValues,
       errors: resolveErrors(fullPath, newValues)
     };
-    return newState;
   }));
-  const setArrayValue = useStableRef((fullPath, mutateArray, mutateArrayErrors) => {
+  const setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
     setState((prevState) => {
-      const newArrayValues = mutateArray(getNested(fullPath, prevState.values));
-      const newValues = setNested(fullPath, prevState.values, newArrayValues);
-      let newErrors = prevState.errors;
-      const existingArrayErrors = getNested(fullPath, newErrors);
-      if (mutateArrayErrors && Array.isArray(existingArrayErrors)) {
-        const newArrayErrors = mutateArrayErrors(existingArrayErrors);
-        if (existingArrayErrors.message) {
-          newArrayErrors.message = existingArrayErrors.message;
-          newArrayErrors.type = existingArrayErrors.type;
-        }
-        newErrors = newArrayErrors.length > 0 ? setNested(fullPath, newErrors, newArrayErrors) : deleteNestedToRoot(fullPath, newErrors);
-      }
+      const newValues = setNested(fullPath, prevState.values, getArray(getNested(fullPath, prevState.values)));
       isTouched.current = true;
       isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-      const newState = {
+      let newErrors = prevState.errors;
+      const existingArrayErrors = getNested(fullPath, newErrors);
+      let newArrayErrors = [];
+      if (Array.isArray(existingArrayErrors)) {
+        newArrayErrors = getArrayErrors(existingArrayErrors);
+      }
+      if (shouldRevalidate) {
+        const resolved = getNested(fullPath, resolver(newValues));
+        if (resolved && resolved.message) {
+          const target = newArrayErrors.length > 0 ? newArrayErrors : {};
+          target.message = resolved.message;
+          target.type = resolved.type;
+          newArrayErrors = target;
+        }
+      }
+      newErrors = deleteNestedToRoot(fullPath, newErrors);
+      if (newArrayErrors.length > 0 || newArrayErrors.message) {
+        newErrors = setNested(fullPath, newErrors, newArrayErrors);
+      }
+      return {
         values: newValues,
         errors: newErrors
       };
-      return newState;
     });
   });
   const append = useStableRef((fullPath, item) => {
-    setArrayValue(fullPath, (arr) => [...arr, item]);
+    setArrayValue(fullPath, (arr) => [...arr, item], (arr) => arr);
   });
   const prepend = useStableRef((fullPath, item) => {
     setArrayValue(fullPath, (arr) => [item, ...arr], (arr) => [void 0, ...arr]);
