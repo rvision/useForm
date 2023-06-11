@@ -164,7 +164,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		}),
 	);
 
-	const setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
+	const _setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
 		setState(prevState => {
 			// calculate new form values
 			const newValues = core.setNested(fullPath, prevState.values, getArray(core.getNested(fullPath, prevState.values)));
@@ -199,7 +199,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			if (newArrayErrors.length > 0 || newArrayErrors.message) {
 				newErrors = core.setNested(fullPath, newErrors, newArrayErrors);
 			}
-
 			return {
 				values: newValues,
 				errors: newErrors,
@@ -208,14 +207,14 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	});
 
 	const append = useStableRef((fullPath, item) => {
-		setArrayValue(
+		_setArrayValue(
 			fullPath,
 			arr => [...arr, item],
 			arr => arr,
 		);
 	});
 	const prepend = useStableRef((fullPath, item) => {
-		setArrayValue(
+		_setArrayValue(
 			fullPath,
 			arr => [item, ...arr],
 			arr => [undefined, ...arr],
@@ -223,16 +222,28 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	});
 	const clear = useStableRef(fullPath => {
 		const clearArr = () => [];
-		setArrayValue(fullPath, clearArr, clearArr);
+		_setArrayValue(fullPath, clearArr, clearArr);
 	});
 	const remove = useStableRef((fullPath, idx) => {
 		const removeByIdx = arr => arr.filter((_, i) => i !== idx);
-		setArrayValue(fullPath, removeByIdx, removeByIdx);
+		_setArrayValue(fullPath, removeByIdx, removeByIdx);
 	});
 	const swap = useStableRef((fullPath, index1, index2) => {
 		const swapByIdx = arr => core.swap(arr, index1, index2);
-		setArrayValue(fullPath, swapByIdx, swapByIdx);
+		_setArrayValue(fullPath, swapByIdx, swapByIdx);
 	});
+
+	// const insertAt = useStableRef((fullPath, item, index) => {
+	// 	const insertAtIdx = arr => {
+	// 		const newArr = [...arr];
+	// 		while (newArr.length < index) {
+	// 			newArr.length++;
+	// 		}
+	// 		newArr.splice(index, 0, item);
+	// 		return newArr;
+	// 	};
+	// 	_setArrayValue(fullPath, insertAtIdx, insertAtIdx);
+	// });
 
 	const getRef = useStableRef(fullPath => refsMap.current.get(fullPath));
 
@@ -370,6 +381,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			prepend,
 			remove,
 			swap,
+			// insertAt,
 		},
 		key: core.key,
 		Error,

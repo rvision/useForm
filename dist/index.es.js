@@ -347,7 +347,7 @@ const useForm = ({
       errors: resolveErrors(fullPath, newValues)
     };
   }));
-  const setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
+  const _setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
     setState((prevState) => {
       const newValues = setNested(fullPath, prevState.values, getArray(getNested(fullPath, prevState.values)));
       isTouched.current = true;
@@ -378,22 +378,22 @@ const useForm = ({
     });
   });
   const append = useStableRef((fullPath, item) => {
-    setArrayValue(fullPath, (arr) => [...arr, item], (arr) => arr);
+    _setArrayValue(fullPath, (arr) => [...arr, item], (arr) => arr);
   });
   const prepend = useStableRef((fullPath, item) => {
-    setArrayValue(fullPath, (arr) => [item, ...arr], (arr) => [void 0, ...arr]);
+    _setArrayValue(fullPath, (arr) => [item, ...arr], (arr) => [void 0, ...arr]);
   });
   const clear = useStableRef((fullPath) => {
     const clearArr = () => [];
-    setArrayValue(fullPath, clearArr, clearArr);
+    _setArrayValue(fullPath, clearArr, clearArr);
   });
   const remove = useStableRef((fullPath, idx) => {
     const removeByIdx = (arr) => arr.filter((_, i) => i !== idx);
-    setArrayValue(fullPath, removeByIdx, removeByIdx);
+    _setArrayValue(fullPath, removeByIdx, removeByIdx);
   });
   const swap$1 = useStableRef((fullPath, index1, index2) => {
     const swapByIdx = (arr) => swap(arr, index1, index2);
-    setArrayValue(fullPath, swapByIdx, swapByIdx);
+    _setArrayValue(fullPath, swapByIdx, swapByIdx);
   });
   const getRef = useStableRef((fullPath) => refsMap.current.get(fullPath));
   const setRef = useStableRef((fullPath, element) => {
