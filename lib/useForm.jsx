@@ -236,9 +236,12 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	// const insertAt = useStableRef((fullPath, item, index) => {
 	// 	const insertAtIdx = arr => {
 	// 		const newArr = [...arr];
-	// 		while (newArr.length < index) {
+	// 		while (newArr.length < index + 1) {
 	// 			newArr.length++;
 	// 		}
+	// 		console.log(`newArr.length`);
+	// 		console.log(newArr.length);
+
 	// 		newArr.splice(index, 0, item);
 	// 		return newArr;
 	// 	};

@@ -161,7 +161,7 @@ const getInputValue = (e) => {
 const swap = (arr, idx1, idx2) => {
   if (Array.isArray(arr)) {
     const newArr = [...arr];
-    while (newArr.length < idx1 || newArr.length < idx2) {
+    while (newArr.length < idx1 + 1 || newArr.length < idx2 + 1) {
       newArr.length++;
     }
     [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
