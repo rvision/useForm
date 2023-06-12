@@ -36,7 +36,12 @@ const backTrackKey = (object) => {
   if (object instanceof Set) {
     clone = /* @__PURE__ */ new Set([...object]);
   } else {
-    clone = Array.isArray(object) ? [...object] : __spreadValues({}, object);
+    const objIsArray = Array.isArray(object);
+    clone = objIsArray ? [...object] : __spreadValues({}, object);
+    if (objIsArray && object.message) {
+      clone.message = object.message;
+      clone.type = object.type;
+    }
   }
   if (keysMap.has(object)) {
     keysMap.set(clone, keysMap.get(object));
