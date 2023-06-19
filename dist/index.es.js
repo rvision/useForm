@@ -393,7 +393,7 @@ const useForm = ({
     _setArrayValue(fullPath, clearArr, clearArr);
   });
   const remove = useStableRef((fullPath, idx) => {
-    const removeByIdx = (arr) => arr.filter((_, i) => i !== idx);
+    const removeByIdx = (arr) => Object.values([...arr]).filter((_, i) => i !== idx);
     _setArrayValue(fullPath, removeByIdx, removeByIdx);
   });
   const swap$1 = useStableRef((fullPath, index1, index2) => {
@@ -472,13 +472,13 @@ const useForm = ({
     children
   }) => {
     const error = getError(fullPath, errors);
-    if (!error || !error.message) {
-      return false;
+    if (error == null ? void 0 : error.message) {
+      return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
+        className: getErrorClassName(error, classNameError),
+        children: error.message
+      });
     }
-    return isFunction(children) ? children(error) : /* @__PURE__ */ jsx("span", {
-      className: getErrorClassName(error, classNameError),
-      children: error.message
-    });
+    return false;
   });
   const isValid = !hasError();
   const Errors = useStableRef(({

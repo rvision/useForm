@@ -225,7 +225,8 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		_setArrayValue(fullPath, clearArr, clearArr);
 	});
 	const remove = useStableRef((fullPath, idx) => {
-		const removeByIdx = arr => arr.filter((_, i) => i !== idx);
+		// NOTE: clone array because .filter doesn't work properly with sparse arrays (errors)
+		const removeByIdx = arr => Object.values([...arr]).filter((_, i) => i !== idx);
 		_setArrayValue(fullPath, removeByIdx, removeByIdx);
 	});
 	const swap = useStableRef((fullPath, index1, index2) => {
