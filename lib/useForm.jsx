@@ -327,12 +327,10 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const Error = useStableRef(({ for: fullPath, children }) => {
 		const error = getError(fullPath, errors);
-
-		if (!error || !error.message) {
-			return false;
+		if (error?.message) {
+			return core.isFunction(children) ? children(error) : <span className={core.getErrorClassName(error, classNameError)}>{error.message}</span>;
 		}
-
-		return core.isFunction(children) ? children(error) : <span className={core.getErrorClassName(error, classNameError)}>{error.message}</span>;
+		return false;
 	});
 
 	const isValid = !hasError();
