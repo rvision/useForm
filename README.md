@@ -71,7 +71,7 @@ Note that handlers have **stable references**. This allows you to memoize parts 
 
 ## Goals
 - **0 dependencies**
-- **lightweight**: ~3.4kb minified & gzipped
+- **lightweight**: ~3.5kb minified & gzipped
 - **simplicity**: low learning curve
 - **nested arrays** without hassle
 - **un-opinionated** - components freedom: doesn't force you to use any specific component for inputs or form, it allows use of native input fields via ```register``` and custom components via ```getValue/setValue``` functions
