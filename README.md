@@ -317,7 +317,7 @@ setErrors({
 });
 ```
 
-#### trigger(fullPath: string? | string[], newValues: any?)
+#### trigger(fullPath: string? | string[], newValues: any?) : Promise<{errors: any, values: any}>
 
 triggers validation on default form values object or passed newValues; it re-validates only the error with ```fullPath```; returns errors in promise
 ```jsx
@@ -440,7 +440,7 @@ formState: {
 	isTouched: bool,
 	isDirty: bool
 	hadError: bool,
-	reset: (values?: any) => void;
+	reset: (values?: any, reValidate?: boolean) => void;
 }
 ```
 
