@@ -206,6 +206,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 			if (newArrayErrors.length > 0 || newArrayErrors.message) {
 				newErrors = core.setNested(fullPath, newErrors, newArrayErrors);
 			}
+
 			return {
 				values: newValues,
 				errors: newErrors,
@@ -217,14 +218,14 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		_setArrayValue(
 			fullPath,
 			arr => [...arr, item],
-			arr => arr,
+			errors => errors,
 		);
 	});
 	const prepend = useStableRef((fullPath, item) => {
 		_setArrayValue(
 			fullPath,
 			arr => [item, ...arr],
-			arr => [undefined, ...arr],
+			errors => [undefined, ...errors],
 		);
 	});
 	const clear = useStableRef(fullPath => {
