@@ -208,14 +208,14 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		_setArrayValue(
 			fullPath,
 			arr => [...arr, item],
-			arr => arr,
+			errors => errors,
 		);
 	});
 	const prepend = useStableRef((fullPath, item) => {
 		_setArrayValue(
 			fullPath,
 			arr => [item, ...arr],
-			arr => [undefined, ...arr],
+			errors => [undefined, ...errors],
 		);
 	});
 	const clear = useStableRef(fullPath => {
