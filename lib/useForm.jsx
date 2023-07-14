@@ -135,7 +135,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const setValue = useStableRef((fullPath, value) =>
 		setState(prevState => {
-			const newValues = fullPath === '' ? value : core.setNested(fullPath, prevState.values, value);
+			const newValues = core.setNested(fullPath, prevState.values, value);
 
 			// set flags
 			isTouched.current = true;
@@ -255,7 +255,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		}
 	});
 
-	const ref = useStableRef(element => element && setRef(element.name, element));
+	const ref = element => element && setRef(element.name, element);
 
 	const onChange = useStableRef(e => setValue(e.target.name, core.getInputValue(e)));
 

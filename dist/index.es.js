@@ -331,7 +331,7 @@ const useForm = ({
   }));
   const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
   const setValue = useStableRef((fullPath, value) => setState((prevState) => {
-    const newValues = fullPath === "" ? value : setNested(fullPath, prevState.values, value);
+    const newValues = setNested(fullPath, prevState.values, value);
     isTouched.current = true;
     isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
     let newErrors = errors;
@@ -403,7 +403,7 @@ const useForm = ({
       refsMap.current.set(fullPath, element);
     }
   });
-  const ref = useStableRef((element) => element && setRef(element.name, element));
+  const ref = (element) => element && setRef(element.name, element);
   const onChange = useStableRef((e) => setValue(e.target.name, getInputValue(e)));
   const onBlur = useStableRef((e) => {
     const {
