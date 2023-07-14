@@ -341,7 +341,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 		// entry[0] = fullPath, entry[1] = element
 		const errorPaths = Array.from(refsMap.current)
-			.filter(entry => !!entry[1])
 			.map(entry => entry[0])
 			.filter(entry => hasError(entry, errors))
 			.sort();

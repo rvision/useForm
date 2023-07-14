@@ -284,14 +284,14 @@ const useForm = ({
     init(defaultValues);
     return resetSplitCache;
   }, [defaultValues, init]);
-  const focus = (fullPath) => {
+  const focus = useCallback((fullPath) => {
     const element = refsMap.current.get(fullPath);
     if (element && element.focus) {
       element.focus();
       return true;
     }
     return false;
-  };
+  }, []);
   const getValue = useStableRef((fullPath = "") => {
     if (!refsMap.current.has(fullPath)) {
       refsMap.current.set(fullPath, null);
@@ -330,7 +330,10 @@ const useForm = ({
     });
   }));
   const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
-  const _resolveErrors = useStableRef((fullPath, newValues) => {
+  const setValue = useStableRef((fullPath, value) => setState((prevState) => {
+    const newValues = fullPath === "" ? value : setNested(fullPath, prevState.values, value);
+    isTouched.current = true;
+    isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
     let newErrors = errors;
     if (shouldRevalidate || hasError(fullPath)) {
       newErrors = deleteNestedToRoot(fullPath, newErrors);
@@ -341,15 +344,9 @@ const useForm = ({
         }
       }
     }
-    return newErrors;
-  });
-  const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) => setState((prevState) => {
-    const newValues = setNested(fullPath, prevState.values, value);
-    isTouched.current = true;
-    isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
     return {
       values: newValues,
-      errors: resolveErrors(fullPath, newValues)
+      errors: newErrors
     };
   }));
   const _setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
@@ -383,10 +380,10 @@ const useForm = ({
     });
   });
   const append = useStableRef((fullPath, item) => {
-    _setArrayValue(fullPath, (arr) => [...arr, item], (arr) => arr);
+    _setArrayValue(fullPath, (arr) => [...arr, item], (errors2) => errors2);
   });
   const prepend = useStableRef((fullPath, item) => {
-    _setArrayValue(fullPath, (arr) => [item, ...arr], (arr) => [void 0, ...arr]);
+    _setArrayValue(fullPath, (arr) => [item, ...arr], (errors2) => [void 0, ...errors2]);
   });
   const clear = useStableRef((fullPath) => {
     const clearArr = () => [];
@@ -488,7 +485,7 @@ const useForm = ({
     if (isValid) {
       return false;
     }
-    const errorPaths = Array.from(refsMap.current).filter((entry) => !!entry[1]).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
+    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
     const result = errorPaths.map((fullPath) => {
       const error = getError(fullPath);
       return /* @__PURE__ */ jsx("li", {
