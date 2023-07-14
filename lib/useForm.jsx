@@ -353,13 +353,15 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 			// entry[0] = fullPath, entry[1] = element
 			const errorPaths = Array.from(refsMap.current)
-				.filter(entry => !!entry[1])
 				.map(entry => entry[0])
 				.filter(entry => hasError(entry, errors))
 				.sort();
 
 			const result = errorPaths.map(fullPath => {
 				const error = getError(fullPath);
+				if (!error) {
+					return false;
+				}
 				return (
 					<li key={fullPath} className={core.getErrorClassName(error, classNameError)}>
 						{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}
