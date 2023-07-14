@@ -133,17 +133,31 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
 
-	const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) =>
+	const setValue = useStableRef((fullPath, value) =>
 		setState(prevState => {
-			const newValues = core.setNested(fullPath, prevState.values, value);
+			const newValues = fullPath === '' ? value : core.setNested(fullPath, prevState.values, value);
 
 			// set flags
 			isTouched.current = true;
 			isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
 
+			// resolve errors if needed
+			let newErrors = errors;
+			if (shouldRevalidate || hasError(fullPath)) {
+				// clear existing error
+				newErrors = core.deleteNestedToRoot(fullPath, newErrors);
+				// revalidate only if it isn't onSubmit mode
+				if (!isOnSubmitMode) {
+					const newError = core.getNested(fullPath, resolver(newValues));
+					if (newError) {
+						newErrors = core.setNested(fullPath, newErrors, newError);
+					}
+				}
+			}
+
 			return {
 				values: newValues,
-				errors: resolveErrors(fullPath, newValues), // resolve errors elsewhere
+				errors: newErrors,
 			};
 		}),
 	);
