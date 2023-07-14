@@ -70,14 +70,14 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 		return core.resetSplitCache;
 	}, [defaultValues, init]);
 
-	const focus = fullPath => {
+	const focus = useCallback(fullPath => {
 		const element = refsMap.current.get(fullPath);
 		if (element && element.focus) {
 			element.focus();
 			return true;
 		}
 		return false;
-	};
+	}, []);
 
 	const getValue = useStableRef((fullPath = '') => {
 		// NOTE: for <Errors /> to work properly
@@ -132,22 +132,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 	);
 
 	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
-	// default errors revalidation when changing form values
-	const _resolveErrors = useStableRef((fullPath, newValues) => {
-		let newErrors = errors;
-		if (shouldRevalidate || hasError(fullPath)) {
-			// clear existing error
-			newErrors = core.deleteNestedToRoot(fullPath, newErrors);
-			// revalidate only if it isn't onSubmit mode
-			if (!isOnSubmitMode) {
-				const newError = core.getNested(fullPath, resolver(newValues));
-				if (newError) {
-					newErrors = core.setNested(fullPath, newErrors, newError);
-				}
-			}
-		}
-		return newErrors;
-	});
 
 	const setValue = useStableRef((fullPath, value, resolveErrors = _resolveErrors) =>
 		setState(prevState => {
