@@ -144,7 +144,7 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 	const setValue = useStableRef((fullPath, value) =>
 		setState(prevState => {
-			const newValues = core.setNested(fullPath, prevState.values, value);
+			const newValues = fullPath === '' ? value : core.setNested(fullPath, prevState.values, value);
 
 			// set flags
 			isTouched.current = true;
@@ -359,9 +359,6 @@ const useForm = ({ defaultValues, mode, classNameError, shouldFocusError = false
 
 			const result = errorPaths.map(fullPath => {
 				const error = getError(fullPath);
-				if (!error) {
-					return false;
-				}
 				return (
 					<li key={fullPath} className={core.getErrorClassName(error, classNameError)}>
 						{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}

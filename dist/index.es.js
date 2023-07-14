@@ -337,7 +337,7 @@ const useForm = ({
   }));
   const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
   const setValue = useStableRef((fullPath, value) => setState((prevState) => {
-    const newValues = setNested(fullPath, prevState.values, value);
+    const newValues = fullPath === "" ? value : setNested(fullPath, prevState.values, value);
     isTouched.current = true;
     isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
     let newErrors = errors;
@@ -490,15 +490,15 @@ const useForm = ({
     if (!hasError()) {
       return false;
     }
-    const errorPaths = Array.from(refsMap.current).filter((entry) => !!entry[1]).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
+    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
     const result = errorPaths.map((fullPath) => {
       const error = getError(fullPath);
       return /* @__PURE__ */ jsx("li", {
         className: getErrorClassName(error, classNameError),
         children: focusable ? /* @__PURE__ */ jsx("a", {
           onClick: () => focus(fullPath),
-          children: error == null ? void 0 : error.message
-        }) : error == null ? void 0 : error.message
+          children: error.message
+        }) : error.message
       }, fullPath);
     });
     return isFunction(children) ? children(result) : result;
