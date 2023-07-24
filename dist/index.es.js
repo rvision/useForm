@@ -59,7 +59,7 @@ const extractPath = (path) => {
   if (cached) {
     return cached;
   }
-  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => !isNaN(parseInt(pathPart, 10)) ? +pathPart : pathPart);
+  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => +pathPart - +pathPart === 0 ? +pathPart : pathPart);
   _splitCache.set(path, cached);
   return cached;
 };
@@ -88,7 +88,7 @@ const _setNested = (fullPath, target, value) => {
   }
   const hasNextProperty = target[path] !== void 0;
   const idx = fullPath[1];
-  const isIndexANumber = !isNaN(idx);
+  const isIndexANumber = +idx - +idx < 1;
   target[path] = hasNextProperty ? backTrackKey(target[path]) : isIndexANumber ? [] : {};
   if (isIndexANumber) {
     target[path][idx] = target[path][idx] === void 0 ? {} : backTrackKey(target[path][idx]);
@@ -148,7 +148,7 @@ const getInputValue = (e) => {
         return null;
       }
       const parsed = Number.parseFloat(value);
-      return !isNaN(parsed) ? +parsed : void 0;
+      return +parsed - +parsed < 1 ? +parsed : void 0;
     }
     case "file":
       return multiple ? files : files.item(0);
