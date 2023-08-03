@@ -2,7 +2,7 @@ import { FC, ReactNode, SyntheticEvent } from "react";
 
 export interface UseFormOptions {
 	/**
-   * form identifier: set it only if you have multiple forms at once
+   * identifier: set it only if you have multiple forms at once
    */
 	id?: string;
 	/**
