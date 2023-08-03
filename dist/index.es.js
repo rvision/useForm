@@ -231,10 +231,13 @@ reactJsxRuntime_production_min.jsxs = q;
 const jsx = jsxRuntime.exports.jsx;
 const ARIA_INVALID = "aria-invalid";
 const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
-const useStableRef = (callback) => {
-  const handlerRef = useRef(callback);
-  handlerRef.current = callback;
-  return useCallback((...args) => handlerRef.current(...args), []);
+const functions = /* @__PURE__ */ new Map();
+const useStableRef = (hash, callback) => {
+  functions.set(hash, callback);
+  useEffect(() => {
+    return () => functions.delete(hash);
+  }, [hash]);
+  return useCallback((...args) => functions.get(hash)(...args), [hash]);
 };
 const registerProps = {
   name: "",
@@ -247,6 +250,7 @@ const registerProps = {
   checked: false
 };
 const useForm = ({
+  id = "",
   defaultValues,
   mode,
   classNameError,
@@ -282,7 +286,9 @@ const useForm = ({
   }, []);
   useEffect(() => {
     init(defaultValues);
-    return resetSplitCache;
+    return () => {
+      resetSplitCache();
+    };
   }, [defaultValues, init]);
   const focus = useCallback((fullPath) => {
     const element = refsMap.current.get(fullPath);
@@ -292,22 +298,22 @@ const useForm = ({
     }
     return false;
   }, []);
-  const getValue = useStableRef((fullPath = "") => {
+  const getValue = useStableRef(id + 1, (fullPath = "") => {
     if (!refsMap.current.has(fullPath)) {
       refsMap.current.set(fullPath, null);
     }
     return getNested(fullPath, values);
   });
-  const getError = useStableRef((fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
-  const hasError = useStableRef((fullPath = "", targetErrors = errors) => fullPath === "" ? !isEmptyObjectOrFalsy(targetErrors) : getNested(fullPath, targetErrors) !== void 0);
-  const clearError = useStableRef((fullPath, targetErrors = errors) => {
+  const getError = useStableRef(id + 2, (fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
+  const hasError = useStableRef(id + 3, (fullPath = "", targetErrors = errors) => fullPath === "" ? !isEmptyObjectOrFalsy(targetErrors) : getNested(fullPath, targetErrors) !== void 0);
+  const clearError = useStableRef(id + 4, (fullPath, targetErrors = errors) => {
     let newErrors = targetErrors;
     if (hasError(fullPath, targetErrors)) {
       newErrors = deleteNestedToRoot(fullPath, targetErrors);
     }
     return newErrors;
   });
-  const trigger = useStableRef((fullPath = "") => new Promise((resolve = noOp) => {
+  const trigger = useStableRef(id + 5, (fullPath = "") => new Promise((resolve = noOp) => {
     setState((prevState) => {
       let newErrors = resolver(prevState.values);
       if (fullPath !== "") {
@@ -330,7 +336,7 @@ const useForm = ({
     });
   }));
   const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
-  const setValue = useStableRef((fullPath, value) => setState((prevState) => {
+  const setValue = useStableRef(id + 6, (fullPath, value) => setState((prevState) => {
     const newValues = setNested(fullPath, prevState.values, value);
     isTouched.current = true;
     isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
@@ -349,7 +355,7 @@ const useForm = ({
       errors: newErrors
     };
   }));
-  const _setArrayValue = useStableRef((fullPath, getArray, getArrayErrors) => {
+  const _setArrayValue = useStableRef(id + 7, (fullPath, getArray, getArrayErrors) => {
     setState((prevState) => {
       const newValues = setNested(fullPath, prevState.values, getArray(getNested(fullPath, prevState.values)));
       isTouched.current = true;
@@ -379,33 +385,33 @@ const useForm = ({
       };
     });
   });
-  const append = useStableRef((fullPath, item) => {
+  const append = useStableRef(id + 8, (fullPath, item) => {
     _setArrayValue(fullPath, (arr) => [...arr, item], (errors2) => errors2);
   });
-  const prepend = useStableRef((fullPath, item) => {
+  const prepend = useStableRef(id + 9, (fullPath, item) => {
     _setArrayValue(fullPath, (arr) => [item, ...arr], (errors2) => [void 0, ...errors2]);
   });
-  const clear = useStableRef((fullPath) => {
+  const clear = useStableRef(id + 10, (fullPath) => {
     const clearArr = () => [];
     _setArrayValue(fullPath, clearArr, clearArr);
   });
-  const remove = useStableRef((fullPath, idx) => {
+  const remove = useStableRef(id + 11, (fullPath, idx) => {
     const removeByIdx = (arr) => [...arr].filter((_, i) => i !== idx);
     _setArrayValue(fullPath, removeByIdx, removeByIdx);
   });
-  const swap$1 = useStableRef((fullPath, index1, index2) => {
+  const swap$1 = useStableRef(id + 12, (fullPath, index1, index2) => {
     const swapByIdx = (arr) => swap(arr, index1, index2);
     _setArrayValue(fullPath, swapByIdx, swapByIdx);
   });
-  const getRef = useStableRef((fullPath) => refsMap.current.get(fullPath));
-  const setRef = useStableRef((fullPath, element) => {
+  const getRef = useStableRef(id + 13, (fullPath) => refsMap.current.get(fullPath));
+  const setRef = useStableRef(id + 14, (fullPath, element) => {
     if (element) {
       refsMap.current.set(fullPath, element);
     }
   });
   const ref = (element) => element && setRef(element.name, element);
-  const onChange = useStableRef((e) => setValue(e.target.name, getInputValue(e)));
-  const onBlur = useStableRef((e) => {
+  const onChange = useStableRef(id + 15, (e) => setValue(e.target.name, getInputValue(e)));
+  const onBlur = useStableRef(id + 16, (e) => {
     const {
       name
     } = e.target;
@@ -419,7 +425,7 @@ const useForm = ({
       setErrors(clearError(name));
     }
   });
-  const register = useStableRef((fullPath, className = "") => {
+  const register = useStableRef(id + 17, (fullPath, className = "") => {
     const value = getValue(fullPath);
     const hasFieldError = hasError(fullPath);
     registerProps.name = fullPath;
@@ -437,7 +443,7 @@ const useForm = ({
     }
     return registerProps;
   });
-  const reset = useStableRef((values2 = defaultValues, reValidate = true) => {
+  const reset = useStableRef(id + 18, (values2 = defaultValues, reValidate = true) => {
     init(values2);
     isTouched.current = false;
     isDirty.current = false;
@@ -464,7 +470,7 @@ const useForm = ({
     handler(values);
     return true;
   };
-  const Error2 = useStableRef(({
+  const Error2 = useStableRef(id + 19, ({
     for: fullPath,
     children
   }) => {
@@ -478,7 +484,7 @@ const useForm = ({
     return false;
   });
   const isValid = !hasError();
-  const Errors = useStableRef(({
+  const Errors = useStableRef(id + 20, ({
     children,
     focusable = false
   }) => {
