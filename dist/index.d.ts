@@ -2,6 +2,10 @@ import { FC, ReactNode, SyntheticEvent } from "react";
 
 export interface UseFormOptions {
 	/**
+   * form identifier: set it only if you have multiple forms at once
+   */
+	id?: string;
+	/**
    * initial values of form fields; do NOT declare them inline
    */
 	defaultValues?: {};

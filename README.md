@@ -92,6 +92,7 @@ Let's call this identifier ```fullPath```. Most of the methods to work with fiel
 ### Hook options
 ```js
 useForm({
+	id: '',
 	defaultValues: {},
 	mode: 'onSubmit',
 	classNameError: null,
@@ -102,6 +103,7 @@ useForm({
 
 **Property**       | **Type**      | **Description**
 --------------- | ------------- | --------------------------------------------------------------
+```id```| ```string```        | identifier: set it only if you have multiple forms at once (used internally for stable callbacks)
 ```defaultValues```| ```object```        | initial form values; for new records it has to be populated with default values (e.g. empty strings, true/false, date, etc.)
 ```mode```      | ```'onSubmit' / 'onChange' / 'onBlur'```  | validation mode, see below
 ```classNameError``` | ```string```        | Registered fields with validation error will have this css class name appended to their className list. Errors and Error components will use this class name also
