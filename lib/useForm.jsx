@@ -8,7 +8,6 @@ export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instance
 const functions = new Map();
 const useStableRef = (hash, callback) => {
 	functions.set(hash, callback);
-
 	useEffect(() => {
 		return () => functions.delete(hash);
 	}, [hash]);
@@ -52,6 +51,9 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	// default mode: no validations until submit, if any errors - validate onChange
 	const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
 
+	// callback identifier
+	let f = 1;
+
 	const setErrors = newErrors =>
 		setState(prev => ({
 			...prev,
@@ -84,7 +86,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		return false;
 	}, []);
 
-	const getValue = useStableRef(id + 1, (fullPath = '') => {
+	const getValue = useStableRef(id + f++, (fullPath = '') => {
 		// NOTE: for <Errors /> to work properly
 		if (!refsMap.current.has(fullPath)) {
 			refsMap.current.set(fullPath, null);
@@ -92,13 +94,13 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		return core.getNested(fullPath, values);
 	});
 
-	const getError = useStableRef(id + 2, (fullPath = '', targetErrors = errors) => core.getNested(fullPath, targetErrors));
+	const getError = useStableRef(id + f++, (fullPath = '', targetErrors = errors) => core.getNested(fullPath, targetErrors));
 
-	const hasError = useStableRef(id + 3, (fullPath = '', targetErrors = errors) =>
+	const hasError = useStableRef(id + f++, (fullPath = '', targetErrors = errors) =>
 		fullPath === '' ? !core.isEmptyObjectOrFalsy(targetErrors) : core.getNested(fullPath, targetErrors) !== undefined,
 	);
 
-	const clearError = useStableRef(id + 4, (fullPath, targetErrors = errors) => {
+	const clearError = useStableRef(id + f++, (fullPath, targetErrors = errors) => {
 		let newErrors = targetErrors;
 		if (hasError(fullPath, targetErrors)) {
 			newErrors = core.deleteNestedToRoot(fullPath, targetErrors);
@@ -107,7 +109,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	});
 
 	const trigger = useStableRef(
-		id + 5,
+		id + f++,
 		(fullPath = '') =>
 			new Promise((resolve = core.noOp) => {
 				setState(prevState => {
@@ -139,7 +141,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	const shouldRevalidate = isOnChangeMode || (formHadError.current && isDefaultMode);
 
-	const setValue = useStableRef(id + 6, (fullPath, value) =>
+	const setValue = useStableRef(id + f++, (fullPath, value) =>
 		setState(prevState => {
 			const newValues = core.setNested(fullPath, prevState.values, value);
 
@@ -168,7 +170,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		}),
 	);
 
-	const _setArrayValue = useStableRef(id + 7, (fullPath, getArray, getArrayErrors) => {
+	const _setArrayValue = useStableRef(id + f++, (fullPath, getArray, getArrayErrors) => {
 		setState(prevState => {
 			// calculate new form values
 			const newValues = core.setNested(fullPath, prevState.values, getArray(core.getNested(fullPath, prevState.values)));
@@ -210,35 +212,35 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		});
 	});
 
-	const append = useStableRef(id + 8, (fullPath, item) => {
+	const append = useStableRef(id + f++, (fullPath, item) => {
 		_setArrayValue(
 			fullPath,
 			arr => [...arr, item],
 			errors => errors,
 		);
 	});
-	const prepend = useStableRef(id + 9, (fullPath, item) => {
+	const prepend = useStableRef(id + f++, (fullPath, item) => {
 		_setArrayValue(
 			fullPath,
 			arr => [item, ...arr],
 			errors => [undefined, ...errors],
 		);
 	});
-	const clear = useStableRef(id + 10, fullPath => {
+	const clear = useStableRef(id + f++, fullPath => {
 		const clearArr = () => [];
 		_setArrayValue(fullPath, clearArr, clearArr);
 	});
-	const remove = useStableRef(id + 11, (fullPath, idx) => {
+	const remove = useStableRef(id + f++, (fullPath, idx) => {
 		// NOTE: clone array because .filter doesn't work properly with sparse arrays (errors)
 		const removeByIdx = arr => [...arr].filter((_, i) => i !== idx);
 		_setArrayValue(fullPath, removeByIdx, removeByIdx);
 	});
-	const swap = useStableRef(id + 12, (fullPath, index1, index2) => {
+	const swap = useStableRef(id + f++, (fullPath, index1, index2) => {
 		const swapByIdx = arr => core.swap(arr, index1, index2);
 		_setArrayValue(fullPath, swapByIdx, swapByIdx);
 	});
 
-	// const insertAt = useStableRef(id + (fullPath, item, index) => {
+	// const insertAt = useStableRef(id + f++(fullPath, item, index) => {
 	// 	const insertAtIdx = arr => {
 	// 		const newArr = [...arr];
 	// 		while (newArr.length < index + 1) {
@@ -253,9 +255,9 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	// 	_setArrayValue(fullPath, insertAtIdx, insertAtIdx);
 	// });
 
-	const getRef = useStableRef(id + 13, fullPath => refsMap.current.get(fullPath));
+	const getRef = useStableRef(id + f++, fullPath => refsMap.current.get(fullPath));
 
-	const setRef = useStableRef(id + 14, (fullPath, element) => {
+	const setRef = useStableRef(id + f++, (fullPath, element) => {
 		if (element) {
 			refsMap.current.set(fullPath, element);
 		}
@@ -263,9 +265,9 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	const ref = element => element && setRef(element.name, element);
 
-	const onChange = useStableRef(id + 15, e => setValue(e.target.name, core.getInputValue(e)));
+	const onChange = useStableRef(id + f++, e => setValue(e.target.name, core.getInputValue(e)));
 
-	const onBlur = useStableRef(id + 16, e => {
+	const onBlur = useStableRef(id + f++, e => {
 		const { name } = e.target;
 		const newError = core.getNested(name, resolver(values));
 		if (newError) {
@@ -278,7 +280,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		}
 	});
 
-	const register = useStableRef(id + 17, (fullPath, className = '') => {
+	const register = useStableRef(id + f++, (fullPath, className = '') => {
 		const value = getValue(fullPath);
 		const hasFieldError = hasError(fullPath);
 
@@ -300,7 +302,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		return registerProps;
 	});
 
-	const reset = useStableRef(id + 18, (values = defaultValues, reValidate = true) => {
+	const reset = useStableRef(id + f++, (values = defaultValues, reValidate = true) => {
 		init(values);
 		isTouched.current = false;
 		isDirty.current = false;
@@ -330,7 +332,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		return true;
 	};
 
-	const Error = useStableRef(id + 19, ({ for: fullPath, children }) => {
+	const Error = useStableRef(id + f++, ({ for: fullPath, children }) => {
 		const error = getError(fullPath, errors);
 		if (error?.message) {
 			return core.isFunction(children) ? children(error) : <span className={core.getErrorClassName(error, classNameError)}>{error.message}</span>;
@@ -340,7 +342,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	const isValid = !hasError();
 
-	const Errors = useStableRef(id + 20, ({ children, focusable = false }) => {
+	const Errors = useStableRef(id + f++, ({ children, focusable = false }) => {
 		if (isValid) {
 			return false;
 		}
