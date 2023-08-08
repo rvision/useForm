@@ -141,6 +141,13 @@ declare function useForm(options: UseFormOptions): {
 		 * @param index2 position of the second element in the array
 		 */
 		swap: (fullPath: string, index1: number, index2: number) => void;
+		/**
+		 * inserts element to the array at specific index
+		 * @param fullPath path to array property, e.g. 'albums'
+		 * @param index position to insert element at
+		 * @param object element to insert to array
+		 */
+		insert: (fullPath: string, index: number, object: any) => void;
 	},
 	/**
 	 * returns stable key for objects to use as React key property (e.g. &lt;div key={key(object)}) /&gt;)

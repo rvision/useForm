@@ -159,15 +159,20 @@ const getInputValue = (e) => {
   }
 };
 const swap = (arr, idx1, idx2) => {
-  if (Array.isArray(arr)) {
-    const newArr = [...arr];
-    while (newArr.length < idx1 + 1 || newArr.length < idx2 + 1) {
-      newArr.length++;
-    }
-    [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
-    return newArr;
+  const newArr = [...arr];
+  while (newArr.length < Math.max(idx1, idx2)) {
+    newArr.push(void 0);
   }
-  return arr;
+  [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
+  return newArr;
+};
+const insertAtIdx = (arr, index, item) => {
+  const newArr = [...arr];
+  while (newArr.length < index) {
+    newArr.push(void 0);
+  }
+  newArr.splice(index, 0, item);
+  return newArr;
 };
 const getErrorClassName = (errorObject, classNameError, className) => `${className || ""} ${classNameError || ""} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
 const yupResolver = (schema) => (formValues) => {
@@ -274,8 +279,8 @@ const useForm = ({
   const isOnBlurMode = mode === "onBlur";
   const isOnChangeMode = mode === "onChange";
   const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
-  let f2 = 1;
-  const useStable = (handler) => useStableReference(id + f2++, handler);
+  let callbackId = 1;
+  const useStable = (handler) => useStableReference(id + callbackId++, handler);
   const setErrors = (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
     errors: newErrors
   }));
@@ -405,6 +410,11 @@ const useForm = ({
     const swapByIdx = (arr) => swap(arr, index1, index2);
     _setArrayValue(fullPath, swapByIdx, swapByIdx);
   });
+  const insert = useStable((fullPath, index, item) => {
+    const insertItem = (arr) => insertAtIdx(arr, index, item);
+    const insertError = (arr) => insertAtIdx(arr, index, void 0);
+    _setArrayValue(fullPath, insertItem, insertError);
+  });
   const getRef = useStable((fullPath) => refsMap.current.get(fullPath));
   const setRef = useStable((fullPath, element) => {
     if (element) {
@@ -528,7 +538,8 @@ const useForm = ({
       append,
       prepend,
       remove,
-      swap: swap$1
+      swap: swap$1,
+      insert
     },
     key,
     Error: Error2,

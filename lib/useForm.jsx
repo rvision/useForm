@@ -52,8 +52,8 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
 
 	// callback identifier, incremented for each stable function
-	let f = 1;
-	const useStable = handler => useStableReference(id + f++, handler);
+	let callbackId = 1;
+	const useStable = handler => useStableReference(id + callbackId++, handler);
 
 	const setErrors = newErrors =>
 		setState(prev => ({
@@ -239,21 +239,11 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		const swapByIdx = arr => core.swap(arr, index1, index2);
 		_setArrayValue(fullPath, swapByIdx, swapByIdx);
 	});
-
-	// const insertAt = useStableRef(getFunctionHash()(fullPath, item, index) => {
-	// 	const insertAtIdx = arr => {
-	// 		const newArr = [...arr];
-	// 		while (newArr.length < index + 1) {
-	// 			newArr.length++;
-	// 		}
-	// 		console.log(`newArr.length`);
-	// 		console.log(newArr.length);
-
-	// 		newArr.splice(index, 0, item);
-	// 		return newArr;
-	// 	};
-	// 	_setArrayValue(fullPath, insertAtIdx, insertAtIdx);
-	// });
+	const insert = useStable((fullPath, index, item) => {
+		const insertItem = arr => core.insertAtIdx(arr, index, item);
+		const insertError = arr => core.insertAtIdx(arr, index, undefined);
+		_setArrayValue(fullPath, insertItem, insertError);
+	});
 
 	const getRef = useStable(fullPath => refsMap.current.get(fullPath));
 
@@ -388,7 +378,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 			prepend,
 			remove,
 			swap,
-			// insertAt,
+			insert,
 		},
 		key: core.key,
 		Error,

@@ -143,6 +143,7 @@ const {
 		prepend,
 		remove,
 		swap,
+		insert,
 	},
 	key,
 	Error,
@@ -430,6 +431,16 @@ swaps item positions in the existing array, useful for drag'n'drop operations
 <button onClick={e => {
 	e.preventDefault();
 	array.swap('movies[3].actors', 0, 1);
+}}>Swap actors</button>
+```
+
+#### array.insert(fullPath: string, index: int, newValue: any)
+
+inserts item to the array at specific index
+```jsx
+<button onClick={e => {
+	e.preventDefault();
+	array.insert('movies[3].actors', { firstName: 'James', lastName: 'Dean' }, 5);
 }}>Swap actors</button>
 ```
 
