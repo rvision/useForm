@@ -240,8 +240,8 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		_setArrayValue(fullPath, swapByIdx, swapByIdx);
 	});
 	const insert = useStable((fullPath, index, item) => {
-		const insertItem = arr => core.insertAtIdx(arr, index, item);
-		const insertError = arr => core.insertAtIdx(arr, index, undefined);
+		const insertItem = arr => core.insert(arr, index, item);
+		const insertError = arr => core.insert(arr, index, undefined);
 		_setArrayValue(fullPath, insertItem, insertError);
 	});
 

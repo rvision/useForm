@@ -59,7 +59,7 @@ const extractPath = (path) => {
   if (cached) {
     return cached;
   }
-  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => +pathPart - +pathPart === 0 ? +pathPart : pathPart);
+  cached = path.replace(_splitRegEx, ".$1").split(".").map((pathPart) => +pathPart - +pathPart < 1 ? +pathPart : pathPart);
   _splitCache.set(path, cached);
   return cached;
 };
@@ -166,7 +166,7 @@ const swap = (arr, idx1, idx2) => {
   [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
   return newArr;
 };
-const insertAtIdx = (arr, index, item) => {
+const insert = (arr, index, item) => {
   const newArr = [...arr];
   while (newArr.length < index) {
     newArr.push(void 0);
@@ -410,9 +410,9 @@ const useForm = ({
     const swapByIdx = (arr) => swap(arr, index1, index2);
     _setArrayValue(fullPath, swapByIdx, swapByIdx);
   });
-  const insert = useStable((fullPath, index, item) => {
-    const insertItem = (arr) => insertAtIdx(arr, index, item);
-    const insertError = (arr) => insertAtIdx(arr, index, void 0);
+  const insert$1 = useStable((fullPath, index, item) => {
+    const insertItem = (arr) => insert(arr, index, item);
+    const insertError = (arr) => insert(arr, index, void 0);
     _setArrayValue(fullPath, insertItem, insertError);
   });
   const getRef = useStable((fullPath) => refsMap.current.get(fullPath));
@@ -539,7 +539,7 @@ const useForm = ({
       prepend,
       remove,
       swap: swap$1,
-      insert
+      insert: insert$1
     },
     key,
     Error: Error2,
