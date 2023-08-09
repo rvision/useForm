@@ -392,12 +392,13 @@ const useForm = ({
       };
     });
   });
-  const append = useStable((fullPath, item) => {
-    _setArrayValue(fullPath, (arr) => [...arr, item], (errors2) => errors2);
+  const insert$1 = useStable((fullPath, index, item) => {
+    const insertItem = (arr) => insert(arr, index, item);
+    const insertError = (arr) => insert(arr, index, void 0);
+    _setArrayValue(fullPath, insertItem, insertError);
   });
-  const prepend = useStable((fullPath, item) => {
-    _setArrayValue(fullPath, (arr) => [item, ...arr], (errors2) => [void 0, ...errors2]);
-  });
+  const append = useStable((fullPath, item) => insert$1(fullPath, getValue(fullPath).length, item));
+  const prepend = (fullPath, item) => insert$1(fullPath, 0, item);
   const clear = useStable((fullPath) => {
     const clearArr = () => [];
     _setArrayValue(fullPath, clearArr, clearArr);
@@ -409,11 +410,6 @@ const useForm = ({
   const swap$1 = useStable((fullPath, index1, index2) => {
     const swapByIdx = (arr) => swap(arr, index1, index2);
     _setArrayValue(fullPath, swapByIdx, swapByIdx);
-  });
-  const insert$1 = useStable((fullPath, index, item) => {
-    const insertItem = (arr) => insert(arr, index, item);
-    const insertError = (arr) => insert(arr, index, void 0);
-    _setArrayValue(fullPath, insertItem, insertError);
   });
   const getRef = useStable((fullPath) => refsMap.current.get(fullPath));
   const setRef = useStable((fullPath, element) => {

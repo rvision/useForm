@@ -212,20 +212,13 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		});
 	});
 
-	const append = useStable((fullPath, item) => {
-		_setArrayValue(
-			fullPath,
-			arr => [...arr, item],
-			errors => errors,
-		);
+	const insert = useStable((fullPath, index, item) => {
+		const insertItem = arr => core.insert(arr, index, item);
+		const insertError = arr => core.insert(arr, index, undefined);
+		_setArrayValue(fullPath, insertItem, insertError);
 	});
-	const prepend = useStable((fullPath, item) => {
-		_setArrayValue(
-			fullPath,
-			arr => [item, ...arr],
-			errors => [undefined, ...errors],
-		);
-	});
+	const append = useStable((fullPath, item) => insert(fullPath, getValue(fullPath).length, item));
+	const prepend = (fullPath, item) => insert(fullPath, 0, item);
 	const clear = useStable(fullPath => {
 		const clearArr = () => [];
 		_setArrayValue(fullPath, clearArr, clearArr);
@@ -238,11 +231,6 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	const swap = useStable((fullPath, index1, index2) => {
 		const swapByIdx = arr => core.swap(arr, index1, index2);
 		_setArrayValue(fullPath, swapByIdx, swapByIdx);
-	});
-	const insert = useStable((fullPath, index, item) => {
-		const insertItem = arr => core.insert(arr, index, item);
-		const insertError = arr => core.insert(arr, index, undefined);
-		_setArrayValue(fullPath, insertItem, insertError);
 	});
 
 	const getRef = useStable(fullPath => refsMap.current.get(fullPath));
