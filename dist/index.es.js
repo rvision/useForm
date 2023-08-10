@@ -168,7 +168,7 @@ const insert = (arr, index, item) => {
   newArr.splice(index, 0, item);
   return newArr;
 };
-const getErrorClassName = (error, classNameError, className) => `${className || ""} ${classNameError || ""} ${error.type ? `error-${error.type}` : ""}`.trim();
+const getErrorClassName = (error, classNameError, className) => [className, classNameError, error].filter((x) => !!x).map((error2) => `${error2.type ? `error-${error2.type}` : error2}`).join(" ");
 const yupResolver = (schema) => (formValues) => {
   let errors = {};
   try {
@@ -432,7 +432,7 @@ const useForm = ({
     const hasFieldError = hasError(fullPath);
     registerProps.name = fullPath;
     registerProps[ARIA_INVALID] = hasFieldError;
-    registerProps.className = getErrorClassName(EMPTY_OBJECT, hasFieldError ? classNameError : "", className);
+    registerProps.className = getErrorClassName(false, hasFieldError ? classNameError : "", className);
     registerProps.onChange = onChange;
     registerProps.ref = ref;
     registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
@@ -493,7 +493,7 @@ const useForm = ({
     if (isValid) {
       return false;
     }
-    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((entry) => hasError(entry, errors)).sort();
+    const errorPaths = Array.from(refsMap.current).map((entry) => entry[0]).filter((fullPath) => fullPath !== "").filter((fullPath) => hasError(fullPath, errors)).sort();
     const result = errorPaths.map((fullPath) => {
       const error = getError(fullPath);
       return /* @__PURE__ */ jsx("li", {

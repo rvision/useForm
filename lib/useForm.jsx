@@ -264,7 +264,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 		registerProps.name = fullPath;
 		registerProps[ARIA_INVALID] = hasFieldError;
-		registerProps.className = core.getErrorClassName(core.EMPTY_OBJECT, hasFieldError ? classNameError : '', className);
+		registerProps.className = core.getErrorClassName(false, hasFieldError ? classNameError : '', className);
 		registerProps.onChange = onChange;
 		registerProps.ref = ref;
 		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;
@@ -328,7 +328,8 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 		// entry[0] = fullPath, entry[1] = element
 		const errorPaths = Array.from(refsMap.current)
 			.map(entry => entry[0])
-			.filter(entry => hasError(entry, errors))
+			.filter(fullPath => fullPath !== '')
+			.filter(fullPath => hasError(fullPath, errors))
 			.sort();
 
 		const result = errorPaths.map(fullPath => {
