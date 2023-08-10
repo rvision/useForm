@@ -260,11 +260,11 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	const register = useStable((fullPath, className = '') => {
 		const value = getValue(fullPath);
-		const hasFieldError = hasError(fullPath);
+		const error = getError(fullPath);
 
 		registerProps.name = fullPath;
-		registerProps[ARIA_INVALID] = hasFieldError;
-		registerProps.className = core.getErrorClassName(false, hasFieldError ? classNameError : '', className);
+		registerProps[ARIA_INVALID] = !!error;
+		registerProps.className = core.getErrorClassName(error, !!error ? classNameError : '', className);
 		registerProps.onChange = onChange;
 		registerProps.ref = ref;
 		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;

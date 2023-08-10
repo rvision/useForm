@@ -429,10 +429,10 @@ const useForm = ({
   });
   const register = useStable((fullPath, className = "") => {
     const value = getValue(fullPath);
-    const hasFieldError = hasError(fullPath);
+    const error = getError(fullPath);
     registerProps.name = fullPath;
-    registerProps[ARIA_INVALID] = hasFieldError;
-    registerProps.className = getErrorClassName(false, hasFieldError ? classNameError : "", className);
+    registerProps[ARIA_INVALID] = !!error;
+    registerProps.className = getErrorClassName(error, !!error ? classNameError : "", className);
     registerProps.onChange = onChange;
     registerProps.ref = ref;
     registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
