@@ -160,21 +160,15 @@ const getInputValue = (e) => {
 };
 const swap = (arr, idx1, idx2) => {
   const newArr = [...arr];
-  while (newArr.length < Math.max(idx1, idx2)) {
-    newArr.push(void 0);
-  }
   [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
   return newArr;
 };
 const insert = (arr, index, item) => {
   const newArr = [...arr];
-  while (newArr.length < index) {
-    newArr.push(void 0);
-  }
   newArr.splice(index, 0, item);
   return newArr;
 };
-const getErrorClassName = (errorObject, classNameError, className) => `${className || ""} ${classNameError || ""} ${errorObject.type ? `error-${errorObject.type}` : ""}`.trim();
+const getErrorClassName = (error, classNameError, className) => `${className || ""} ${classNameError || ""} ${error.type ? `error-${error.type}` : ""}`.trim();
 const yupResolver = (schema) => (formValues) => {
   let errors = {};
   try {
