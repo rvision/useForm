@@ -28,7 +28,7 @@ const registerProps = {
 	checked: false,
 };
 
-const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusError = false, resolver = core.noOp }) => {
+const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = false, resolver = core.noOp }) => {
 	const [state, setState] = useState({
 		values: defaultValues || core.EMPTY_OBJECT,
 		errors: {},
@@ -53,7 +53,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	// callback identifier, incremented for each stable function
 	let callbackId = 1;
-	const useStable = handler => useStableReference(id + callbackId++, handler);
+	const useStable = handler => useStableReference([id, callbackId++].join(''), handler);
 
 	const setErrors = newErrors =>
 		setState(prev => ({
@@ -213,21 +213,27 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	});
 
 	const insert = useStable((fullPath, index, item) => {
-		const insertItem = arr => core.insert(arr, index, item);
-		const insertError = arr => core.insert(arr, index, undefined);
-		_setArrayValue(fullPath, insertItem, insertError);
+		_setArrayValue(
+			fullPath,
+			arr => core.insert(arr, index, item),
+			arr => core.insert(arr, index, undefined),
+		);
 	});
-	const append = useStable((fullPath, item) => insert(fullPath, getValue(fullPath).length, item));
+	const append = (fullPath, item) => insert(fullPath, getValue(fullPath).length, item);
+
 	const prepend = (fullPath, item) => insert(fullPath, 0, item);
+
 	const clear = useStable(fullPath => {
 		const clearArr = () => [];
 		_setArrayValue(fullPath, clearArr, clearArr);
 	});
+
 	const remove = useStable((fullPath, idx) => {
 		// NOTE: clone array because .filter doesn't work properly with sparse arrays (errors)
 		const removeByIdx = arr => [...arr].filter((_, i) => i !== idx);
 		_setArrayValue(fullPath, removeByIdx, removeByIdx);
 	});
+
 	const swap = useStable((fullPath, index1, index2) => {
 		const swapByIdx = arr => core.swap(arr, index1, index2);
 		_setArrayValue(fullPath, swapByIdx, swapByIdx);
@@ -260,11 +266,11 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 
 	const register = useStable((fullPath, className = '') => {
 		const value = getValue(fullPath);
-		const error = getError(fullPath);
+		const fieldError = getError(fullPath);
 
 		registerProps.name = fullPath;
-		registerProps[ARIA_INVALID] = !!error;
-		registerProps.className = core.getErrorClassName(error, !!error ? classNameError : '', className);
+		registerProps[ARIA_INVALID] = !!fieldError;
+		registerProps.className = core.getErrorClassName(fieldError, !!fieldError ? classNameError : '', className);
 		registerProps.onChange = onChange;
 		registerProps.ref = ref;
 		registerProps.onBlur = isOnBlurMode ? onBlur : undefined;

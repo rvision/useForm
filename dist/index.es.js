@@ -249,7 +249,7 @@ const registerProps = {
   checked: false
 };
 const useForm = ({
-  id = "",
+  id,
   defaultValues,
   mode,
   classNameError,
@@ -274,7 +274,7 @@ const useForm = ({
   const isOnChangeMode = mode === "onChange";
   const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
   let callbackId = 1;
-  const useStable = (handler) => useStableReference(id + callbackId++, handler);
+  const useStable = (handler) => useStableReference([id, callbackId++].join(""), handler);
   const setErrors = (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
     errors: newErrors
   }));
@@ -387,11 +387,9 @@ const useForm = ({
     });
   });
   const insert$1 = useStable((fullPath, index, item) => {
-    const insertItem = (arr) => insert(arr, index, item);
-    const insertError = (arr) => insert(arr, index, void 0);
-    _setArrayValue(fullPath, insertItem, insertError);
+    _setArrayValue(fullPath, (arr) => insert(arr, index, item), (arr) => insert(arr, index, void 0));
   });
-  const append = useStable((fullPath, item) => insert$1(fullPath, getValue(fullPath).length, item));
+  const append = (fullPath, item) => insert$1(fullPath, getValue(fullPath).length, item);
   const prepend = (fullPath, item) => insert$1(fullPath, 0, item);
   const clear = useStable((fullPath) => {
     const clearArr = () => [];
@@ -429,10 +427,10 @@ const useForm = ({
   });
   const register = useStable((fullPath, className = "") => {
     const value = getValue(fullPath);
-    const error = getError(fullPath);
+    const fieldError = getError(fullPath);
     registerProps.name = fullPath;
-    registerProps[ARIA_INVALID] = !!error;
-    registerProps.className = getErrorClassName(error, !!error ? classNameError : "", className);
+    registerProps[ARIA_INVALID] = !!fieldError;
+    registerProps.className = getErrorClassName(fieldError, !!fieldError ? classNameError : "", className);
     registerProps.onChange = onChange;
     registerProps.ref = ref;
     registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
