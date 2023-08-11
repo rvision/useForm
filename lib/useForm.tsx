@@ -1,15 +1,17 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { EffectCallback, useCallback, useEffect, useRef, useState } from 'react';
 import * as core from './core';
 const ARIA_INVALID = 'aria-invalid';
 export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
 const functions = new Map();
-const useStableReference = (hash, callback) => {
+const useStableReference = (hash: string, callback: any) => {
 	functions.set(hash, callback);
 	useEffect(() => {
-		return () => functions.delete(hash);
+		return () => {
+			functions.delete(hash);
+		};
 	}, [hash]);
 
 	return useCallback((...args) => functions.get(hash)(...args), [hash]);
@@ -17,7 +19,18 @@ const useStableReference = (hash, callback) => {
 
 // reuse single object for register props
 //----------------------------------------------------------------------------------------
-const registerProps = {
+type TypeRegisterProps	= {
+	name: string,
+	[ARIA_INVALID]: boolean,
+	className: string,
+	onChange: any,
+	onBlur: any,
+	ref: any,
+	value: string | undefined,
+	checked: boolean | undefined
+};
+
+const registerProps : TypeRegisterProps = {
 	name: '',
 	[ARIA_INVALID]: false,
 	className: '',
@@ -40,7 +53,7 @@ const useForm = ({ id = '', defaultValues, mode, classNameError, shouldFocusErro
 	const isDirty = useRef(false);
 	const formHadError = useRef(false);
 	const refsMap = useRef(new Map());
-	const defaultValuesJSON = useRef();
+	const defaultValuesJSON = useRef<string>();
 
 	// validates when submitting; any change in error field will remove error for that field (no matter if field is valid or not)
 	const isOnSubmitMode = mode === 'onSubmit';
