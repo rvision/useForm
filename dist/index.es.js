@@ -274,7 +274,7 @@ const useForm = ({
   const isOnChangeMode = mode === "onChange";
   const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
   let callbackId = 1;
-  const useStable = (handler) => useStableReference([id, callbackId++].join(""), handler);
+  const useStable = (handler) => useStableReference(`${id}!${callbackId++}`, handler);
   const setErrors = (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
     errors: newErrors
   }));

@@ -53,7 +53,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 
 	// callback identifier, incremented for each stable function
 	let callbackId = 1;
-	const useStable = handler => useStableReference([id, callbackId++].join(''), handler);
+	const useStable = handler => useStableReference(`${id}!${callbackId++}`, handler);
 
 	const setErrors = newErrors =>
 		setState(prev => ({
