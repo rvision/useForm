@@ -17,7 +17,7 @@ var __spreadValues = (a, b) => {
   return a;
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-import require$$0, { useState, useRef, useCallback, useEffect } from "react";
+import require$$0, { useState, useRef, useEffect, useCallback } from "react";
 const isFunction = (obj) => typeof obj === "function";
 const EMPTY_OBJECT = {};
 const noOp = () => EMPTY_OBJECT;
@@ -228,7 +228,6 @@ reactJsxRuntime_production_min.jsxs = q;
   jsxRuntime.exports = reactJsxRuntime_production_min;
 }
 const jsx = jsxRuntime.exports.jsx;
-const ARIA_INVALID = "aria-invalid";
 const toJSON = (obj) => JSON.stringify(obj, (key2, value) => value instanceof Set ? [...value].sort() : value);
 const functions = /* @__PURE__ */ new Map();
 const useStableReference = (hash, callback) => {
@@ -237,16 +236,6 @@ const useStableReference = (hash, callback) => {
     return () => functions.delete(hash);
   }, [hash]);
   return useCallback((...args) => functions.get(hash)(...args), [hash]);
-};
-const registerProps = {
-  name: "",
-  [ARIA_INVALID]: false,
-  className: "",
-  onChange: noOp,
-  onBlur: noOp,
-  ref: noOp,
-  value: "",
-  checked: false
 };
 const useForm = ({
   id,
@@ -273,48 +262,96 @@ const useForm = ({
   const isOnBlurMode = mode === "onBlur";
   const isOnChangeMode = mode === "onChange";
   const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
-  let callbackId = 1;
-  const useStable = (handler) => useStableReference(`${id}!${callbackId++}`, handler);
-  const setErrors = (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
-    errors: newErrors
+  const [setValue] = useState(() => (fullPath, value) => setState((prevState) => {
+    const newValues = setNested(fullPath, prevState.values, value);
+    isTouched.current = true;
+    isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+    let newErrors = prevState.errors;
+    if (isOnChangeMode || formHadError.current && isDefaultMode || hasError(fullPath, newErrors)) {
+      newErrors = deleteNestedToRoot(fullPath, newErrors);
+      if (!isOnSubmitMode) {
+        const newError = getNested(fullPath, resolver(newValues));
+        if (newError) {
+          newErrors = setNested(fullPath, newErrors, newError);
+        }
+      }
+    }
+    return {
+      values: newValues,
+      errors: newErrors
+    };
   }));
-  const init = useCallback((initValues) => {
+  const [array] = useState(() => {
+    const _setArrayValue = (fullPath, getArray, getArrayErrors) => {
+      setState((prevState) => {
+        const newValues = setNested(fullPath, prevState.values, getArray(getNested(fullPath, prevState.values)));
+        isTouched.current = true;
+        isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
+        let newErrors = prevState.errors;
+        const existingArrayErrors = getNested(fullPath, newErrors);
+        let newArrayErrors = [];
+        if (Array.isArray(existingArrayErrors)) {
+          newArrayErrors = getArrayErrors(existingArrayErrors);
+        }
+        if (isOnChangeMode || formHadError.current && isDefaultMode) {
+          const resolved = getNested(fullPath, resolver(newValues));
+          if (resolved && resolved.message) {
+            const target = newArrayErrors.length > 0 ? newArrayErrors : {};
+            target.message = resolved.message;
+            target.type = resolved.type;
+            newArrayErrors = target;
+          }
+        }
+        newErrors = deleteNestedToRoot(fullPath, newErrors);
+        if (newArrayErrors.length > 0 || newArrayErrors.message) {
+          newErrors = setNested(fullPath, newErrors, newArrayErrors);
+        }
+        return {
+          values: newValues,
+          errors: newErrors
+        };
+      });
+    };
+    const insert$1 = (fullPath, index, item) => {
+      _setArrayValue(fullPath, (arr) => insert(arr, index, item), (arr) => insert(arr, index, void 0));
+    };
+    return {
+      insert: insert$1,
+      append: (fullPath, item) => insert$1(fullPath, getValue(fullPath).length, item),
+      prepend: (fullPath, item) => insert$1(fullPath, 0, item),
+      clear: (fullPath) => {
+        const clearArr = () => [];
+        _setArrayValue(fullPath, clearArr, clearArr);
+      },
+      remove: (fullPath, idx) => {
+        const removeByIdx = (arr) => [...arr].filter((_, i) => i !== idx);
+        _setArrayValue(fullPath, removeByIdx, removeByIdx);
+      },
+      swap: (fullPath, index1, index2) => {
+        const swapByIdx = (arr) => swap(arr, index1, index2);
+        _setArrayValue(fullPath, swapByIdx, swapByIdx);
+      }
+    };
+  });
+  const [setErrors] = useState(() => (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
+    errors: newErrors
+  })));
+  const [init] = useState(() => (initValues) => {
     const vals = initValues || EMPTY_OBJECT;
     defaultValuesJSON.current = toJSON(vals);
     setState((prev) => __spreadProps(__spreadValues({}, prev), {
       values: __spreadValues({}, vals)
     }));
-  }, []);
-  useEffect(() => {
-    init(defaultValues);
-    return () => {
-      resetSplitCache();
-    };
-  }, [defaultValues, init]);
-  const focus = useCallback((fullPath) => {
+  });
+  const [focus] = useState(() => (fullPath) => {
     const element = refsMap.current.get(fullPath);
     if (element && element.focus) {
       element.focus();
       return true;
     }
     return false;
-  }, []);
-  const getValue = useStable((fullPath = "") => {
-    if (!refsMap.current.has(fullPath)) {
-      refsMap.current.set(fullPath, null);
-    }
-    return getNested(fullPath, values);
   });
-  const getError = useStable((fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
-  const hasError = useStable((fullPath = "", targetErrors = errors) => fullPath === "" ? !isEmptyObjectOrFalsy(targetErrors) : getNested(fullPath, targetErrors) !== void 0);
-  const clearError = useStable((fullPath, targetErrors = errors) => {
-    let newErrors = targetErrors;
-    if (hasError(fullPath, targetErrors)) {
-      newErrors = deleteNestedToRoot(fullPath, targetErrors);
-    }
-    return newErrors;
-  });
-  const trigger = useStable((fullPath = "") => new Promise((resolve = noOp) => {
+  const [trigger] = useState(() => (fullPath = "") => new Promise((resolve = noOp) => {
     setState((prevState) => {
       let newErrors = resolver(prevState.values);
       if (fullPath !== "") {
@@ -336,81 +373,45 @@ const useForm = ({
       return newState;
     });
   }));
-  const shouldRevalidate = isOnChangeMode || formHadError.current && isDefaultMode;
-  const setValue = useStable((fullPath, value) => setState((prevState) => {
-    const newValues = setNested(fullPath, prevState.values, value);
-    isTouched.current = true;
-    isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-    let newErrors = errors;
-    if (shouldRevalidate || hasError(fullPath)) {
-      newErrors = deleteNestedToRoot(fullPath, newErrors);
-      if (!isOnSubmitMode) {
-        const newError = getNested(fullPath, resolver(newValues));
-        if (newError) {
-          newErrors = setNested(fullPath, newErrors, newError);
-        }
-      }
+  const [clearError] = useState(() => (fullPath, targetErrors) => {
+    let newErrors = targetErrors;
+    if (hasError(fullPath, targetErrors)) {
+      newErrors = deleteNestedToRoot(fullPath, targetErrors);
     }
-    return {
-      values: newValues,
-      errors: newErrors
-    };
-  }));
-  const _setArrayValue = useStable((fullPath, getArray, getArrayErrors) => {
-    setState((prevState) => {
-      const newValues = setNested(fullPath, prevState.values, getArray(getNested(fullPath, prevState.values)));
-      isTouched.current = true;
-      isDirty.current = defaultValuesJSON.current !== toJSON(newValues);
-      let newErrors = prevState.errors;
-      const existingArrayErrors = getNested(fullPath, newErrors);
-      let newArrayErrors = [];
-      if (Array.isArray(existingArrayErrors)) {
-        newArrayErrors = getArrayErrors(existingArrayErrors);
-      }
-      if (shouldRevalidate) {
-        const resolved = getNested(fullPath, resolver(newValues));
-        if (resolved && resolved.message) {
-          const target = newArrayErrors.length > 0 ? newArrayErrors : {};
-          target.message = resolved.message;
-          target.type = resolved.type;
-          newArrayErrors = target;
-        }
-      }
-      newErrors = deleteNestedToRoot(fullPath, newErrors);
-      if (newArrayErrors.length > 0 || newArrayErrors.message) {
-        newErrors = setNested(fullPath, newErrors, newArrayErrors);
-      }
-      return {
-        values: newValues,
-        errors: newErrors
-      };
-    });
+    return newErrors;
   });
-  const insert$1 = useStable((fullPath, index, item) => {
-    _setArrayValue(fullPath, (arr) => insert(arr, index, item), (arr) => insert(arr, index, void 0));
-  });
-  const append = (fullPath, item) => insert$1(fullPath, getValue(fullPath).length, item);
-  const prepend = (fullPath, item) => insert$1(fullPath, 0, item);
-  const clear = useStable((fullPath) => {
-    const clearArr = () => [];
-    _setArrayValue(fullPath, clearArr, clearArr);
-  });
-  const remove = useStable((fullPath, idx) => {
-    const removeByIdx = (arr) => [...arr].filter((_, i) => i !== idx);
-    _setArrayValue(fullPath, removeByIdx, removeByIdx);
-  });
-  const swap$1 = useStable((fullPath, index1, index2) => {
-    const swapByIdx = (arr) => swap(arr, index1, index2);
-    _setArrayValue(fullPath, swapByIdx, swapByIdx);
-  });
-  const getRef = useStable((fullPath) => refsMap.current.get(fullPath));
-  const setRef = useStable((fullPath, element) => {
+  const [getRef] = useState(() => (fullPath) => refsMap.current.get(fullPath));
+  const [setRef] = useState(() => (fullPath, element) => {
     if (element) {
       refsMap.current.set(fullPath, element);
     }
   });
-  const ref = (element) => element && setRef(element.name, element);
-  const onChange = useStable((e) => setValue(e.target.name, getInputValue(e)));
+  const [ref] = useState(() => (element) => element && setRef(element.name, element));
+  const [reset] = useState(() => (values2, reValidate = true) => {
+    init(values2 || defaultValues);
+    isTouched.current = false;
+    isDirty.current = false;
+    if (reValidate) {
+      trigger("", values2);
+    }
+  });
+  const [onChange] = useState(() => (e) => setValue(e.target.name, getInputValue(e)));
+  let callbackId = 1;
+  const useStable = (handler) => useStableReference(`${id}!${callbackId++}`, handler);
+  useEffect(() => {
+    init(defaultValues);
+    return () => {
+      resetSplitCache();
+    };
+  }, [defaultValues, init]);
+  const getValue = useStable((fullPath = "") => {
+    if (!refsMap.current.has(fullPath)) {
+      refsMap.current.set(fullPath, null);
+    }
+    return getNested(fullPath, values);
+  });
+  const getError = useStable((fullPath = "", targetErrors = errors) => getNested(fullPath, targetErrors));
+  const hasError = useStable((fullPath = "", targetErrors = errors) => fullPath === "" ? !isEmptyObjectOrFalsy(targetErrors) : getNested(fullPath, targetErrors) !== void 0);
   const onBlur = useStable((e) => {
     const {
       name
@@ -422,34 +423,23 @@ const useForm = ({
         focus(name);
       }
     } else {
-      setErrors(clearError(name));
+      setErrors(clearError(name, errors));
     }
   });
   const register = useStable((fullPath, className = "") => {
     const value = getValue(fullPath);
     const fieldError = getError(fullPath);
-    registerProps.name = fullPath;
-    registerProps[ARIA_INVALID] = !!fieldError;
-    registerProps.className = getErrorClassName(fieldError, !!fieldError ? classNameError : "", className);
-    registerProps.onChange = onChange;
-    registerProps.ref = ref;
-    registerProps.onBlur = isOnBlurMode ? onBlur : void 0;
-    if (value === true || value === false) {
-      registerProps.checked = value;
-      registerProps.value = void 0;
-    } else {
-      registerProps.value = `${value}` === "0" ? value : value || "";
-      registerProps.checked = void 0;
-    }
-    return registerProps;
-  });
-  const reset = useStable((values2 = defaultValues, reValidate = true) => {
-    init(values2);
-    isTouched.current = false;
-    isDirty.current = false;
-    if (reValidate) {
-      trigger("", values2);
-    }
+    const isBool = value === true || value === false;
+    return {
+      name: fullPath,
+      ["aria-invalid"]: !!fieldError,
+      className: getErrorClassName(fieldError, !!fieldError ? classNameError : "", className),
+      onChange,
+      onBlur: isOnBlurMode ? onBlur : void 0,
+      ref,
+      value: isBool ? void 0 : `${value}` === "0" ? value : value || "",
+      checked: isBool ? value : void 0
+    };
   });
   const handleSubmit = (handler) => (e) => {
     e && e.preventDefault();
@@ -516,19 +506,12 @@ const useForm = ({
     handleSubmit,
     hasError,
     getError,
-    clearError: (fullPath) => setErrors(clearError(fullPath)),
+    clearError: (fullPath) => setErrors(clearError(fullPath, errors)),
     setErrors: (newErrors) => {
       formHadError.current = true;
       setErrors(newErrors);
     },
-    array: {
-      clear,
-      append,
-      prepend,
-      remove,
-      swap: swap$1,
-      insert: insert$1
-    },
+    array,
     key,
     Error: Error2,
     Errors,
