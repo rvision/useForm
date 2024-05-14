@@ -131,13 +131,18 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		};
 	});
 
-	const [setErrors] = useState(
+	const [_setErrors] = useState(
 		() => newErrors =>
 			setState(prev => ({
 				...prev,
 				errors: newErrors,
 			})),
 	);
+
+	const [setErrors] = useState(() => newErrors => {
+		formHadError.current = true;
+		_setErrors(newErrors);
+	});
 
 	const [init] = useState(() => initValues => {
 		const vals = initValues || core.EMPTY_OBJECT;
@@ -188,13 +193,28 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 				}),
 	);
 
-	const [clearError] = useState(() => (fullPath, targetErrors) => {
+	const [_clearError] = useState(() => (fullPath, targetErrors) => {
 		let newErrors = targetErrors;
 		if (hasError(fullPath, targetErrors)) {
 			newErrors = core.deleteNestedToRoot(fullPath, targetErrors);
 		}
 		return newErrors;
 	});
+
+	const [clearError] = useState(
+		() => fullPath =>
+			setState(prevState => {
+				const prevErrors = prevState.errors;
+				const newErrors = _clearError(fullPath, prevErrors);
+				if (newErrors === prevErrors) {
+					return prevState;
+				}
+				return {
+					...prevState,
+					errors: newErrors,
+				};
+			}),
+	);
 
 	const [getRef] = useState(() => fullPath => refsMap.current.get(fullPath));
 	const [setRef] = useState(() => (fullPath, element) => {
@@ -244,12 +264,12 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		const { name } = e.target;
 		const newError = core.getNested(name, resolver(values));
 		if (newError) {
-			setErrors(core.setNested(name, errors, newError));
+			_setErrors(core.setNested(name, errors, newError));
 			if (shouldFocusError) {
 				focus(name);
 			}
 		} else {
-			setErrors(clearError(name, errors));
+			_setErrors(_clearError(name, errors));
 		}
 	});
 
@@ -274,7 +294,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		// eslint-disable-next-line no-unused-expressions
 		e && e.preventDefault();
 		const newErrors = resolver(values);
-		setErrors(newErrors);
+		_setErrors(newErrors);
 		if (hasError('', newErrors)) {
 			if (shouldFocusError) {
 				let isFocused = false;
@@ -337,11 +357,8 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		handleSubmit,
 		hasError,
 		getError,
-		clearError: fullPath => setErrors(clearError(fullPath, errors)),
-		setErrors: newErrors => {
-			formHadError.current = true;
-			setErrors(newErrors);
-		},
+		clearError,
+		setErrors,
 		array,
 		key: core.key,
 		Error,
