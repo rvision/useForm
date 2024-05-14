@@ -333,9 +333,13 @@ const useForm = ({
       }
     };
   });
-  const [setErrors] = useState(() => (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
+  const [_setErrors] = useState(() => (newErrors) => setState((prev) => __spreadProps(__spreadValues({}, prev), {
     errors: newErrors
   })));
+  const [setErrors] = useState(() => (newErrors) => {
+    formHadError.current = true;
+    _setErrors(newErrors);
+  });
   const [init] = useState(() => (initValues) => {
     const vals = initValues || EMPTY_OBJECT;
     defaultValuesJSON.current = toJSON(vals);
@@ -373,13 +377,23 @@ const useForm = ({
       return newState;
     });
   }));
-  const [clearError] = useState(() => (fullPath, targetErrors) => {
+  const [_clearError] = useState(() => (fullPath, targetErrors) => {
     let newErrors = targetErrors;
     if (hasError(fullPath, targetErrors)) {
       newErrors = deleteNestedToRoot(fullPath, targetErrors);
     }
     return newErrors;
   });
+  const [clearError] = useState(() => (fullPath) => setState((prevState) => {
+    const prevErrors = prevState.errors;
+    const newErrors = _clearError(fullPath, prevErrors);
+    if (newErrors === prevErrors) {
+      return prevState;
+    }
+    return __spreadProps(__spreadValues({}, prevState), {
+      errors: newErrors
+    });
+  }));
   const [getRef] = useState(() => (fullPath) => refsMap.current.get(fullPath));
   const [setRef] = useState(() => (fullPath, element) => {
     if (element) {
@@ -418,12 +432,12 @@ const useForm = ({
     } = e.target;
     const newError = getNested(name, resolver(values));
     if (newError) {
-      setErrors(setNested(name, errors, newError));
+      _setErrors(setNested(name, errors, newError));
       if (shouldFocusError) {
         focus(name);
       }
     } else {
-      setErrors(clearError(name, errors));
+      _setErrors(_clearError(name, errors));
     }
   });
   const register = useStable((fullPath, className = "") => {
@@ -444,7 +458,7 @@ const useForm = ({
   const handleSubmit = (handler) => (e) => {
     e && e.preventDefault();
     const newErrors = resolver(values);
-    setErrors(newErrors);
+    _setErrors(newErrors);
     if (hasError("", newErrors)) {
       if (shouldFocusError) {
         let isFocused = false;
@@ -506,11 +520,8 @@ const useForm = ({
     handleSubmit,
     hasError,
     getError,
-    clearError: (fullPath) => setErrors(clearError(fullPath, errors)),
-    setErrors: (newErrors) => {
-      formHadError.current = true;
-      setErrors(newErrors);
-    },
+    clearError,
+    setErrors,
     array,
     key,
     Error: Error2,
