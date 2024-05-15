@@ -1,3 +1,5 @@
+//"module": "commonjs"
+
 module.exports = {
 	parser: 'babel',
 	printWidth: 170, // wrap lines at
@@ -23,3 +25,4 @@ module.exports = {
 	endOfLine: 'auto',
 	vueIndentScriptAndStyle: false,
 };
+

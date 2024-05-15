@@ -5,12 +5,11 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as yup from 'yup';
+import useForm from '../../useForm';
 import UnitTestForm from './UnitTestForm';
-
 // import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 // import Accordion from './Accordion';
 // import "@testing-library/jest-dom";
-// import { act } from 'react-dom/test-utils';
 
 // test('composed of non-numbers to throw error', () => {
 // 	expect(() => numberToCurrency('abc')).toThrow()
@@ -58,7 +57,7 @@ const defaultValues = {
 	albums: [],
 };
 
-describe('useForm array operations', () => {
+describe('useForm array validations', () => {
 	// beforeEach(() => {
 	// 	render(<TestForm onFormSubmit={onSubmit} />);
 	// });
@@ -90,51 +89,98 @@ describe('useForm array operations', () => {
 		expect(screen.getByText('Max 2 albums')).toBeTruthy();
 		expect(hasErrorSummary()).toBeTruthy();
 	});
+});
 
-	/*
-	doesn't work
-	it('test', () => {
-		let formData = null;
-		const onSubmit = vi.fn(data => {
-			formData = data;
-		});
+describe('useForm: array operations', () => {
+	const defaultValues = {
+		name: 'John Doe',
+		age: 30,
+		isMarried: false,
+		occupations: ['actor', 'singer'],
+	};
 
-		render(<UnitTestForm onFormSubmit={onSubmit} defaultValues={defaultValues} schema={schema} />);
-
-		act(() => {
-			fireEvent.click(screen.getByTestId('button-prepend_new_album'));
-			fireEvent.clickSubmit();
-
-			// fireEvent.click(screen.getByTestId('button-prepend_new_album'));
-			// fireEvent.click(screen.getByTestId('button-prepend_new_album'));
-
-			// fireEvent.click(screen.getByTestId('button-swap_albums'));
-		});
+	it('should insert an item to the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { array } = result.current;
 
 		act(() => {
-			fireEvent.click(screen.getByTestId('button-prepend_new_album'));
-			fireEvent.click(screen.getByTestId('button-prepend_new_album'));
-
-			fireEvent.click(screen.getByTestId('button-swap_albums'));
+			array.insert('occupations', 0, 'dancer');
 		});
 
-		// fireEvent.clickSubmit();
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['dancer', 'actor', 'singer']);
+	});
 
-		// });
-		// fireEvent.change(screen.getByTestId('title'), { target: { value: 'Mr' } });
+	it('should append an item to the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { array } = result.current;
 
-		// const input = screen.getByRole('textbox', { name: /first name/i });
-		// fireEvent.change(input, targetValue(''));
+		act(() => {
+			array.append('occupations', 'dancer');
+		});
 
-		expect(onSubmit).toBeCalledTimes(0);
-		// expect(screen.getByText(/⚠ please enter first name/i)).toBeTruthy();
-		// expect(screen.getByText('Max 2 albums')).toBeTruthy();
-		expect(screen.getByText("Album's release date is required")).toBeTruthy();
-		expect(hasErrorSummary()).toBeTruthy();
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['actor', 'singer', 'dancer']);
+	});
 
-		// fireEvent.change(input, targetValue('first name test'));
-		// fireEvent.clickSubmit();
-		// expect(onSubmit).toBeCalledTimes(1);
-		// expect(formData).toHaveProperty('firstName', 'first name test');
-	}); */
+	it('should prepend an item to the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { array } = result.current;
+
+		act(() => {
+			array.prepend('occupations', 'dancer');
+		});
+
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['dancer', 'actor', 'singer']);
+	});
+
+	it('should remove an item from the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { array } = result.current;
+
+		act(() => {
+			array.remove('occupations', 1);
+		});
+
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['actor']);
+	});
+
+	it('should swap items in the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { array } = result.current;
+
+		act(() => {
+			array.swap('occupations', 0, 1);
+		});
+
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['singer', 'actor']);
+	});
+
+	it('should update an item in the array', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { setValue } = result.current;
+
+		act(() => {
+			setValue('occupations[0]', 'comedian');
+		});
+
+		const { formState, getValue } = result.current;
+		expect(getValue('occupations')).toEqual(['comedian', 'singer']);
+	});
+
+	it('should reset the array to its initial value', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { setValue, formState } = result.current;
+
+		act(() => {
+			setValue('occupations', ['actor', 'dancer']);
+			formState.reset();
+		});
+
+		const { getValue } = result.current;
+		expect(getValue('occupations')).toEqual(defaultValues.occupations);
+	});
 });
