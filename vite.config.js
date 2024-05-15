@@ -1,10 +1,12 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
-const react = require('@vitejs/plugin-react');
-const path = require('path');
-const { defineConfig } = require('vite');
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import analyze from 'rollup-plugin-analyzer';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
 
-module.exports = defineConfig({
+export default defineConfig({
 	plugins: [react()],
 	test: {
 		globals: true,
@@ -19,15 +21,26 @@ module.exports = defineConfig({
 		rollupOptions: {
 			// make sure to externalize deps that shouldn't be bundled
 			// into your library
-			external: ['react', 'react-dom'],
+			external: ['react', 'react-dom', 'react/jsx-runtime'],
 			output: {
+				exports: 'named',
 				// Provide global variables to use in the UMD build
 				// for externalized deps
 				globals: {
 					react: 'react',
 					'react-dom': 'react-dom',
+					'react/jsx-runtime': 'react/jsx-runtime',
 				},
 			},
+			plugins: [
+				analyze({
+					summaryOnly: true,
+					showExports: true,
+				}),
+				visualizer({
+					template: 'treemap', // sunburst, treemap, network
+				}),
+			],
 		},
 	},
 });

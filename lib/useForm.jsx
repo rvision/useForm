@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as core from './core';
 export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
