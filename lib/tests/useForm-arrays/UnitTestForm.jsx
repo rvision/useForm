@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { yupResolver } from '../../resolvers';
 import useForm from '../../useForm';
+import yupResolver from '../../yupResolver';
 
 const toYYYYMMDDString = date => {
 	if (date === null) {

@@ -1,15 +1,16 @@
 // import { within } from '@testing-library/dom';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import useForm from '../useForm';
 import TestForm from './components/TestForm';
 import defaultValues from './components/defaultValues';
 
 // import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 // import Accordion from './Accordion';
 // import "@testing-library/jest-dom";
-// import { act } from 'react-dom/test-utils';
 
 // test('composed of non-numbers to throw error', () => {
 // 	expect(() => numberToCurrency('abc')).toThrow()
@@ -39,7 +40,7 @@ const onSubmit = vi.fn(data => {
 	formData = data;
 });
 
-describe('useForm', () => {
+describe('useForm: inputs', () => {
 	// beforeEach(() => {
 	// 	render(<TestForm onFormSubmit={onSubmit} />);
 	// });
@@ -213,28 +214,159 @@ describe('useForm', () => {
 
 		expect(formData.movies[0]).toEqual(movie);
 	});
+});
 
-	it('form: reset', () => {
-		let formData = null;
-		const onSubmit = vi.fn(data => {
-			formData = data;
+describe('useForm: init, update, validate, reset', () => {
+	const defaultValues = {
+		name: 'John Doe',
+		age: 30,
+		isMarried: false,
+	};
+
+	it('init form with default values', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { formState, getValue } = result.current;
+
+		expect(getValue('name')).toBe('John Doe');
+		expect(getValue('age')).toBe(30);
+		expect(getValue('isMarried')).toBe(false);
+	});
+
+	it('update form values', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { setValue } = result.current;
+
+		act(() => {
+			setValue('name', 'Jane Doe');
+			setValue('age', 35);
+			setValue('isMarried', true);
 		});
-		render(<TestForm onFormSubmit={onSubmit} />);
 
-		const { firstName } = defaultValues;
+		const { formState, getValue } = result.current;
+		expect(getValue('name')).toBe('Jane Doe');
+		expect(getValue('age')).toBe(35);
+		expect(getValue('isMarried')).toBe(true);
+	});
 
-		const input = screen.getByRole('textbox', { name: /first name/i });
-		fireEvent.change(input, targetValue('other name'));
-		fireEvent.clickSubmit();
+	it('validate form on submit', () => {
+		const validate = values => {
+			const errors = {};
+			if (!values.name) {
+				errors.name = 'Name is required';
+			}
+			if (values.age < 18) {
+				errors.age = 'Age must be at least 18';
+			}
+			return errors;
+		};
 
-		expect(defaultValues.firstName).toEqual(firstName);
+		const testValues = { name: '', age: 8 };
+		const { result } = renderHook(() => useForm({ defaultValues: testValues, resolver: validate }));
+		const { handleSubmit, getValue } = result.current;
 
-		fireEvent.click(
-			screen.getByRole('button', {
-				name: /reset/i,
-			}),
-		);
-		fireEvent.clickSubmit();
-		expect(formData).toHaveProperty('firstName', firstName);
+		act(() => {
+			handleSubmit(() => {})();
+		});
+
+		const { formState } = result.current;
+		expect(formState.errors).toEqual({
+			name: 'Name is required',
+			age: 'Age must be at least 18',
+		});
+	});
+
+	it('clear form error', () => {
+		const validate = values => {
+			const errors = {};
+			if (!values.name) {
+				errors.name = 'Name is required';
+			}
+			if (values.age < 18) {
+				errors.age = 'Age must be at least 18';
+			}
+			return errors;
+		};
+
+		const testValues = { name: '', age: 8 };
+		const { result } = renderHook(() => useForm({ defaultValues: testValues, resolver: validate }));
+		const { handleSubmit, clearError } = result.current;
+
+		act(() => {
+			handleSubmit(() => {})();
+		});
+
+		act(() => {
+			clearError('name');
+		});
+
+		const { formState } = result.current;
+		expect(formState.errors).toEqual({
+			age: 'Age must be at least 18',
+		});
+	});
+
+	it('reset form values', () => {
+		const { result } = renderHook(() => useForm({ defaultValues }));
+		const { setValue } = result.current;
+
+		act(() => {
+			setValue('name', 'Jane Doe');
+			setValue('age', 35);
+			setValue('isMarried', true);
+		});
+
+		const { formState, getValue } = result.current;
+
+		act(() => {
+			formState.reset();
+		});
+
+		expect(getValue('name')).toBe(defaultValues.name);
+		expect(getValue('age')).toBe(defaultValues.age);
+		expect(getValue('isMarried')).toBe(defaultValues.isMarried);
 	});
 });
+
+/*
+describe('Error component', () => {
+	const defaultValues = {
+		name: 'John Doe',
+		age: 30,
+		isMarried: false,
+	};
+
+	it('renders error message when error exists', () => {
+		const { Error } = useForm({
+			defaultValues,
+			resolver: () => ({ name: 'Required field' }),
+		});
+
+		const { getByText } = render(<Error for="name" />);
+
+		expect(getByText('Required field')).toBeInTheDocument();
+	});
+
+	it('renders children function when error exists', () => {
+		const { Error } = useForm({
+			defaultValues,
+			resolver: () => ({ name: 'Required field' }),
+		});
+
+		const childrenFn = jest.fn(error => <span>{error.message}</span>);
+		const { getByText } = render(<Error for="name">{childrenFn}</Error>);
+
+		expect(getByText('Required field')).toBeInTheDocument();
+		expect(childrenFn).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not render error message when no error exists', () => {
+		const { Error } = useForm({
+			defaultValues,
+			resolver: () => ({}),
+		});
+
+		const { queryByText } = render(<Error for="name" />);
+
+		expect(queryByText('Required field')).not.toBeInTheDocument();
+	});
+});*/
