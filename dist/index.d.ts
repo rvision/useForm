@@ -2,10 +2,6 @@ import { FC, ReactNode, SyntheticEvent } from "react";
 
 export interface UseFormOptions {
 	/**
-   * identifier: set it only if you have multiple forms at once
-   */
-	id?: string;
-	/**
    * initial values of form fields; do NOT declare them inline
    */
 	defaultValues?: {};
@@ -13,6 +9,10 @@ export interface UseFormOptions {
    * "onSubmit" | "onBlur" | "onChange"
    */
     mode?: "onSubmit" | "onBlur" | "onChange";
+	/**
+	 * fullPath to registered input via (register or setRef) that will be focused when form is mounted
+	 */
+    focusOn?: string;
 	/**
 	 * className to use when rendering error in registered inputs, Error and Errors components
 	 */

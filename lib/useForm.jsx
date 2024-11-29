@@ -1,20 +1,28 @@
 /* eslint-disable no-underscore-dangle */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import * as core from './core';
 export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
 const functions = new Map();
-const useStableReference = (hash, callback) => {
+const useStableRef = callback => {
+	const hash = useId();
 	functions.set(hash, callback);
 	useEffect(() => {
 		return () => functions.delete(hash);
-	}, [hash]);
-
-	return useCallback((...args) => functions.get(hash)(...args), [hash]);
+	}, []);
+	return useCallback((...args) => functions.get(hash)(...args), []);
 };
 
-const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = false, resolver = core.noOp }) => {
+const _focus = element => {
+	if (element && element.focus) {
+		element.focus();
+		return true;
+	}
+	return false;
+};
+
+const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusError = false, resolver = core.noOp }) => {
 	const [state, setState] = useState({
 		values: defaultValues || core.EMPTY_OBJECT,
 		errors: {},
@@ -153,14 +161,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		}));
 	});
 
-	const [focus] = useState(() => fullPath => {
-		const element = refsMap.current.get(fullPath);
-		if (element && element.focus) {
-			element.focus();
-			return true;
-		}
-		return false;
-	});
+	const [focus] = useState(() => fullPath => _focus(refsMap.current.get(fullPath)));
 
 	const [trigger] = useState(
 		() =>
@@ -216,13 +217,17 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 			}),
 	);
 
+	const _focusRef = useCallback(node => _focus(node), []);
 	const [getRef] = useState(() => fullPath => refsMap.current.get(fullPath));
 	const [setRef] = useState(() => (fullPath, element) => {
 		if (element) {
 			refsMap.current.set(fullPath, element);
+			if (fullPath === focusOn) {
+				_focusRef(element);
+			}
 		}
 	});
-	const [ref] = useState(() => element => element && setRef(element.name, element));
+	const [ref] = useState(() => element => setRef(element?.name, element));
 
 	const [reset] = useState(() => (values, reValidate = true) => {
 		init(values || defaultValues);
@@ -234,10 +239,6 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 	});
 	const [onChange] = useState(() => e => setValue(e.target.name, core.getInputValue(e)));
 
-	// callback identifier, incremented for each stable function
-	let callbackId = 1;
-	const useStable = handler => useStableReference(`${id}!${callbackId++}`, handler);
-
 	useEffect(() => {
 		init(defaultValues);
 		return () => {
@@ -246,7 +247,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		};
 	}, [defaultValues, init]);
 
-	const getValue = useStable((fullPath = '') => {
+	const getValue = useStableRef((fullPath = '') => {
 		// NOTE: for <Errors /> to work properly
 		if (!refsMap.current.has(fullPath)) {
 			refsMap.current.set(fullPath, null);
@@ -254,13 +255,13 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		return core.getNested(fullPath, values);
 	});
 
-	const getError = useStable((fullPath = '', targetErrors = errors) => core.getNested(fullPath, targetErrors));
+	const getError = useStableRef((fullPath = '', targetErrors = errors) => core.getNested(fullPath, targetErrors));
 
-	const hasError = useStable((fullPath = '', targetErrors = errors) =>
+	const hasError = useStableRef((fullPath = '', targetErrors = errors) =>
 		fullPath === '' ? !core.isEmptyObjectOrFalsy(targetErrors) : core.getNested(fullPath, targetErrors) !== undefined,
 	);
 
-	const onBlur = useStable(e => {
+	const onBlur = useStableRef(e => {
 		const { name } = e.target;
 		const newError = core.getNested(name, resolver(values));
 		if (newError) {
@@ -273,7 +274,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		}
 	});
 
-	const register = useStable((fullPath, className = '') => {
+	const register = useStableRef((fullPath, className = '') => {
 		const value = getValue(fullPath);
 		const fieldError = getError(fullPath);
 		const isBool = value === true || value === false;
@@ -311,7 +312,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 		return true;
 	};
 
-	const Error = useStable(({ for: fullPath, children }) => {
+	const Error = useStableRef(({ for: fullPath, children }) => {
 		const error = getError(fullPath, errors);
 		if (error?.message) {
 			return core.isFunction(children) ? children(error) : <span className={core.getErrorClassName(error, classNameError)}>{error.message}</span>;
@@ -321,7 +322,7 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 
 	const isValid = !hasError();
 
-	const Errors = useStable(({ children, focusable = false }) => {
+	const Errors = useStableRef(({ children, focusable = false }) => {
 		if (isValid) {
 			return false;
 		}
@@ -344,6 +345,15 @@ const useForm = ({ id, defaultValues, mode, classNameError, shouldFocusError = f
 
 		return core.isFunction(children) ? children(result) : result;
 	});
+
+	// console.log(`refsMap.current`);
+	// console.log(refsMap.current);
+
+	// console.log(`functions`);
+	// console.log(functions);
+
+	// console.log(`core.key({})`);
+	// console.log(core.key({}));
 
 	return {
 		getValue,
