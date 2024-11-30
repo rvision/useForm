@@ -496,6 +496,10 @@ PRs welcome
 
 ## Changelog
 
+<= v1.0.29:
+- Errors component doesn't render ghost errors (without message)
+- better class names for errors
+
 <= v1.0.28:
 - removed id property, useId is better
 - added focusOn option

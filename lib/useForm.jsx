@@ -282,7 +282,7 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 		return {
 			name: fullPath,
 			['aria-invalid']: !!fieldError,
-			className: core.getErrorClassName(fieldError, !!fieldError ? classNameError : '', className),
+			className: core.getErrorClassName(className, fieldError && classNameError, fieldError),
 			onChange: onChange,
 			onBlur: isOnBlurMode ? onBlur : undefined,
 			ref,
@@ -313,9 +313,10 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 	};
 
 	const Error = useStableRef(({ for: fullPath, children }) => {
-		const error = getError(fullPath, errors);
+		const error = getError(fullPath);
 		if (error?.message) {
-			return core.isFunction(children) ? children(error) : <span className={core.getErrorClassName(error, classNameError)}>{error.message}</span>;
+			const className = core.getErrorClassName(classNameError, error);
+			return core.isFunction(children) ? children(error, className) : <span className={className}>{error.message}</span>;
 		}
 		return false;
 	});
@@ -327,21 +328,17 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 			return false;
 		}
 
-		// entry[0] = fullPath, entry[1] = element
-		const errorPaths = Array.from(refsMap.current)
+		const result = Array.from(refsMap.current)
+			// entry[0] = fullPath, entry[1] = element
 			.map(entry => entry[0])
-			.filter(fullPath => fullPath !== '')
-			.filter(fullPath => hasError(fullPath, errors))
-			.sort();
-
-		const result = errorPaths.map(fullPath => {
-			const error = getError(fullPath);
-			return (
-				<li key={fullPath} className={core.getErrorClassName(error, classNameError)}>
-					{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}
-				</li>
-			);
-		});
+			.filter(fullPath => !!fullPath && hasError(fullPath))
+			.map(fullPath => {
+				return (
+					<Error key={fullPath} for={fullPath}>
+						{(error, className) => <li className={className}>{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}</li>}
+					</Error>
+				);
+			});
 
 		return core.isFunction(children) ? children(result) : result;
 	});
