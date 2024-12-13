@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import * as core from './core';
 export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
@@ -245,7 +245,7 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 			// cleanup, ALWAYS
 			core.resetSplitCache();
 		};
-	}, [defaultValues, init]);
+	}, [defaultValues]);
 
 	const getValue = useStableRef((fullPath = '') => {
 		// NOTE: for <Errors /> to work properly
@@ -312,36 +312,40 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 		return true;
 	};
 
-	const Error = useStableRef(({ for: fullPath, children }) => {
-		const error = getError(fullPath);
-		if (error?.message) {
-			const className = core.getErrorClassName(classNameError, error);
-			return core.isFunction(children) ? children(error, className) : <span className={className}>{error.message}</span>;
-		}
-		return false;
-	});
+	const Error = memo(
+		useStableRef(({ for: fullPath, children }) => {
+			const error = getError(fullPath);
+			if (error?.message) {
+				const className = core.getErrorClassName(classNameError, error);
+				return core.isFunction(children) ? children(error, className) : <span className={className}>{error.message}</span>;
+			}
+			return false;
+		}),
+	);
 
 	const isValid = !hasError();
 
-	const Errors = useStableRef(({ children, focusable = false }) => {
-		if (isValid) {
-			return false;
-		}
+	const Errors = memo(
+		useStableRef(({ children, focusable = false }) => {
+			if (isValid) {
+				return false;
+			}
 
-		const result = Array.from(refsMap.current)
-			// entry[0] = fullPath, entry[1] = element
-			.map(entry => entry[0])
-			.filter(fullPath => !!fullPath && hasError(fullPath))
-			.map(fullPath => {
-				return (
-					<Error key={fullPath} for={fullPath}>
-						{(error, className) => <li className={className}>{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}</li>}
-					</Error>
-				);
-			});
+			const result = Array.from(refsMap.current)
+				// entry[0] = fullPath, entry[1] = element
+				.map(entry => entry[0])
+				.filter(fullPath => !!fullPath && hasError(fullPath))
+				.map(fullPath => {
+					return (
+						<Error key={fullPath} for={fullPath}>
+							{(error, className) => <li className={className}>{focusable ? <a onClick={() => focus(fullPath)}>{error.message}</a> : error.message}</li>}
+						</Error>
+					);
+				});
 
-		return core.isFunction(children) ? children(result) : result;
-	});
+			return core.isFunction(children) ? children(result) : result;
+		}),
+	);
 
 	// console.log(`refsMap.current`);
 	// console.log(refsMap.current);
