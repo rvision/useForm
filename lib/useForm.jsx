@@ -1,17 +1,13 @@
 /* eslint-disable no-underscore-dangle */
-import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import * as core from './core';
 export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instanceof Set ? [...value].sort() : value));
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
-const functions = new Map();
-const useStableRef = callback => {
-	const hash = useId();
-	functions.set(hash, callback);
-	useEffect(() => {
-		return () => functions.delete(hash);
-	}, []);
-	return useCallback((...args) => functions.get(hash)(...args), []);
+const useStableRef = (callback) => {
+  const [stableCallback] = useState(() => (...args) => core.keysMap.get(stableCallback)(...args));
+  core.keysMap.set(stableCallback, callback);
+  return stableCallback;
 };
 
 const _focus = element => {
@@ -317,7 +313,7 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 			const error = getError(fullPath);
 			if (error?.message) {
 				const className = core.getErrorClassName(classNameError, error);
-				return core.isFunction(children) ? children(error, className) : <span className={className}>{error.message}</span>;
+				return core.isFunction(children) ? children(error, className) : <span className={className} role="alert" aria-live="polite">{error.message}</span>;
 			}
 			return false;
 		}),
