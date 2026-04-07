@@ -5,13 +5,10 @@ export const toJSON = obj => JSON.stringify(obj, (key, value) => (value instance
 // inline useStableRef for better minification
 //----------------------------------------------------------------------------------------
 const functions = new Map();
-const useStableRef = callback => {
-	const hash = useId();
-	functions.set(hash, callback);
-	useEffect(() => {
-		return () => functions.delete(hash);
-	}, []);
-	return useCallback((...args) => functions.get(hash)(...args), []);
+const useStableRef = (callback) => {
+	const [stableCallback] = useState(() => (...args) => functions.get(stableCallback)(...args));
+	functions.set(stableCallback, callback);
+	return stableCallback;
 };
 
 const _focus = element => {
@@ -244,8 +241,9 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 		return () => {
 			// cleanup, ALWAYS
 			core.resetSplitCache();
+			functions.clear();
 		};
-	}, [defaultValues, init]);
+	}, [defaultValues]);
 
 	const getValue = useStableRef((fullPath = '') => {
 		// NOTE: for <Errors /> to work properly

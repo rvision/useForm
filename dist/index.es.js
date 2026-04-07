@@ -1,298 +1,298 @@
-import { jsx as D } from "react/jsx-runtime";
-import { useState as p, useRef as T, useCallback as ye, useEffect as ge, useId as Re } from "react";
-const ie = (r) => typeof r == "function", b = {}, ae = () => b;
-let Se = 2e9;
-const M = /* @__PURE__ */ new WeakMap(), Te = (r) => {
-  let e = M.get(r);
-  return e || (e = (Se++).toString(36), M.set(r, e)), e;
-}, ue = (r) => {
-  let e;
+import { jsx as b } from "react/jsx-runtime";
+import { useState as g, useRef as x, useCallback as Ne, useEffect as Oe } from "react";
+const ce = (r) => typeof r == "function", I = {}, ie = () => I;
+let Me = 2e9;
+const C = /* @__PURE__ */ new WeakMap(), Re = (r) => {
+  let t = C.get(r);
+  return t || (t = (Me++).toString(36), C.set(r, t)), t;
+}, ae = (r) => {
+  let t;
   if (r instanceof Set)
-    e = /* @__PURE__ */ new Set([...r]);
+    t = /* @__PURE__ */ new Set([...r]);
   else {
-    const c = Array.isArray(r);
-    e = c ? [...r] : { ...r }, c && r.message && (e.message = r.message, e.type = r.type);
+    const n = Array.isArray(r);
+    t = n ? [...r] : { ...r }, n && r.message && (t.message = r.message, t.type = r.type);
   }
-  return M.has(r) && (M.set(e, M.get(r)), M.delete(r)), e;
-}, xe = /\[([^\]]+)\]/g;
-let G = /* @__PURE__ */ new Map();
-const Q = (r) => {
+  return C.has(r) && (C.set(t, C.get(r)), C.delete(r)), t;
+}, Se = /\[([^\]]+)\]/g;
+let Y = /* @__PURE__ */ new Map();
+const L = (r) => {
   if (!r)
     return [];
-  let e = G.get(r);
-  return e || (e = r.replace(xe, ".$1").split(".").map((c) => +c - +c < 1 ? +c : c), G.set(r, e), e);
+  let t = Y.get(r);
+  return t || (t = r.replace(Se, ".$1").split(".").map((n) => +n - +n < 1 ? +n : n), Y.set(r, t)), t;
 }, Ce = () => {
-  G = /* @__PURE__ */ new Map();
-}, U = (r, e) => {
-  if (e !== void 0)
-    return r.length === 0 ? e : U(r.slice(1), e[r[0]]);
-}, w = (r, e) => U(Q(r), e), le = (r, e, c) => {
-  const { length: i } = r;
-  if (i === 0)
-    return;
-  const a = r[0];
-  if (i === 1) {
-    e[a] = c;
-    return;
+  Y = /* @__PURE__ */ new Map();
+}, A = (r, t) => {
+  let n = t;
+  const i = Array.isArray(r) ? r : L(r);
+  for (let u = 0; u < i.length; u += 1) {
+    if (n === void 0)
+      return;
+    n = n[i[u]];
   }
-  const d = e[a] !== void 0, y = r[1], E = +y - +y < 1;
-  e[a] = d ? ue(e[a]) : E ? [] : {}, E && (e[a][y] = e[a][y] === void 0 ? {} : ue(e[a][y])), le(r.slice(1), e[a], c);
-}, v = (r, e, c) => {
-  const i = { ...e };
-  return le(Q(r), i, c), i;
-}, $ = (r, e) => {
-  const { length: c } = r;
-  if (c === 0 || e === void 0)
-    return;
-  const i = r[0];
-  if (c === 1) {
-    delete e[i];
-    return;
+  return n;
+}, v = (r, t, n) => {
+  const i = L(r), { length: u } = i;
+  if (u === 0)
+    return t;
+  const d = { ...t };
+  let a = d;
+  for (let m = 0; m < u - 1; m += 1) {
+    const y = i[m], p = i[m + 1], S = a[y] !== void 0, k = +p - +p < 1;
+    a[y] = S ? ae(a[y]) : k ? [] : {}, k && (a[y][p] = a[y][p] === void 0 ? {} : ae(a[y][p])), a = a[y];
   }
-  $(r.slice(1), e[i]);
-}, L = (r) => Object.keys(r || b).length === 0, Be = (r, e) => {
-  $(r, e), r.map((i, a) => a === 0 ? [...r] : [...r].slice(0, -1 * a)).forEach((i) => {
-    const a = U(i, e);
-    a !== void 0 && (Array.isArray(a) ? (a.length === 0 || a.every(L)) && !a.message && $(i, e) : L(a) && $(i, e));
-  });
-}, V = (r, e) => {
-  const c = { ...e };
-  return Be(Q(r), c), c;
-}, Ie = (r) => {
-  const { value: e, type: c, checked: i, options: a, files: d, multiple: y, valueAsNumber: E, valueAsDate: _ } = r.target;
-  switch (c) {
+  return a[i[u - 1]] = n, d;
+}, K = (r, t) => {
+  const { length: n } = r;
+  if (n === 0 || t === void 0)
+    return;
+  let i = t;
+  for (let u = 0; u < n - 1; u += 1)
+    if (i = i[r[u]], i === void 0)
+      return;
+  delete i[r[n - 1]];
+}, q = (r) => Object.keys(r || I).length === 0, D = (r, t) => {
+  const n = { ...t }, i = L(r);
+  return K(i, n), i.map((d, a) => a === 0 ? [...i] : [...i].slice(0, -1 * a)).forEach((d) => {
+    const a = A(d, n);
+    a !== void 0 && (Array.isArray(a) ? (a.length === 0 || a.every(q)) && !a.message && K(d, n) : q(a) && K(d, n));
+  }), n;
+}, Te = (r) => {
+  const { value: t, type: n, checked: i, options: u, files: d, multiple: a, valueAsNumber: m, valueAsDate: y } = r.target;
+  switch (n) {
     case "checkbox":
       return i;
     case "range":
-      return E;
+      return m;
     case "date":
-      return _;
+      return y;
     case "number": {
-      if (e === "")
+      if (t === "")
         return null;
-      const g = Number.parseFloat(e);
-      return +g - +g < 1 ? +g : void 0;
+      const p = Number.parseFloat(t);
+      return +p - +p < 1 ? +p : void 0;
     }
     case "file":
-      return y ? d : d.item(0);
+      return a ? d : d.item(0);
     case "select-multiple":
-      return [...a].filter((g) => g.selected).map((g) => g.value);
+      return [...u].filter((p) => p.selected).map((p) => p.value);
     default:
-      return e;
+      return t;
   }
-}, De = (r, e, c) => {
+}, _e = (r, t, n) => {
   const i = [...r];
-  return [i[e], i[c]] = [i[c], i[e]], i;
-}, fe = (r, e, c) => {
+  return [i[t], i[n]] = [i[n], i[t]], i;
+}, ue = (r, t, n) => {
   const i = [...r];
-  return i.splice(e, 0, c), i;
-}, de = (...r) => r.filter((e) => !!e).map((e) => `${e.type ? `error-${e.type}` : e}`).join(" "), Y = (r) => JSON.stringify(r, (e, c) => c instanceof Set ? [...c].sort() : c), q = /* @__PURE__ */ new Map(), O = (r) => {
-  const e = Re();
-  return q.set(e, r), ge(() => () => q.delete(e), []), ye((...c) => q.get(e)(...c), []);
-}, pe = (r) => r && r.focus ? (r.focus(), !0) : !1, be = ({ defaultValues: r, mode: e, focusOn: c, classNameError: i, shouldFocusError: a = !1, resolver: d = ae }) => {
-  const [y, E] = p({
-    values: r || b,
+  return i.splice(t, 0, n), i;
+}, fe = (...r) => r.filter((t) => !!t).map((t) => `${t.type ? `error-${t.type}` : t}`).join(" "), W = (r) => JSON.stringify(r, (t, n) => n instanceof Set ? [...n].sort() : n), G = /* @__PURE__ */ new Map(), R = (r) => {
+  const [t] = g(() => (...n) => G.get(t)(...n));
+  return G.set(t, r), t;
+}, de = (r) => r && r.focus ? (r.focus(), !0) : !1, he = ({ defaultValues: r, mode: t, focusOn: n, classNameError: i, shouldFocusError: u = !1, resolver: d = ie }) => {
+  const [a, m] = g({
+    values: r || I,
     errors: {}
-  }), { values: _, errors: g } = y, x = T(!1), C = T(!1), R = T(!1), A = T(/* @__PURE__ */ new Map()), F = T(), X = e === "onSubmit", Z = e === "onBlur", J = e === "onChange", j = !X && !Z && !J, [P] = p(
-    () => (s, t) => E((n) => {
-      const o = v(s, n.values, t);
-      x.current = !0, C.current = F.current !== Y(o);
-      let u = n.errors;
-      if ((J || R.current && j || N(s, u)) && (u = V(s, u), !X)) {
-        const f = w(s, d(o));
-        f && (u = v(s, u, f));
+  }), { values: y, errors: p } = a, S = x(!1), k = x(!1), T = x(!1), N = x(/* @__PURE__ */ new Map()), V = x(), Q = t === "onSubmit", U = t === "onBlur", $ = t === "onChange", X = !Q && !U && !$, [Z] = g(
+    () => (e, o) => m((s) => {
+      const c = v(e, s.values, o);
+      S.current = !0, k.current = V.current !== W(c);
+      let f = s.errors;
+      if (($ || T.current && X || O(e, f)) && (f = D(e, f), !Q)) {
+        const l = A(e, d(c));
+        l && (f = v(e, f, l));
       }
       return {
-        values: o,
-        errors: u
+        values: c,
+        errors: f
       };
     })
-  ), [me] = p(() => {
-    const s = (n, o, u) => {
-      E((f) => {
-        const l = v(n, f.values, o(w(n, f.values)));
-        x.current = !0, C.current = F.current !== Y(l);
-        let m = f.errors;
-        const S = w(n, m);
-        let k = [];
-        if (Array.isArray(S) && (k = u(S)), J || R.current && j) {
-          const I = w(n, d(l));
-          if (I && I.message) {
-            const W = k.length > 0 ? k : {};
-            W.message = I.message, W.type = I.type, k = W;
+  ), [le] = g(() => {
+    const e = (s, c, f) => {
+      m((l) => {
+        const E = v(s, l.values, c(A(s, l.values)));
+        S.current = !0, k.current = V.current !== W(E);
+        let w = l.errors;
+        const _ = A(s, w);
+        let M = [];
+        if (Array.isArray(_) && (M = f(_)), $ || T.current && X) {
+          const h = A(s, d(E));
+          if (h && h.message) {
+            const H = M.length > 0 ? M : {};
+            H.message = h.message, H.type = h.type, M = H;
           }
         }
-        return m = V(n, m), (k.length > 0 || k.message) && (m = v(n, m, k)), {
-          values: l,
-          errors: m
+        return w = D(s, w), (M.length > 0 || M.message) && (w = v(s, w, M)), {
+          values: E,
+          errors: w
         };
       });
-    }, t = (n, o, u) => {
-      s(
-        n,
-        (f) => fe(f, o, u),
-        (f) => fe(f, o, void 0)
+    }, o = (s, c, f) => {
+      e(
+        s,
+        (l) => ue(l, c, f),
+        (l) => ue(l, c, void 0)
       );
     };
     return {
-      insert: t,
-      append: (n, o) => t(n, H(n).length, o),
-      prepend: (n, o) => t(n, 0, o),
-      clear: (n) => {
-        const o = () => [];
-        s(n, o, o);
+      insert: o,
+      append: (s, c) => o(s, J(s).length, c),
+      prepend: (s, c) => o(s, 0, c),
+      clear: (s) => {
+        const c = () => [];
+        e(s, c, c);
       },
-      remove: (n, o) => {
-        const u = (f) => [...f].filter((l, m) => m !== o);
-        s(n, u, u);
+      remove: (s, c) => {
+        const f = (l) => [...l].filter((E, w) => w !== c);
+        e(s, f, f);
       },
-      swap: (n, o, u) => {
-        const f = (l) => De(l, o, u);
-        s(n, f, f);
+      swap: (s, c, f) => {
+        const l = (E) => _e(E, c, f);
+        e(s, l, l);
       }
     };
-  }), [B] = p(
-    () => (s) => E((t) => ({
-      ...t,
-      errors: s
+  }), [B] = g(
+    () => (e) => m((o) => ({
+      ...o,
+      errors: e
     }))
-  ), [Ee] = p(() => (s) => {
-    R.current = !0, B(s);
-  }), [h] = p(() => (s) => {
-    const t = s || b;
-    F.current = Y(t), E((n) => ({
-      ...n,
-      values: { ...t }
+  ), [pe] = g(() => (e) => {
+    T.current = !0, B(e);
+  }), [j] = g(() => (e) => {
+    const o = e || I;
+    V.current = W(o), m((s) => ({
+      ...s,
+      values: { ...o }
     }));
-  }), [z] = p(() => (s) => pe(A.current.get(s))), [ee] = p(
-    () => (s = "") => new Promise((t = ae) => {
-      E((n) => {
-        let o = d(n.values);
-        if (s !== "") {
-          const f = Array.isArray(s) ? s : [s];
-          let l = { ...n.errors };
-          f.forEach((m) => {
-            const S = w(m, o);
-            l = V(m, l), S !== void 0 && (l = v(m, l, S));
-          }), o = l;
+  }), [F] = g(() => (e) => de(N.current.get(e))), [P] = g(
+    () => (e = "") => new Promise((o = ie) => {
+      m((s) => {
+        let c = d(s.values);
+        if (e !== "") {
+          const l = Array.isArray(e) ? e : [e];
+          let E = { ...s.errors };
+          l.forEach((w) => {
+            const _ = A(w, c);
+            E = D(w, E), _ !== void 0 && (E = v(w, E, _));
+          }), c = E;
         }
-        const u = {
-          ...n,
-          errors: o
+        const f = {
+          ...s,
+          errors: c
         };
-        return t(u), u;
+        return o(f), f;
       });
     })
-  ), [re] = p(() => (s, t) => {
-    let n = t;
-    return N(s, t) && (n = V(s, t)), n;
-  }), [we] = p(
-    () => (s) => E((t) => {
-      const n = t.errors, o = re(s, n);
-      return o === n ? t : {
-        ...t,
-        errors: o
+  ), [ee] = g(() => (e, o) => {
+    let s = o;
+    return O(e, o) && (s = D(e, o)), s;
+  }), [ge] = g(
+    () => (e) => m((o) => {
+      const s = o.errors, c = ee(e, s);
+      return c === s ? o : {
+        ...o,
+        errors: c
       };
     })
-  ), ve = ye((s) => pe(s), []), [Ae] = p(() => (s) => A.current.get(s)), [se] = p(() => (s, t) => {
-    t && (A.current.set(s, t), s === c && ve(t));
-  }), [Ne] = p(() => (s) => se(s == null ? void 0 : s.name, s)), [ke] = p(() => (s, t = !0) => {
-    h(s || r), x.current = !1, C.current = !1, t && ee("", s);
-  }), [ne] = p(() => (s) => P(s.target.name, Ie(s)));
-  ge(() => (h(r), () => {
-    Ce();
-  }), [r, h]);
-  const H = O((s = "") => (A.current.has(s) || A.current.set(s, null), w(s, _))), K = O((s = "", t = g) => w(s, t)), N = O(
-    (s = "", t = g) => s === "" ? !L(t) : w(s, t) !== void 0
-  ), te = O((s) => {
-    const { name: t } = s.target, n = w(t, d(_));
-    n ? (B(v(t, g, n)), a && z(t)) : B(re(t, g));
-  }), Oe = O((s, t = "") => {
-    const n = H(s), o = K(s), u = n === !0 || n === !1;
+  ), ye = Ne((e) => de(e), []), [me] = g(() => (e) => N.current.get(e)), [re] = g(() => (e, o) => {
+    o && (N.current.set(e, o), e === n && ye(o));
+  }), [Ee] = g(() => (e) => re(e == null ? void 0 : e.name, e)), [we] = g(() => (e, o = !0) => {
+    j(e || r), S.current = !1, k.current = !1, o && P("", e);
+  }), [se] = g(() => (e) => Z(e.target.name, Te(e)));
+  Oe(() => (j(r), () => {
+    Ce(), G.clear();
+  }), [r]);
+  const J = R((e = "") => (N.current.has(e) || N.current.set(e, null), A(e, y))), z = R((e = "", o = p) => A(e, o)), O = R(
+    (e = "", o = p) => e === "" ? !q(o) : A(e, o) !== void 0
+  ), te = R((e) => {
+    const { name: o } = e.target, s = A(o, d(y));
+    s ? (B(v(o, p, s)), u && F(o)) : B(ee(o, p));
+  }), Ae = R((e, o = "") => {
+    const s = J(e), c = z(e), f = s === !0 || s === !1;
     return {
-      name: s,
-      "aria-invalid": !!o,
-      className: de(t, o && i, o),
-      onChange: ne,
-      onBlur: Z ? te : void 0,
-      ref: Ne,
-      value: u ? void 0 : `${n}` == "0" ? n : n || "",
-      checked: u ? n : void 0
+      name: e,
+      "aria-invalid": !!c,
+      className: fe(o, c && i, c),
+      onChange: se,
+      onBlur: U ? te : void 0,
+      ref: Ee,
+      value: f ? void 0 : `${s}` == "0" ? s : s || "",
+      checked: f ? s : void 0
     };
-  }), _e = (s) => (t) => {
-    t && t.preventDefault();
-    const n = d(_);
-    if (B(n), N("", n)) {
-      if (a) {
-        let o = !1;
-        A.current.forEach((u, f) => {
-          !o && N(f, n) && (o = z(f));
+  }), ve = (e) => (o) => {
+    o && o.preventDefault();
+    const s = d(y);
+    if (B(s), O("", s)) {
+      if (u) {
+        let c = !1;
+        N.current.forEach((f, l) => {
+          !c && O(l, s) && (c = F(l));
         });
       }
-      return R.current = !0, !1;
+      return T.current = !0, !1;
     }
-    return s(_), !0;
-  }, oe = O(({ for: s, children: t }) => {
-    const n = K(s);
-    if (n != null && n.message) {
-      const o = de(i, n);
-      return ie(t) ? t(n, o) : /* @__PURE__ */ D("span", { className: o, children: n.message });
+    return e(y), !0;
+  }, ne = R(({ for: e, children: o }) => {
+    const s = z(e);
+    if (s != null && s.message) {
+      const c = fe(i, s);
+      return ce(o) ? o(s, c) : /* @__PURE__ */ b("span", { className: c, children: s.message });
     }
     return !1;
-  }), ce = !N(), Me = O(({ children: s, focusable: t = !1 }) => {
-    if (ce)
+  }), oe = !O(), ke = R(({ children: e, focusable: o = !1 }) => {
+    if (oe)
       return !1;
-    const n = Array.from(A.current).map((o) => o[0]).filter((o) => !!o && N(o)).map((o) => /* @__PURE__ */ D(oe, { for: o, children: (u, f) => /* @__PURE__ */ D("li", { className: f, children: t ? /* @__PURE__ */ D("a", { onClick: () => z(o), children: u.message }) : u.message }) }, o));
-    return ie(s) ? s(n) : n;
+    const s = Array.from(N.current).map((c) => c[0]).filter((c) => !!c && O(c)).map((c) => /* @__PURE__ */ b(ne, { for: c, children: (f, l) => /* @__PURE__ */ b("li", { className: l, children: o ? /* @__PURE__ */ b("a", { onClick: () => F(c), children: f.message }) : f.message }) }, c));
+    return ce(e) ? e(s) : s;
   });
   return {
-    getValue: H,
-    setValue: P,
-    register: Oe,
-    onChange: ne,
+    getValue: J,
+    setValue: Z,
+    register: Ae,
+    onChange: se,
     onBlur: te,
-    getRef: Ae,
-    setRef: se,
-    trigger: ee,
-    handleSubmit: _e,
-    hasError: N,
-    getError: K,
-    clearError: we,
-    setErrors: Ee,
-    array: me,
-    key: Te,
-    Error: oe,
-    Errors: Me,
+    getRef: me,
+    setRef: re,
+    trigger: P,
+    handleSubmit: ve,
+    hasError: O,
+    getError: z,
+    clearError: ge,
+    setErrors: pe,
+    array: le,
+    key: Re,
+    Error: ne,
+    Errors: ke,
     formState: {
-      errors: g,
-      isValid: ce,
-      isTouched: x.current,
-      isDirty: C.current,
-      hadError: R.current,
-      reset: ke
+      errors: p,
+      isValid: oe,
+      isTouched: S.current,
+      isDirty: k.current,
+      hadError: T.current,
+      reset: we
     }
   };
-}, Fe = (r) => (e) => {
-  let c = {};
+}, be = (r) => (t) => {
+  let n = {};
   try {
-    r.validateSync(e, { abortEarly: !1 });
+    r.validateSync(t, { abortEarly: !1 });
   } catch (i) {
-    for (const a of i.inner) {
-      const d = w(a.path, c) || {};
-      d.message = a.message, d.type = a.type, c = v(a.path, c, d);
+    for (const u of i.inner) {
+      const d = A(u.path, n) || {};
+      d.message = u.message, d.type = u.type, n = v(u.path, n, d);
     }
   }
-  return c;
-}, Je = (r) => (e) => {
-  let c = {};
-  const i = r.safeParse(e);
-  return i.success || i.error.errors.forEach((a) => {
-    const d = a.path.join("."), y = w(d, c) || {};
-    y.message = a.message, y.type = a.type, c = v(d, c, y);
-  }), c;
+  return n;
+}, De = (r) => (t) => {
+  let n = {};
+  const i = r.safeParse(t);
+  return i.success || i.error.errors.forEach((u) => {
+    const d = u.path.join("."), a = A(d, n) || {};
+    a.message = u.message, a.type = u.type, n = v(d, n, a);
+  }), n;
 };
 export {
-  be as default,
-  Fe as yupResolver,
-  Je as zodResolver
+  he as default,
+  be as yupResolver,
+  De as zodResolver
 };
