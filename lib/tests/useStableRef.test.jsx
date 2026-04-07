@@ -49,10 +49,12 @@ describe('useStableRef', () => {
 
 		result.current();
 		expect(first).toHaveBeenCalledTimes(1);
+		first.mockReset();
 
 		rerender({ fn: second });
 		result.current();
-		expect(first).toHaveBeenCalledTimes(1);
+
+		expect(first).toHaveBeenCalledTimes(0);
 		expect(second).toHaveBeenCalledTimes(1);
 	});
 
