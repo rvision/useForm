@@ -33,12 +33,10 @@ const useForm = ({ defaultValues, mode, focusOn, classNameError, shouldFocusErro
 	const refsMap = useRef(new Map());
 	const defaultValuesJSON = useRef();
 
-	// validates when submitting; any change in error field will remove error for that field (no matter if field is valid or not)
-	const isOnSubmitMode = mode === 'onSubmit';
-	// validates when field is blurred; be careful with shouldFocusError, it will trap the user to field
-	const isOnBlurMode = mode === 'onBlur';
-	// validates on any change
-	const isOnChangeMode = mode === 'onChange';
+	// isOnSubmitMode: validates when submitting; any change in error field will remove error for that field (no matter if field is valid or not)
+	// isOnBlurMode: validates when field is blurred; be careful with shouldFocusError, it will trap the user to field
+	// isOnChangeMode: validates on any change
+	const [isOnSubmitMode, isOnBlurMode, isOnChangeMode] = [mode === 'onSubmit', mode === 'onBlur', mode === 'onChange'];
 	// default mode: no validations until submit, if any errors - validate onChange
 	const isDefaultMode = !isOnSubmitMode && !isOnBlurMode && !isOnChangeMode;
 

@@ -93,7 +93,7 @@ const L = (r) => {
   const [a, m] = g({
     values: r || I,
     errors: {}
-  }), { values: y, errors: p } = a, S = x(!1), k = x(!1), T = x(!1), N = x(/* @__PURE__ */ new Map()), V = x(), Q = t === "onSubmit", U = t === "onBlur", $ = t === "onChange", X = !Q && !U && !$, [Z] = g(
+  }), { values: y, errors: p } = a, S = x(!1), k = x(!1), T = x(!1), N = x(/* @__PURE__ */ new Map()), V = x(), [Q, U, $] = [t === "onSubmit", t === "onBlur", t === "onChange"], X = !Q && !U && !$, [Z] = g(
     () => (e, o) => m((s) => {
       const c = v(e, s.values, o);
       S.current = !0, k.current = V.current !== W(c);
